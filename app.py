@@ -1,14 +1,12 @@
 import os
 import streamlit as st
-durch diesen abwärtskompatiblen Import:
-   ```python
-   # NACHHER:
-   try:
-       from mistralai.client import Mistral  # Für mistralai v2.x
-   except ImportError:
-       from mistralai import Mistral  # Für ältere mistralai v1.x
 
-# 1. Webseiten-Konfiguration & Titel
+try:
+    from mistralai.client import Mistral
+except ImportError:
+    from mistralai import Mistral
+
+# Page Configuration
 st.set_page_config(
     page_title="TALVOA – Fellow Guide",
     page_icon="🧭",
@@ -16,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 2. Dunkelgraues Farbschema per CSS erzwingen
+# Dark Gray Styling
 st.markdown(
     """
     <style>
@@ -39,7 +37,7 @@ st.markdown(
 st.title("TALVOA")
 st.caption("Your fellow guide and advisor through day-to-day matters")
 
-# 3. VOLLSTÄNDIGER SYSTEM-PROMPT (Version 1.03)
+# Full TALVOA System Prompt (Version 1.03)
 SYSTEM_PROMPT = """
 <system_config version="1.03" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
@@ -221,16 +219,16 @@ SYSTEM_PROMPT = """
 </system_config>
 """
 
-# 4. API-Schlüssel sicher laden
+# Load API Key
 api_key = os.environ.get("MISTRAL_API_KEY")
 
 if not api_key:
-    st.error("Der MISTRAL_API_KEY wurde noch nicht hinterlegt.")
+    st.error("MISTRAL_API_KEY is not configured in secrets.")
     st.stop()
 
 client = Mistral(api_key=api_key)
 
-# 5. Chat-Historie verwalten
+# Session History
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -238,23 +236,21 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# 6. Benutzereingabe mit gewünschtem Platzhalter
+# User Input
 if user_prompt := st.chat_input("What's your matter?"):
     st.chat_message("user").markdown(user_prompt)
     st.session_state.messages.append({"role": "user", "content": user_prompt})
 
-    # System-Prompt voranstellen
     api_payload = [{"role": "system", "content": SYSTEM_PROMPT}] + st.session_state.messages
 
-    # Live-Streaming der Antwort von Mistral Large
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
         full_response = ""
-        
+
         try:
             stream = client.chat.stream(
                 model="mistral-large-latest",
-                messages=api_payload
+                messages=api_payload,
             )
             for chunk in stream:
                 if chunk.data.choices[0].delta.content:
@@ -262,7 +258,7 @@ if user_prompt := st.chat_input("What's your matter?"):
                     message_placeholder.markdown(full_response + "▌")
             message_placeholder.markdown(full_response)
         except Exception as e:
-            st.error(f"Fehler bei der Übertragung: {e}")
+            st.error(f"Error: {e}")
 
     if full_response:
         st.session_state.messages.append({"role": "assistant", "content": full_response})
