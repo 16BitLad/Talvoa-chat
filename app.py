@@ -1,6 +1,12 @@
 import os
 import streamlit as st
-from mistralai import Mistral
+durch diesen abwärtskompatiblen Import:
+   ```python
+   # NACHHER:
+   try:
+       from mistralai.client import Mistral  # Für mistralai v2.x
+   except ImportError:
+       from mistralai import Mistral  # Für ältere mistralai v1.x
 
 # 1. Webseiten-Konfiguration & Titel
 st.set_page_config(
