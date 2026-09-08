@@ -14,28 +14,80 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# Dark Gray Styling
+# Initialize Chat History
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# Dynamic CSS: Center layout when empty, dock to bottom when active
+if len(st.session_state.messages) == 0:
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            background-color: #18181b;
+            color: #f4f4f5;
+        }
+        header {visibility: hidden;}
+        footer {visibility: hidden;}
+        .block-container {
+            padding-top: 30vh !important;
+            max-width: 750px !important;
+            text-align: center;
+        }
+        .stChatInput {
+            position: fixed !important;
+            top: 54% !important;
+            bottom: auto !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            max-width: 750px !important;
+            width: 90% !important;
+            z-index: 100 !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+else:
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            background-color: #18181b;
+            color: #f4f4f5;
+        }
+        header {visibility: hidden;}
+        footer {visibility: hidden;}
+        .block-container {
+            padding-top: 2rem !important;
+            padding-bottom: 100px !important;
+            max-width: 750px !important;
+        }
+        .stChatInput {
+            position: fixed !important;
+            bottom: 20px !important;
+            top: auto !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            max-width: 750px !important;
+            width: 90% !important;
+            z-index: 100 !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+# Centered Header
 st.markdown(
     """
-    <style>
-    .stApp {
-        background-color: #18181b;
-        color: #f4f4f5;
-    }
-    header {visibility: hidden;}
-    footer {visibility: hidden;}
-    .stChatInput {
-        position: fixed;
-        bottom: 20px;
-        z-index: 100;
-    }
-    </style>
-""",
+    <div style="text-align: center; margin-bottom: 1.5rem;">
+        <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 0.2rem; color: #ffffff;">TALVOA</h1>
+        <p style="color: #a1a1aa; font-size: 1rem; margin-top: 0;">Your fellow guide and advisor through day-to-day matters</p>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
-
-st.title("TALVOA")
-st.caption("Your fellow guide and advisor through day-to-day matters")
 
 # Full TALVOA System Prompt (Version 1.03)
 SYSTEM_PROMPT = """
@@ -228,15 +280,12 @@ if not api_key:
 
 client = Mistral(api_key=api_key)
 
-# Session History
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
+# Render Chat History
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# User Input
+# User Input Box
 if user_prompt := st.chat_input("What's your matter?"):
     st.chat_message("user").markdown(user_prompt)
     st.session_state.messages.append({"role": "user", "content": user_prompt})
@@ -262,3 +311,4 @@ if user_prompt := st.chat_input("What's your matter?"):
 
     if full_response:
         st.session_state.messages.append({"role": "assistant", "content": full_response})
+        st.rerun()
