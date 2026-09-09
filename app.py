@@ -62,7 +62,7 @@ if st.session_state.current_chat_id and st.session_state.current_chat_id in st.s
 # Dynamische Hoehenberechnung
 chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 210px)"
 
-# 4. Custom CSS: Mobile-Optimierung & sauberes Dark-Theme (v1.12)
+# 4. Custom CSS: Kontrast & Dark-Theme Fixes (v1.13)
 st.markdown(
     f"""
     <style>
@@ -83,7 +83,26 @@ st.markdown(
     }}
 
     /* ==================================================================== */
-    /* CHAT FORM: EINGABEZEILE + ARROW BUTTON (DUNKEL & REPARIERT)           */
+    /* GLOBAL BUTTON DEFAULT: VERHINDERT WEISSE BUTTONS IN DER HISTORIE     */
+    /* ==================================================================== */
+    .stButton > button,
+    button[data-testid="stBaseButton-secondary"] {{
+        background-color: #202024 !important;
+        color: #e4e4e7 !important;
+        border: 1px solid #2e2e33 !important;
+        border-radius: 8px !important;
+        font-size: 0.85rem !important;
+        transition: all 0.2s ease !important;
+    }}
+    .stButton > button:hover,
+    button[data-testid="stBaseButton-secondary"]:hover {{
+        background-color: #2a2a30 !important;
+        border-color: #52525b !important;
+        color: #ffffff !important;
+    }}
+
+    /* ==================================================================== */
+    /* CHAT FORM: EINGABEZEILE + ARROW BUTTON                               */
     /* ==================================================================== */
     div[data-testid="stForm"] {{
         background-color: #27272a !important;
@@ -92,7 +111,6 @@ st.markdown(
         padding: 0.3rem 0.5rem !important;
         margin: 0.4rem auto 0.6rem auto !important;
     }}
-    /* Verhindert den Umbruch auf Mobilgeräten */
     div[data-testid="stForm"] [data-testid="stHorizontalBlock"] {{
         display: flex !important;
         flex-direction: row !important;
@@ -110,29 +128,31 @@ st.markdown(
         min-width: 42px !important;
     }}
 
-    /* EINGABEFELD DUNKEL MACHEN */
+    /* EINGABEFELD & PLATZHALTER */
     div[data-testid="stTextInput"],
     div[data-testid="stTextInput"] div[data-baseweb="base-input"],
     div[data-testid="stTextInput"] div[data-baseweb="input"],
     div[data-testid="stTextInput"] input {{
         background-color: #27272a !important;
-        color: #f4f4f5 !important;
+        color: #ffffff !important;
         border: none !important;
         box-shadow: none !important;
         font-size: 0.95rem !important;
     }}
-    /* Entfernt den roten/grauen Fokus-Rahmen beim Tippen */
+    div[data-testid="stTextInput"] input::placeholder {{
+        color: #a1a1aa !important;
+        opacity: 1 !important;
+    }}
     div[data-baseweb="input"]:focus-within,
     div[data-baseweb="base-input"]:focus-within {{
         border-color: transparent !important;
         box-shadow: none !important;
     }}
-    /* Blendet den störenden Hinweis "Press Enter to submit form" aus */
     div[data-testid="stInputInstructions"] {{
         display: none !important;
     }}
 
-    /* SENDE-BUTTON (stFormSubmitButton) DUNKEL STYLEN */
+    /* SENDE-BUTTON */
     div[data-testid="stFormSubmitButton"] button,
     div[data-testid="stForm"] button {{
         background-color: #3f3f46 !important;
@@ -156,7 +176,7 @@ st.markdown(
     }}
 
     /* ==================================================================== */
-    /* ACTION BUTTONS: SCHMALER, ZENTRIERT & EXAKT GLEICH GROSS             */
+    /* ACTION BUTTONS (NEU CHAT / HISTORY TOGGLE)                           */
     /* ==================================================================== */
     div[data-testid="stHorizontalBlock"]:not(div[data-testid="stForm"] *) {{
         display: flex !important;
@@ -189,7 +209,6 @@ st.markdown(
         align-items: center !important;
         justify-content: center !important;
         width: 100% !important;
-        transition: all 0.2s ease !important;
     }}
     div[data-testid="stHorizontalBlock"]:not(div[data-testid="stForm"] *) .stButton > button:hover {{ 
         background-color: #3f3f46 !important; 
@@ -198,42 +217,8 @@ st.markdown(
     }}
 
     /* ==================================================================== */
-    /* HISTORY DROPDOWN BOX                                                 */
+    /* CHAT BUBBLES & TEXT KONTRAST FIX                                     */
     /* ==================================================================== */
-    .history-dropdown-box {{
-        max-height: 220px;
-        overflow-y: auto;
-        background-color: #1c1c20;
-        border: 1px solid #333338;
-        border-radius: 10px;
-        padding: 0.8rem;
-        margin-bottom: 0.6rem;
-        text-align: left;
-    }}
-    .history-item .stButton > button {{
-        background-color: #202024 !important;
-        border: 1px solid #2e2e33 !important;
-        color: #d4d4d8 !important;
-        text-align: left !important;
-        justify-content: flex-start !important;
-        padding: 0.5rem 0.8rem !important;
-        margin-bottom: 0.3rem !important;
-        font-size: 0.85rem !important;
-        border-radius: 6px !important;
-    }}
-    .history-item .stButton > button:hover {{
-        background-color: #2a2a30 !important;
-        border-color: #52525b !important;
-        color: #ffffff !important;
-    }}
-
-    /* Emojis / Avatare ausblenden */
-    [data-testid^="stChatMessageAvatar"],
-    div[data-testid="stChatMessageAvatar"] {{
-        display: none !important;
-    }}
-
-    /* Chat Bubbles */
     div[data-testid="stChatMessage"] {{
         padding: 0.6rem 0.9rem !important;
         margin-bottom: 0.6rem !important;
@@ -245,6 +230,18 @@ st.markdown(
         min-height: 0 !important;
     }}
 
+    /* ERZWINGT HELLE SCHRIFT IN ALLEN CHAT-NACHRICHTEN */
+    div[data-testid="stChatMessage"] *,
+    div[data-testid="stChatMessage"] p,
+    div[data-testid="stChatMessage"] span,
+    div[data-testid="stChatMessage"] div,
+    div[data-testid="stChatMessage"] li,
+    div[data-testid="stChatMessage"] strong,
+    div[data-testid="stChatMessage"] em {{
+        color: #f4f4f5 !important;
+        text-align: left !important;
+    }}
+
     /* User Bubble (Links) */
     div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {{
         background-color: #27272a !important;
@@ -252,17 +249,21 @@ st.markdown(
         border-bottom-left-radius: 3px !important;
         margin-left: 0 !important;
         margin-right: auto !important;
-        text-align: left !important;
     }}
 
     /* Assistant Bubble (Rechts) */
     div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {{
-        background-color: #1c1c20 !important;
+        background-color: #1e1e22 !important;
         border: 1px solid #333338 !important;
         border-bottom-right-radius: 3px !important;
         margin-left: auto !important;
         margin-right: 0 !important;
-        text-align: left !important;
+    }}
+
+    /* Emojis / Avatare ausblenden */
+    [data-testid^="stChatMessageAvatar"],
+    div[data-testid="stChatMessageAvatar"] {{
+        display: none !important;
     }}
 
     /* Dialogfenster Scroll-Container */
@@ -335,38 +336,29 @@ with col_b2:
         on_click=toggle_history
     )
 
-# 8. Collapsible History Dropdown
+# 8. Collapsible History Dropdown (Clean Containers)
 if st.session_state.show_history:
-    st.markdown('<div class="history-dropdown-box">', unsafe_allow_html=True)
-    st.markdown(
-        """
-        <p style="color: #71717a; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; font-weight: 600;">
-            Previous Conversations
-        </p>
-        """,
-        unsafe_allow_html=True,
-    )
+    with st.container():
+        st.markdown(
+            '<p style="color: #a1a1aa; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.4rem; font-weight: 600; text-align: left;">Previous Conversations</p>',
+            unsafe_allow_html=True,
+        )
+        if len(st.session_state.all_chats) == 0:
+            st.markdown("<p style='color: #71717a; font-size: 0.85rem; margin: 0; text-align: left;'>No previous conversations stored yet.</p>", unsafe_allow_html=True)
+        else:
+            for c_id, c_data in reversed(list(st.session_state.all_chats.items())):
+                btn_label = f"💬 {c_data['title']}   •   🕒 {c_data['timestamp']}"
+                st.button(
+                    btn_label, 
+                    key=f"hist_select_{c_id}", 
+                    use_container_width=True,
+                    on_click=select_chat,
+                    args=(c_id,)
+                )
 
-    if len(st.session_state.all_chats) == 0:
-        st.markdown("<p style='color: #71717a; font-size: 0.85rem; margin: 0;'>No previous conversations stored yet.</p>", unsafe_allow_html=True)
-    else:
-        for c_id, c_data in reversed(list(st.session_state.all_chats.items())):
-            st.markdown('<div class="history-item">', unsafe_allow_html=True)
-            btn_label = f"💬 {c_data['title']}   •   🕒 {c_data['timestamp']}"
-            st.button(
-                btn_label, 
-                key=f"hist_select_{c_id}", 
-                use_container_width=True,
-                on_click=select_chat,
-                args=(c_id,)
-            )
-            st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# 9. Full WITTALVA System Prompt (Version 1.12)
+# 9. Full WITTALVA System Prompt (Version 1.13)
 SYSTEM_PROMPT = """
-<system_config version="1.12" deployment_mode="in_context">
+<system_config version="1.13" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
