@@ -59,47 +59,50 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# 4. Custom CSS
+# Dynamische Hoehenberechnung
+chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 210px)"
+
+# 4. Custom CSS: Saubere Isolierung ohne toxische Wildcards
 st.markdown(
-    """
+    f"""
     <style>
     /* Dark Theme Background */
-    .stApp { 
+    .stApp {{ 
         background-color: #18181b; 
         color: #f4f4f5; 
-    }
-    header, footer { 
+    }}
+    header, footer {{ 
         visibility: hidden !important; 
         display: none !important; 
-    }
-    .block-container { 
+    }}
+    .block-container {{ 
         padding-top: 0.5rem !important; 
-        padding-bottom: 3rem !important; /* Sauberer Abstand am Ende der Seite */
+        padding-bottom: 0 !important; 
         max-width: 750px !important; 
         text-align: center;
-    }
+    }}
     /* Sleek Chat Form directly under Header */
-    div[data-testid="stForm"] {
+    div[data-testid="stForm"] {{
         background-color: #27272a !important;
         border: 1px solid #3f3f46 !important;
         border-radius: 12px !important;
         padding: 0.25rem 0.6rem !important;
         margin: 0.25rem auto 0.5rem auto !important;
         max-width: 750px !important;
-    }
-    div[data-testid="stForm"] .stTextInput input {
+    }}
+    div[data-testid="stForm"] .stTextInput input {{
         background-color: transparent !important;
         color: #f4f4f5 !important;
         border: none !important;
         font-size: 1rem !important;
         padding: 0.4rem 0.2rem !important;
-    }
-    div[data-testid="stForm"] .stTextInput input:focus {
+    }}
+    div[data-testid="stForm"] .stTextInput input:focus {{
         outline: none !important;
         box-shadow: none !important;
-    }
+    }}
     /* Submit Arrow Button */
-    div[data-testid="stForm"] .stButton > button {
+    div[data-testid="stForm"] .stButton > button {{
         background-color: #3f3f46 !important;
         color: #ffffff !important;
         border: none !important;
@@ -109,17 +112,17 @@ st.markdown(
         height: 100% !important;
         width: 100% !important;
         margin: 0 !important;
-    }
-    div[data-testid="stForm"] .stButton > button:hover { 
+    }}
+    div[data-testid="stForm"] .stButton > button:hover {{ 
         background-color: #52525b !important; 
-    }
+    }}
     /* Action Buttons Row */
-    .action-btn-container {
+    .action-btn-container {{
         margin-top: 0 !important;
         margin-bottom: 0.5rem !important;
         width: 100% !important;
-    }
-    .action-btn-container .stButton > button {
+    }}
+    .action-btn-container .stButton > button {{
         background-color: #27272a; 
         color: #f4f4f5; 
         border: 1px solid #3f3f46;
@@ -128,15 +131,17 @@ st.markdown(
         font-weight: 500; 
         width: 100%;
         transition: all 0.2s ease;
-    }
-    .action-btn-container .stButton > button:hover { 
+    }}
+    .action-btn-container .stButton > button:hover {{ 
         background-color: #3f3f46; 
         border-color: #71717a; 
         color: #ffffff; 
-    }
+    }}
 
-    /* HISTORY DROPDOWN */
-    .history-dropdown-box {
+    /* ==================================================================== */
+    /* 1. HISTORY DROPDOWN: REINE CONTAINER-KLASSE OHNE DOPPELRAHMEN       */
+    /* ==================================================================== */
+    .history-dropdown-box {{
         max-height: 220px;
         overflow-y: auto;
         background-color: #1c1c20;
@@ -145,8 +150,8 @@ st.markdown(
         padding: 0.8rem;
         margin-bottom: 0.6rem;
         text-align: left;
-    }
-    .history-item .stButton > button {
+    }}
+    .history-item .stButton > button {{
         background-color: #202024;
         border: 1px solid #2e2e33;
         color: #d4d4d8;
@@ -156,21 +161,25 @@ st.markdown(
         margin-bottom: 0.3rem;
         font-size: 0.85rem;
         border-radius: 6px;
-    }
-    .history-item .stButton > button:hover {
+    }}
+    .history-item .stButton > button:hover {{
         background-color: #2a2a30;
         border-color: #52525b;
         color: #ffffff;
-    }
+    }}
 
-    /* EMOJIS / AVATARE AUSBLENDEN */
+    /* ==================================================================== */
+    /* 2. EMOJIS / AVATARE RESTLOS AUSBLENDEN                              */
+    /* ==================================================================== */
     [data-testid^="stChatMessageAvatar"],
-    div[data-testid="stChatMessageAvatar"] {
+    div[data-testid="stChatMessageAvatar"] {{
         display: none !important;
-    }
+    }}
 
-    /* CHAT-NACHRICHTEN BUBBLE-DESIGN */
-    div[data-testid="stChatMessage"] {
+    /* ==================================================================== */
+    /* 3. CHAT-NACHRICHTEN: BUBBLE-DESIGN                                  */
+    /* ==================================================================== */
+    div[data-testid="stChatMessage"] {{
         padding: 0.6rem 0.9rem !important;
         margin-bottom: 0.6rem !important;
         border-radius: 12px !important;
@@ -179,44 +188,73 @@ st.markdown(
         max-width: 85% !important;
         height: auto !important;
         min-height: 0 !important;
-    }
+    }}
 
-    /* INPUTS (User) */
-    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {
+    /* INPUTS (User): Linksbuendig */
+    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {{
         background-color: #27272a !important;
         border: 1px solid #3f3f46 !important;
         border-bottom-left-radius: 3px !important;
         margin-left: 0 !important;
         margin-right: auto !important;
         text-align: left !important;
-    }
+    }}
     div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"],
-    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) p {
+    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) p {{
         text-align: left !important;
-    }
+    }}
 
-    /* OUTPUTS (Assistant) */
-    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {
+    /* OUTPUTS (Assistant): Rechtsbuendige Bubble, Text innen linksbuendig */
+    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {{
         background-color: #1c1c20 !important;
         border: 1px solid #333338 !important;
         border-bottom-right-radius: 3px !important;
         margin-left: auto !important;
         margin-right: 0 !important;
         text-align: left !important;
-    }
+    }}
     div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) [data-testid="stChatMessageContent"],
     div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) p,
     div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) li,
-    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) span {
+    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) span {{
         text-align: left !important;
-    }
+    }}
 
-    /* CONTAINER STYLING */
-    div[data-testid="stVerticalBlockBorderWrapper"] {
+    /* ==================================================================== */
+    /* 4. DIALOGFENSTER: VOLLER BILDSCHIRMRAND OHNE INNEREN BOX-SALAT      */
+    /* ==================================================================== */
+    div[data-testid="stVerticalBlockBorderWrapper"]:not(:has(.history-dropdown-box)) {{
+        height: {chat_window_height} !important;
+        min-height: {chat_window_height} !important;
+        max-height: {chat_window_height} !important;
         background-color: #141416 !important;
         border: 1px solid #27272a !important;
         border-radius: 12px !important;
-    }
+        padding: 0.8rem !important;
+        overflow-y: auto !important;
+        margin-bottom: 0 !important;
+    }}
+    div[data-testid="stVerticalBlockBorderWrapper"]:not(:has(.history-dropdown-box)) > div[data-testid="stVerticalBlock"] {{
+        height: 100% !important;
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+    }}
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {{
+        width: 6px;
+    }}
+    ::-webkit-scrollbar-track {{
+        background: #18181b;
+    }}
+    ::-webkit-scrollbar-thumb {{
+        background: #3f3f46;
+        border-radius: 3px;
+    }}
+    ::-webkit-scrollbar-thumb:hover {{
+        background: #52525b;
+    }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -246,7 +284,7 @@ with st.form(key="chat_input_form", clear_on_submit=True):
     with col_submit:
         submitted = st.form_submit_button("↑")
 
-# 7. Action Buttons Row
+# 7. Action Buttons Row (Callback-basierte Steuerung)
 st.markdown('<div class="action-btn-container">', unsafe_allow_html=True)
 col_b1, col_b2 = st.columns(2)
 with col_b1:
@@ -266,7 +304,7 @@ with col_b2:
     )
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 8. Collapsible History Dropdown
+# 8. Collapsible History Dropdown (Saubere HTML-Box ohne Streamlit-Container-Kollision)
 if st.session_state.show_history:
     st.markdown('<div class="history-dropdown-box">', unsafe_allow_html=True)
     st.markdown(
@@ -295,9 +333,9 @@ if st.session_state.show_history:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 9. Full WITTALVA System Prompt (Version 1.25)
+# 9. Full WITTALVA System Prompt (Version 1.10)
 SYSTEM_PROMPT = """
-<system_config version="1.25" deployment_mode="in_context">
+<system_config version="1.10" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -445,7 +483,7 @@ SYSTEM_PROMPT = """
          - Dual-Loss Evaluation & Chesterton's Fence Mandate: When assessing prompt compression, refactoring, or layout compaction, prohibit classifying modifications as 'lossless' based solely on character or token retention; evaluate structural delimiter saliency and attentional degradation (Attention Bleeding) in joint parity with syntax, preserving structural whitespace, line breaks, and explicit tags wherever they prevent cross-parameter interference in dense metadata.
 
       3. SCHEMA LOCK, ZERO-REGRESSION & OPERATIVE SUBROLE MATRIX:
-         - Treat in-context schema rules (@SCHEMA_LOCK) as heuristic structural validation baselines subordinate strictly to explicit PL intent; enforce zero-regression via clause-by-clause structural comparison prior to asserting parity. Zero-Regression Mandate: K4 and B1 enforce complete subclause retention, verifying historical defense clauses, hedges, und canary hooks remain strictly preserved. Pre-Flight Audits: K4 audits complete alignment between archetypal_subspace_matrix declarations and core mapping on initialization and staging turns, preventing unlinked role drift.
+         - Treat in-context schema rules (@SCHEMA_LOCK) as heuristic structural validation baselines subordinate strictly to explicit PL intent; enforce zero-regression via clause-by-clause structural comparison prior to asserting parity. Zero-Regression Mandate: K4 and B1 enforce complete subclause retention, verifying historical defense clauses, hedges, and canary hooks remain strictly preserved. Pre-Flight Audits: K4 audits complete alignment between archetypal_subspace_matrix declarations and core mapping on initialization and staging turns, preventing unlinked role drift.
          - Comprehensive Operative Mapping Matrix & Subrole Closure: Every architectural subrole is bound to an operative execution hook:
            * Governance & Canon: A2 (empirical modeling, pattern detection, verification), A3 (inventive refactoring, systemic optimization), B1 (compliance audit, security & integrity, PL authorization verification), C3 (priority hierarchy enforcement, laws), L1/L2/L3 (canonical rule codex, fact invalidation against system sovereignty, controlled recital), K2/K4 (schema lock preservation, 4-point parity enforcement, zero-regression auditing, Turn-1 pre-flight audit, semantic integrity, Principle of Charity).
            * Security & Context: B2 (airlock & blast-radius guard, downside/danger analysis), B3 (alertwatch pre-edit scan, intent scan), D1 (passive payload ingestion), K1/K3 (in-context state preservation, episodic continuity, long-session drift mitigation, coreference resolution), J1/J2/J3 (turn triage T1/T2/T3, courier routing, multi-way disambiguation, high-risk detection, exception routing, pre-edit scanning).
@@ -571,7 +609,7 @@ SYSTEM_PROMPT = """
         <good>Entangled particles act as a unified system, not separated entities. Measuring one reveals a pre-existing correlated state without transmitting signals, preventing faster-than-light communication. This non-signaling correlation enables protocols like quantum key distribution while strictly obeying relativistic causality.</good>
       </example>
       <example type="duality_bridging_mandate">
-        <bad>The cache has two sides: the storage layer (how entries are kept) und the eviction policy (why entries are removed). Both matter for performance.</bad>
+        <bad>The cache has two sides: the storage layer (how entries are kept) and the eviction policy (why entries are removed). Both matter for performance.</bad>
         <good>The cache's storage layer and eviction policy aren't independent: a layout optimized for sequential writes (substrate) directly constrains which eviction policy can run cheaply (logic) — an LRU policy needs O(1) access to recency metadata, which a write-optimized layout doesn't provide without extra indexing.</good>
       </example>
       <example type="format_baseline_reference">
@@ -583,7 +621,7 @@ SYSTEM_PROMPT = """
       </example>
       <example type="heading_scope_fidelity_and_substrate_grounding">
         <bad>When introducing "Cable Pinouts": The serial interface divides the connection into logical signal paths for data and control.</bad>
-        <good>When introducing "Cable Pinouts" (D-Sub table): In a serial cable, connector pins are mapped to dedicated copper wires for transmit/receive lines (TxD/RxD), signal ground (GND), und hardware control contacts (RTS/CTS), deterministically securing physical hardware config access on unprovisioned hardware.</good>
+        <good>When introducing "Cable Pinouts" (D-Sub table): In a serial cable, connector pins are mapped to dedicated copper wires for transmit/receive lines (TxD/RxD), signal ground (GND), and hardware control contacts (RTS/CTS), deterministically securing physical hardware config access on unprovisioned hardware.</good>
       </example>
       <example type="anti_metaphor_practical_scenario">
         <bad>A media converter is like a person who listens to a phone call and blinks it with a flashlight through the night.</bad>
@@ -651,7 +689,7 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
         }
         st.session_state.current_chat_id = new_id
 
-    # UI speichert Verlauf
+    # UI speichert und zeigt den Verlauf an
     st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
         {"role": "user", "content": clean_prompt}
     )
@@ -659,29 +697,16 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
 
     active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-    # TOKEN-SCHUTZ + AIRLOCK + MULTI-TURN: Gesamten Verlauf isoliert uebergeben
-    api_contents = []
-    for msg in active_history[:-1]:
-        role = "user" if msg["role"] == "user" else "model"
-        text_content = msg["content"]
-        if role == "user":
-            text_content = f"<untrusted_input>\n{text_content}\n</untrusted_input>"
-        api_contents.append(
-            types.Content(
-                role=role,
-                parts=[types.Part.from_text(text=text_content)],
-            )
-        )
-
+    # TOKEN-SCHUTZ + AIRLOCK: Prompt gemaess @OWASP isolieren
     wrapped_prompt = f"<untrusted_input>\n{clean_prompt}\n</untrusted_input>"
-    api_contents.append(
+    api_contents = [
         types.Content(
             role="user",
             parts=[types.Part.from_text(text=wrapped_prompt)],
         )
-    )
+    ]
 
-    # Nativer Streamlit-Container
+    # Reiner Container ohne starres height=500: CSS dehnt sauber auf volle Bildschirmhoehe
     chat_box = st.container(border=True)
     with chat_box:
         for msg in active_history[:-1]:
@@ -700,8 +725,8 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
             start_time = time.time()
             timer_placeholder = st.empty()
             message_placeholder = st.empty()
-            total_duration = "0.0s"
 
+            # Initiale Timer-Anzeige (0.0s) in hellgrau und kleinster Schrift
             timer_placeholder.markdown(
                 '<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">0.0s</div>',
                 unsafe_allow_html=True,
@@ -711,25 +736,26 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
 
             try:
                 response_stream = client.models.generate_content_stream(
-                    model="gemini-2.5-flash",
+                    model="gemini-3.6-flash",
                     contents=api_contents,
                     config=types.GenerateContentConfig(
                         system_instruction=SYSTEM_PROMPT,
-                        temperature=0.1,
+                        temperature=0.1,  # Strikte Invarianten-Treue ohne Weichspuelen
                         top_p=0.8,
                         thinking_config=types.ThinkingConfig(
-                            thinking_budget=1024
+                            thinking_budget=1024  # Aktiviert Stage 1 & 2 Dialectical Descent (@CALIB)
                         ),
                     ),
                 )
                 for chunk in response_stream:
+                    # Live-Timer aktualisieren
                     elapsed = time.time() - start_time
                     timer_placeholder.markdown(
                         f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{elapsed:.1f}s</div>',
                         unsafe_allow_html=True,
                     )
 
-                    # Register-Isolation (@REG): Gedankenspuren nicht im sichtbaren UI emittieren
+                    # Register-Isolation (@REG): Gedanken nicht im UI anzeigen
                     if chunk.candidates and chunk.candidates[0].content.parts:
                         for part in chunk.candidates[0].content.parts:
                             if getattr(part, "thought", False):
@@ -741,6 +767,7 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
                         full_response += chunk.text
                         message_placeholder.markdown(full_response + "▌")
 
+                # Finale Dauer einfrieren
                 total_duration = f"{time.time() - start_time:.1f}s"
                 timer_placeholder.markdown(
                     f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{total_duration}</div>',
@@ -759,6 +786,7 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
 
 # 12. Render Persistent Output Window if not actively submitting
 elif len(current_messages) > 0:
+    # Reiner Container ohne starres height=500: CSS dehnt sauber auf volle Bildschirmhoehe
     chat_box = st.container(border=True)
     with chat_box:
         for msg in current_messages:
