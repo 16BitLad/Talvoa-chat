@@ -32,7 +32,7 @@ if st.session_state.current_chat_id and st.session_state.current_chat_id in st.s
 st.markdown(
     """
     <style>
-    /* Dark Background */
+    /* Dark Theme Background */
     .stApp { 
         background-color: #18181b; 
         color: #f4f4f5; 
@@ -79,8 +79,8 @@ st.markdown(
         width: 100% !important;
         margin: 0 !important;
     }
-    div[data-testid="stForm"] .stButton > button:hover {
-        background-color: #52525b !important;
+    div[data-testid="stForm"] .stButton > button:hover { 
+        background-color: #52525b !important; 
     }
     /* Action Buttons Row */
     .action-btn-container {
@@ -103,7 +103,7 @@ st.markdown(
         border-color: #71717a; 
         color: #ffffff; 
     }
-    /* History List Items */
+    /* History Dropdown Container */
     .history-dropdown-box {
         max-height: 35vh;
         overflow-y: auto;
@@ -130,7 +130,7 @@ st.markdown(
         border-color: #52525b;
         color: #ffffff;
     }
-    /* Dedicated Scroll Container for Conversation Messages */
+    /* Dedicated Scroll Container */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         height: calc(100vh - 340px) !important;
         max-height: calc(100vh - 340px) !important;
@@ -163,7 +163,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 4. Header Section (Top)
+# 4. Header Section
 st.markdown(
     """
     <div style="text-align: center; margin-bottom: 0.2rem;">
@@ -174,7 +174,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 5. Guaranteed In-Place Input Field (Cannot jump to bottom)
+# 5. Form Input Field
 with st.form(key="chat_input_form", clear_on_submit=True):
     col_input, col_submit = st.columns([9, 1])
     with col_input:
@@ -187,7 +187,7 @@ with st.form(key="chat_input_form", clear_on_submit=True):
     with col_submit:
         submitted = st.form_submit_button("↑")
 
-# 6. Action Buttons Row (Directly underneath the input field)
+# 6. Action Buttons Row
 st.markdown('<div class="action-btn-container">', unsafe_allow_html=True)
 col_b1, col_b2 = st.columns(2)
 with col_b1:
@@ -202,7 +202,7 @@ with col_b2:
         st.rerun()
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 7. Collapsible History Dropdown (Expands directly underneath the buttons)
+# 7. Collapsible History Dropdown
 if st.session_state.show_history:
     st.markdown('<div class="history-dropdown-box">', unsafe_allow_html=True)
     st.markdown(
@@ -228,15 +228,7 @@ if st.session_state.show_history:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 8. Dedicated Scrollable Output Window for Active Conversation
-if len(current_messages) > 0:
-    chat_box = st.container(height=500)
-    with chat_box:
-        for msg in current_messages:
-            with st.chat_message(msg["role"]):
-                st.markdown(msg["content"])
-
-# 9. Full WITTALVA System Prompt (Version 1.06)
+# 8. Full WITTALVA System Prompt (Version 1.06)
 SYSTEM_PROMPT = """
 <system_config version="1.06" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
@@ -419,7 +411,7 @@ SYSTEM_PROMPT = """
 </system_config>
 """
 
-# 10. Load API Key securely
+# 9. Load API Key securely
 api_key = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 
 if not api_key:
@@ -428,69 +420,76 @@ if not api_key:
 
 client = genai.Client(api_key=api_key)
 
-# 11. Handle Submission (Enter or Click on Arrow)
-if (submitted and user_prompt) or (user_prompt and len(user_prompt.strip()) > 0):
-    st.session_state.show_history = False
-    now_str = datetime.now().strftime("%d.%m.%Y, %H:%M")
-
-    if not st.session_state.current_chat_id:
-        new_id = str(uuid.uuid4())[:8]
-        title = user_prompt[:35] + "..." if len(user_prompt) > 35 else user_prompt
-        st.session_state.all_chats[new_id] = {
-            "title": title,
-            "timestamp": now_str,
-            "messages": [],
-        }
-        st.session_state.current_chat_id = new_id
-
-    st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
-        {"role": "user", "content": user_prompt}
-    )
-
-    active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
-    contents = []
-    for msg in active_history:
-        role = "user" if msg["role"] == "user" else "model"
-        contents.append(
-            types.Content(
-                role=role,
-                parts=[types.Part(text=msg["content"])],
-            )
-        )
-
-    # Stream response inside dedicated output container
-    chat_box = st.container(height=500)
+# 10. Dedicated Single Output Container
+if len(current_messages) > 0 or (submitted and user_prompt.strip()):
+    chat_box = st.container(height=520)
+    
     with chat_box:
-        for msg in active_history[:-1]:
+        # Render existing messages
+        for msg in current_messages:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
         
-        with st.chat_message("user"):
-            st.markdown(user_prompt)
+        # Process new submission exclusively once
+        if submitted and user_prompt.strip():
+            clean_prompt = user_prompt.strip()
+            now_str = datetime.now().strftime("%d.%m.%Y, %H:%M")
 
-        with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            full_response = ""
+            if not st.session_state.current_chat_id:
+                new_id = str(uuid.uuid4())[:8]
+                title = clean_prompt[:35] + "..." if len(clean_prompt) > 35 else clean_prompt
+                st.session_state.all_chats[new_id] = {
+                    "title": title,
+                    "timestamp": now_str,
+                    "messages": [],
+                }
+                st.session_state.current_chat_id = new_id
 
-            try:
-                response_stream = client.models.generate_content_stream(
-                    model="gemini-3.6-flash",
-                    contents=contents,
-                    config=types.GenerateContentConfig(
-                        system_instruction=SYSTEM_PROMPT,
-                        temperature=0.2,
-                    ),
+            # Save user prompt
+            st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
+                {"role": "user", "content": clean_prompt}
+            )
+
+            # Render current user prompt
+            with st.chat_message("user"):
+                st.markdown(clean_prompt)
+
+            # Prepare API history
+            active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
+            contents = []
+            for msg in active_history:
+                role = "user" if msg["role"] == "user" else "model"
+                contents.append(
+                    types.Content(
+                        role=role,
+                        parts=[types.Part(text=msg["content"])],
+                    )
                 )
-                for chunk in response_stream:
-                    if chunk.text:
-                        full_response += chunk.text
-                        message_placeholder.markdown(full_response + "▌")
-                message_placeholder.markdown(full_response)
-            except Exception as e:
-                st.error(f"API Error: {e}")
 
-    if full_response:
-        st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
-            {"role": "assistant", "content": full_response}
-        )
-        st.rerun()
+            # Stream response
+            with st.chat_message("assistant"):
+                message_placeholder = st.empty()
+                full_response = ""
+
+                try:
+                    response_stream = client.models.generate_content_stream(
+                        model="gemini-3.6-flash",
+                        contents=contents,
+                        config=types.GenerateContentConfig(
+                            system_instruction=SYSTEM_PROMPT,
+                            temperature=0.2,
+                        ),
+                    )
+                    for chunk in response_stream:
+                        if chunk.text:
+                            full_response += chunk.text
+                            message_placeholder.markdown(full_response + "▌")
+                    message_placeholder.markdown(full_response)
+                except Exception as e:
+                    st.error(f"API Error: {e}")
+
+            if full_response:
+                st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
+                    {"role": "assistant", "content": full_response}
+                )
+                st.rerun()
