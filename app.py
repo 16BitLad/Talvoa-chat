@@ -28,11 +28,11 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# 3. Permanent Natural Flow CSS (Completely disables Streamlit bottom-docking)
+# 3. Permanent Natural Flow CSS & Form Styling
 st.markdown(
     """
     <style>
-    /* Dark Theme Background */
+    /* Dark Background */
     .stApp { 
         background-color: #18181b; 
         color: #f4f4f5; 
@@ -42,25 +42,45 @@ st.markdown(
         display: none !important; 
     }
     .block-container { 
-        padding-top: 2.5rem !important; 
+        padding-top: 2rem !important; 
         padding-bottom: 2rem !important; 
         max-width: 750px !important; 
         text-align: center;
     }
-    /* Neutralize Streamlit's hidden bottom container completely */
-    div[data-testid="stBottom"], .stBottom {
-        position: static !important;
-        background: transparent !important;
-        padding: 0 !important;
-        width: 100% !important;
-    }
-    /* Chat Input strictly positioned in natural flow under header */
-    div[data-testid="stChatInput"], .stChatInput {
-        position: static !important;
-        margin: 0.8rem auto 1rem auto !important;
+    /* Sleek Chat Form directly under Header */
+    div[data-testid="stForm"] {
+        background-color: #27272a !important;
+        border: 1px solid #3f3f46 !important;
+        border-radius: 12px !important;
+        padding: 0.35rem 0.6rem !important;
+        margin: 0.5rem auto 1rem auto !important;
         max-width: 750px !important;
+    }
+    div[data-testid="stForm"] .stTextInput input {
+        background-color: transparent !important;
+        color: #f4f4f5 !important;
+        border: none !important;
+        font-size: 1rem !important;
+        padding: 0.5rem 0.2rem !important;
+    }
+    div[data-testid="stForm"] .stTextInput input:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+    /* Submit Arrow Button */
+    div[data-testid="stForm"] .stButton > button {
+        background-color: #3f3f46 !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-size: 1.1rem !important;
+        padding: 0.3rem 0.6rem !important;
+        height: 100% !important;
         width: 100% !important;
-        z-index: 50 !important;
+        margin: 0 !important;
+    }
+    div[data-testid="stForm"] .stButton > button:hover {
+        background-color: #52525b !important;
     }
     /* Action Buttons Row */
     .action-btn-container {
@@ -73,7 +93,7 @@ st.markdown(
         color: #f4f4f5; 
         border: 1px solid #3f3f46;
         border-radius: 8px; 
-        padding: 0.6rem 1rem; 
+        padding: 0.55rem 1rem; 
         font-weight: 500;
         width: 100%;
         transition: all 0.2s ease;
@@ -83,7 +103,7 @@ st.markdown(
         border-color: #71717a; 
         color: #ffffff; 
     }
-    /* History Dropdown Container */
+    /* History List Items */
     .history-dropdown-box {
         max-height: 35vh;
         overflow-y: auto;
@@ -112,8 +132,8 @@ st.markdown(
     }
     /* Dedicated Scroll Container for Conversation Messages */
     div[data-testid="stVerticalBlockBorderWrapper"] {
-        height: calc(100vh - 360px) !important;
-        max-height: calc(100vh - 360px) !important;
+        height: calc(100vh - 340px) !important;
+        max-height: calc(100vh - 340px) !important;
         min-height: 420px !important;
         background-color: #141416 !important;
         border: 1px solid #27272a !important;
@@ -143,7 +163,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 4. Header Section
+# 4. Header Section (Top)
 st.markdown(
     """
     <div style="text-align: center; margin-bottom: 0.2rem;">
@@ -154,8 +174,18 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 5. Chat Input Field (Renders directly underneath the header in natural flow)
-user_prompt = st.chat_input("How can I help?")
+# 5. Guaranteed In-Place Input Field (Cannot jump to bottom)
+with st.form(key="chat_input_form", clear_on_submit=True):
+    col_input, col_submit = st.columns([9, 1])
+    with col_input:
+        user_prompt = st.text_input(
+            "Input",
+            placeholder="How can I help?",
+            label_visibility="collapsed",
+            key="user_text_input",
+        )
+    with col_submit:
+        submitted = st.form_submit_button("↑")
 
 # 6. Action Buttons Row (Directly underneath the input field)
 st.markdown('<div class="action-btn-container">', unsafe_allow_html=True)
@@ -198,7 +228,15 @@ if st.session_state.show_history:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 8. Full WITTALVA System Prompt (Version 1.06)
+# 8. Dedicated Scrollable Output Window for Active Conversation
+if len(current_messages) > 0:
+    chat_box = st.container(height=500)
+    with chat_box:
+        for msg in current_messages:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
+
+# 9. Full WITTALVA System Prompt (Version 1.06)
 SYSTEM_PROMPT = """
 <system_config version="1.06" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
@@ -381,7 +419,7 @@ SYSTEM_PROMPT = """
 </system_config>
 """
 
-# 9. Load API Key securely
+# 10. Load API Key securely
 api_key = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 
 if not api_key:
@@ -390,71 +428,69 @@ if not api_key:
 
 client = genai.Client(api_key=api_key)
 
-# 10. Dedicated Scroll Container for Conversation Messages
-if len(current_messages) > 0 or user_prompt:
-    chat_box = st.container(height=480)
+# 11. Handle Submission (Enter or Click on Arrow)
+if (submitted and user_prompt) or (user_prompt and len(user_prompt.strip()) > 0):
+    st.session_state.show_history = False
+    now_str = datetime.now().strftime("%d.%m.%Y, %H:%M")
+
+    if not st.session_state.current_chat_id:
+        new_id = str(uuid.uuid4())[:8]
+        title = user_prompt[:35] + "..." if len(user_prompt) > 35 else user_prompt
+        st.session_state.all_chats[new_id] = {
+            "title": title,
+            "timestamp": now_str,
+            "messages": [],
+        }
+        st.session_state.current_chat_id = new_id
+
+    st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
+        {"role": "user", "content": user_prompt}
+    )
+
+    active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
+    contents = []
+    for msg in active_history:
+        role = "user" if msg["role"] == "user" else "model"
+        contents.append(
+            types.Content(
+                role=role,
+                parts=[types.Part(text=msg["content"])],
+            )
+        )
+
+    # Stream response inside dedicated output container
+    chat_box = st.container(height=500)
     with chat_box:
-        for msg in current_messages:
+        for msg in active_history[:-1]:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
+        
+        with st.chat_message("user"):
+            st.markdown(user_prompt)
 
-        # Handle active streaming directly inside the scroll box
-        if user_prompt:
-            st.session_state.show_history = False
-            now_str = datetime.now().strftime("%d.%m.%Y, %H:%M")
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            full_response = ""
 
-            if not st.session_state.current_chat_id:
-                new_id = str(uuid.uuid4())[:8]
-                title = user_prompt[:35] + "..." if len(user_prompt) > 35 else user_prompt
-                st.session_state.all_chats[new_id] = {
-                    "title": title,
-                    "timestamp": now_str,
-                    "messages": [],
-                }
-                st.session_state.current_chat_id = new_id
-
-            st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
-                {"role": "user", "content": user_prompt}
-            )
-
-            with st.chat_message("user"):
-                st.markdown(user_prompt)
-
-            active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
-            contents = []
-            for msg in active_history:
-                role = "user" if msg["role"] == "user" else "model"
-                contents.append(
-                    types.Content(
-                        role=role,
-                        parts=[types.Part(text=msg["content"])],
-                    )
+            try:
+                response_stream = client.models.generate_content_stream(
+                    model="gemini-3.6-flash",
+                    contents=contents,
+                    config=types.GenerateContentConfig(
+                        system_instruction=SYSTEM_PROMPT,
+                        temperature=0.2,
+                    ),
                 )
+                for chunk in response_stream:
+                    if chunk.text:
+                        full_response += chunk.text
+                        message_placeholder.markdown(full_response + "▌")
+                message_placeholder.markdown(full_response)
+            except Exception as e:
+                st.error(f"API Error: {e}")
 
-            with st.chat_message("assistant"):
-                message_placeholder = st.empty()
-                full_response = ""
-
-                try:
-                    response_stream = client.models.generate_content_stream(
-                        model="gemini-3.6-flash",
-                        contents=contents,
-                        config=types.GenerateContentConfig(
-                            system_instruction=SYSTEM_PROMPT,
-                            temperature=0.2,
-                        ),
-                    )
-                    for chunk in response_stream:
-                        if chunk.text:
-                            full_response += chunk.text
-                            message_placeholder.markdown(full_response + "▌")
-                    message_placeholder.markdown(full_response)
-                except Exception as e:
-                    st.error(f"API Error: {e}")
-
-            if full_response:
-                st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
-                    {"role": "assistant", "content": full_response}
-                )
-                st.rerun()
-                
+    if full_response:
+        st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
+            {"role": "assistant", "content": full_response}
+        )
+        st.rerun()
