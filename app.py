@@ -61,9 +61,9 @@ if st.session_state.current_chat_id and st.session_state.current_chat_id in st.s
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
 # Dynamische Hoehenberechnung fuer den unteren Bildschirmrand
-chat_window_height = "calc(100vh - 470px)" if st.session_state.show_history else "calc(100vh - 210px)"
+chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 210px)"
 
-# 4. Custom CSS: Avatare ausblenden, Bubble-Positionierung & Full-Height
+# 4. Custom CSS: Saubere Einzel-Rahmen, Avatare ausblenden & Full-Height
 st.markdown(
     f"""
     <style>
@@ -138,7 +138,20 @@ st.markdown(
         border-color: #71717a; 
         color: #ffffff; 
     }}
-    /* History Dropdown Item Styling */
+
+    /* ==================================================================== */
+    /* 1. HISTORY DROPDOWN: KLARE, SCHLANKE BOX OHNE VERSCHACHTELUNG       */
+    /* ==================================================================== */
+    .history-dropdown-box {{
+        max-height: 240px;
+        overflow-y: auto;
+        background-color: #1c1c20;
+        border: 1px solid #333338;
+        border-radius: 10px;
+        padding: 0.8rem;
+        margin-bottom: 0.6rem;
+        text-align: left;
+    }}
     .history-item .stButton > button {{
         background-color: #202024;
         border: 1px solid #2e2e33;
@@ -157,7 +170,7 @@ st.markdown(
     }}
 
     /* ==================================================================== */
-    /* 1. EMOJIS / AVATARE RESTLOS AUSBLENDEN                              */
+    /* 2. EMOJIS / AVATARE RESTLOS AUSBLENDEN                              */
     /* ==================================================================== */
     [data-testid^="stChatMessageAvatar"],
     div[data-testid="stChatMessageAvatar"] {{
@@ -165,7 +178,7 @@ st.markdown(
     }}
 
     /* ==================================================================== */
-    /* 2. CHAT-NACHRICHTEN: GRUNDFORMAT & BUBBLE-AUSRICHTUNG               */
+    /* 3. CHAT-NACHRICHTEN: BUBBLE-DESIGN                                  */
     /* ==================================================================== */
     div[data-testid="stChatMessage"] {{
         padding: 0.6rem 0.9rem !important;
@@ -176,7 +189,7 @@ st.markdown(
         max-width: 85% !important;
     }}
 
-    /* INPUTS (User): Linksbuendige Bubble & linksbuendiger Text */
+    /* INPUTS (User): Linksbuendige Bubble */
     div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {{
         background-color: #27272a !important;
         border: 1px solid #3f3f46 !important;
@@ -190,7 +203,7 @@ st.markdown(
         text-align: left !important;
     }}
 
-    /* OUTPUTS (Assistant): Rechtsbuendige Bubble, aber TEXT INNEN LINKSBUENDIG */
+    /* OUTPUTS (Assistant): Rechtsbuendige Bubble, Text innen linksbuendig */
     div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {{
         background-color: #1c1c20 !important;
         border: 1px solid #333338 !important;
@@ -207,13 +220,10 @@ st.markdown(
     }}
 
     /* ==================================================================== */
-    /* 3. DIALOGFENSTER: GARANTIERT BIS ZUM UNTEREN WEBFENSTERRAND         */
+    /* 4. DIALOGFENSTER: VOLLSTAENDIG BIS ZUM UNTEREN WEBFENSTERRAND       */
     /* ==================================================================== */
-    /* Zielgenauer Angriff ueber die Streamlit-Key-Klasse .st-key-chat_box */
-    .st-key-chat_box,
-    .st-key-chat_box > div,
-    .st-key-chat_box [data-testid="stVerticalBlockBorderWrapper"],
-    .st-key-chat_box div[style*="height"] {{
+    /* Exakt EIN Rahmen auf oberster Ebene ohne Schachtel-Effekt */
+    div[data-testid="stVerticalBlockBorderWrapper"] {{
         height: {chat_window_height} !important;
         min-height: {chat_window_height} !important;
         max-height: {chat_window_height} !important;
@@ -224,25 +234,10 @@ st.markdown(
         overflow-y: auto !important;
         margin-bottom: 0 !important;
     }}
-
-    /* Innerer Scroll-Container auf 100% zwingen */
-    .st-key-chat_box div[data-testid="stVerticalBlock"] {{
+    div[data-testid="stVerticalBlockBorderWrapper"] > div[data-testid="stVerticalBlock"] {{
         height: 100% !important;
-        max-height: 100% !important;
-    }}
-
-    /* Das History-Dropdown bleibt separat kompakt bei 240px */
-    .st-key-history_box,
-    .st-key-history_box > div,
-    .st-key-history_box [data-testid="stVerticalBlockBorderWrapper"],
-    .st-key-history_box div[style*="height"] {{
-        height: 240px !important;
-        min-height: 240px !important;
-        max-height: 240px !important;
-        background-color: #1c1c20 !important;
-        border: 1px solid #333338 !important;
-        border-radius: 10px !important;
-        margin-bottom: 0.5rem !important;
+        border: none !important;
+        background: transparent !important;
     }}
 
     /* Custom Scrollbars */
@@ -308,32 +303,34 @@ with col_b2:
     )
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 8. Collapsible History Dropdown (Mit festem Key: history_box)
+# 8. Collapsible History Dropdown (Schlanke Original-Formation ohne BorderWrapper)
 if st.session_state.show_history:
-    with st.container(height=240, key="history_box"):
-        st.markdown(
-            """
-            <p style="color: #71717a; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; font-weight: 600;">
-                Previous Conversations
-            </p>
-            """,
-            unsafe_allow_html=True,
-        )
+    st.markdown('<div class="history-dropdown-box">', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <p style="color: #71717a; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; font-weight: 600;">
+            Previous Conversations
+        </p>
+        """,
+        unsafe_allow_html=True,
+    )
 
-        if len(st.session_state.all_chats) == 0:
-            st.markdown("<p style='color: #71717a; font-size: 0.85rem; margin: 0;'>No previous conversations stored yet.</p>", unsafe_allow_html=True)
-        else:
-            for c_id, c_data in reversed(list(st.session_state.all_chats.items())):
-                st.markdown('<div class="history-item">', unsafe_allow_html=True)
-                btn_label = f"💬 {c_data['title']}   •   🕒 {c_data['timestamp']}"
-                st.button(
-                    btn_label, 
-                    key=f"hist_select_{c_id}", 
-                    use_container_width=True,
-                    on_click=select_chat,
-                    args=(c_id,)
-                )
-                st.markdown('</div>', unsafe_allow_html=True)
+    if len(st.session_state.all_chats) == 0:
+        st.markdown("<p style='color: #71717a; font-size: 0.85rem; margin: 0;'>No previous conversations stored yet.</p>", unsafe_allow_html=True)
+    else:
+        for c_id, c_data in reversed(list(st.session_state.all_chats.items())):
+            st.markdown('<div class="history-item">', unsafe_allow_html=True)
+            btn_label = f"💬 {c_data['title']}   •   🕒 {c_data['timestamp']}"
+            st.button(
+                btn_label, 
+                key=f"hist_select_{c_id}", 
+                use_container_width=True,
+                on_click=select_chat,
+                args=(c_id,)
+            )
+            st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # 9. Full WITTALVA System Prompt (Version 1.10)
 SYSTEM_PROMPT = """
@@ -708,8 +705,8 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
         )
     ]
 
-    # Gezielt ansteuerbarer Chat-Container mit festem key="chat_box"
-    chat_box = st.container(height=500, key="chat_box")
+    # Reiner Container ohne starres height=500: CSS dehnt sauber auf volle Bildschirmhoehe
+    chat_box = st.container(border=True)
     with chat_box:
         for msg in active_history[:-1]:
             with st.chat_message(msg["role"]):
@@ -788,8 +785,8 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
 
 # 12. Render Persistent Output Window if not actively submitting
 elif len(current_messages) > 0:
-    # Gezielt ansteuerbarer Chat-Container mit festem key="chat_box"
-    chat_box = st.container(height=500, key="chat_box")
+    # Reiner Container ohne starres height=500: CSS dehnt sauber auf volle Bildschirmhoehe
+    chat_box = st.container(border=True)
     with chat_box:
         for msg in current_messages:
             with st.chat_message(msg["role"]):
