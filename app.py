@@ -28,123 +28,183 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# 3. Custom Styling & Dark Theme
-st.markdown(
-    """
-    <style>
-    .stApp { 
-        background-color: #18181b; 
-        color: #f4f4f5; 
-    }
-    header { visibility: hidden; }
-    footer { visibility: hidden; }
-    .block-container { 
-        padding-top: 5vh !important; 
-        padding-bottom: 120px !important; 
-        max-width: 750px !important; 
-    }
-    /* Fixed bottom input field */
-    .stChatInput {
-        position: fixed !important; 
-        bottom: 20px !important; 
-        left: 50% !important; 
-        transform: translateX(-50%) !important;
-        max-width: 750px !important; 
-        width: 90% !important; 
-        z-index: 100 !important;
-    }
-    /* Action Buttons */
-    .action-btn-container .stButton > button {
-        background-color: #27272a; 
-        color: #f4f4f5; 
-        border: 1px solid #3f3f46;
-        border-radius: 8px; 
-        padding: 0.6rem 1rem; 
-        font-weight: 500;
-        transition: all 0.2s ease;
-    }
-    .action-btn-container .stButton > button:hover { 
-        background-color: #3f3f46; 
-        border-color: #71717a; 
-        color: #ffffff; 
-    }
-    /* History List items */
-    .history-item .stButton > button {
-        background-color: #202024;
-        border: 1px solid #2e2e33;
-        color: #d4d4d8;
-        text-align: left !important;
-        justify-content: flex-start !important;
-        padding: 0.7rem 1rem;
-        margin-bottom: 0.4rem;
-        font-size: 0.9rem;
-    }
-    .history-item .stButton > button:hover {
-        background-color: #2a2a30;
-        border-color: #52525b;
-        color: #ffffff;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-# 4. Header Section
-st.markdown(
-    """
-    <div style="text-align: center; margin-bottom: 1.5rem;">
-        <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 0.2rem; color: #ffffff;">WITTALVA</h1>
-        <p style="color: #a1a1aa; font-size: 1rem; margin-top: 0;">Your fellow guide and advisor through day-to-day matters</p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-# 5. Centered Action Buttons Row
-st.markdown('<div class="action-btn-container">', unsafe_allow_html=True)
-col_btn1, col_btn2 = st.columns(2)
-
-with col_btn1:
-    if st.button("➕ Open new chat", use_container_width=True, key="btn_new_chat"):
-        st.session_state.current_chat_id = None
-        st.session_state.show_history = False
-        st.rerun()
-
-with col_btn2:
-    hist_label = "▲ Hide history" if st.session_state.show_history else "📜 Chat history"
-    if st.button(hist_label, use_container_width=True, key="btn_toggle_history"):
-        st.session_state.show_history = not st.session_state.show_history
-        st.rerun()
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# 6. Collapsible Chat History List (Expands underneath buttons and pushes active chat down)
-if st.session_state.show_history:
+# 3. Dynamic Styling: Centered on Empty Home, Docked Bottom on Active Chat
+if len(current_messages) == 0:
     st.markdown(
         """
-        <div style="background-color: #1c1c20; border: 1px solid #333338; border-radius: 10px; padding: 1.2rem; margin-top: 0.8rem; margin-bottom: 1.5rem;">
-            <p style="color: #71717a; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.8rem; font-weight: 600;">
-                Previous Conversations
-            </p>
+        <style>
+        .stApp { 
+            background-color: #18181b; 
+            color: #f4f4f5; 
+        }
+        header { visibility: hidden; }
+        footer { visibility: hidden; }
+        .block-container { 
+            padding-top: 14vh !important; 
+            max-width: 750px !important; 
+            text-align: center; 
+        }
+        /* Centered input box on home screen */
+        .stChatInput {
+            position: fixed !important; 
+            top: 38% !important; 
+            bottom: auto !important;
+            left: 50% !important; 
+            transform: translate(-50%, -50%) !important;
+            max-width: 750px !important; 
+            width: 90% !important; 
+            z-index: 100 !important;
+        }
+        /* Action buttons container directly below the centered input */
+        .home-actions-row { 
+            margin-top: 9rem !important; 
+            width: 100% !important;
+        }
+        .action-btn-container .stButton > button {
+            background-color: #27272a; 
+            color: #f4f4f5; 
+            border: 1px solid #3f3f46;
+            border-radius: 8px; 
+            padding: 0.6rem 1rem; 
+            font-weight: 500;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+        .action-btn-container .stButton > button:hover { 
+            background-color: #3f3f46; 
+            border-color: #71717a; 
+            color: #ffffff; 
+        }
+        /* History list items */
+        .history-item .stButton > button {
+            background-color: #202024;
+            border: 1px solid #2e2e33;
+            color: #d4d4d8;
+            text-align: left !important;
+            justify-content: flex-start !important;
+            padding: 0.7rem 1rem;
+            margin-bottom: 0.4rem;
+            font-size: 0.9rem;
+            border-radius: 6px;
+        }
+        .history-item .stButton > button:hover {
+            background-color: #2a2a30;
+            border-color: #52525b;
+            color: #ffffff;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+else:
+    st.markdown(
+        """
+        <style>
+        .stApp { 
+            background-color: #18181b; 
+            color: #f4f4f5; 
+        }
+        header { visibility: hidden; }
+        footer { visibility: hidden; }
+        .block-container { 
+            padding-top: 2rem !important; 
+            padding-bottom: 120px !important; 
+            max-width: 750px !important; 
+        }
+        /* Fixed bottom input field during active chat */
+        .stChatInput {
+            position: fixed !important; 
+            bottom: 25px !important; 
+            top: auto !important;
+            left: 50% !important; 
+            transform: translateX(-50%) !important;
+            max-width: 750px !important; 
+            width: 90% !important; 
+            z-index: 100 !important;
+        }
+        .nav-button > button {
+            background-color: transparent; 
+            border: 1px solid #3f3f46; 
+            color: #a1a1aa;
+            border-radius: 6px; 
+            padding: 0.3rem 0.8rem; 
+            margin-bottom: 1rem;
+        }
+        .nav-button > button:hover { 
+            background-color: #27272a; 
+            color: #ffffff; 
+        }
+        </style>
         """,
         unsafe_allow_html=True,
     )
 
-    if len(st.session_state.all_chats) == 0:
-        st.markdown("<p style='color: #71717a; font-size: 0.9rem; margin: 0;'>No previous conversations stored yet.</p>", unsafe_allow_html=True)
-    else:
-        for c_id, c_data in reversed(list(st.session_state.all_chats.items())):
-            st.markdown('<div class="history-item">', unsafe_allow_html=True)
-            btn_label = f"💬 {c_data['title']}   •   🕒 {c_data['timestamp']}"
-            if st.button(btn_label, key=f"hist_select_{c_id}", use_container_width=True):
-                st.session_state.current_chat_id = c_id
-                st.session_state.show_history = False
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
+# 4. Header Section
+if len(current_messages) == 0:
+    st.markdown(
+        """
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 0.2rem; color: #ffffff;">WITTALVA</h1>
+            <p style="color: #a1a1aa; font-size: 1rem; margin-top: 0;">Your fellow guide and advisor through day-to-day matters</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+else:
+    col1, col2 = st.columns([6, 2])
+    with col1:
+        st.markdown("<h3 style='margin: 0; color: #ffffff;'>WITTALVA</h3>", unsafe_allow_html=True)
+    with col2:
+        st.markdown('<div class="nav-button">', unsafe_allow_html=True)
+        if st.button("➕ Open new chat", key="btn_nav_new"):
+            st.session_state.current_chat_id = None
+            st.session_state.show_history = False
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)
+# 5. Buttons Row on Home Screen
+if len(current_messages) == 0:
+    st.markdown('<div class="home-actions-row action-btn-container">', unsafe_allow_html=True)
+    col_b1, col_b2 = st.columns(2)
+    with col_b1:
+        if st.button("➕ Open new chat", use_container_width=True, key="btn_home_new"):
+            st.session_state.current_chat_id = None
+            st.session_state.show_history = False
+            st.rerun()
+    with col_b2:
+        hist_label = "▲ Hide history" if st.session_state.show_history else "📜 Chat history"
+        if st.button(hist_label, use_container_width=True, key="btn_home_hist"):
+            st.session_state.show_history = not st.session_state.show_history
+            st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# 7. JavaScript: Auto-collapse history when user clicks/focuses into the chat input
+    # 6. Collapsible History List
+    if st.session_state.show_history:
+        st.markdown(
+            """
+            <div style="background-color: #1c1c20; border: 1px solid #333338; border-radius: 10px; padding: 1.2rem; margin-top: 1rem; margin-bottom: 1.5rem; text-align: left;">
+                <p style="color: #71717a; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.8rem; font-weight: 600;">
+                    Previous Conversations
+                </p>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        if len(st.session_state.all_chats) == 0:
+            st.markdown("<p style='color: #71717a; font-size: 0.9rem; margin: 0;'>No previous conversations stored yet.</p>", unsafe_allow_html=True)
+        else:
+            for c_id, c_data in reversed(list(st.session_state.all_chats.items())):
+                st.markdown('<div class="history-item">', unsafe_allow_html=True)
+                btn_label = f"💬 {c_data['title']}   •   🕒 {c_data['timestamp']}"
+                if st.button(btn_label, key=f"hist_select_{c_id}", use_container_width=True):
+                    st.session_state.current_chat_id = c_id
+                    st.session_state.show_history = False
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+# 7. JavaScript: Auto-collapse history when user focuses into chat input
 st.components.v1.html(
     """
     <script>
@@ -152,7 +212,6 @@ st.components.v1.html(
     const inputArea = doc.querySelector('textarea[data-testid="stChatInputTextArea"]');
     if (inputArea) {
         inputArea.addEventListener('focus', function() {
-            // Find hide history button if open and trigger close
             const buttons = Array.from(doc.querySelectorAll('button'));
             const hideBtn = buttons.find(el => el.innerText.includes('Hide history'));
             if (hideBtn) {
@@ -165,7 +224,7 @@ st.components.v1.html(
     height=0,
 )
 
-# 8. Render Active Conversation Messages (Pushed down if history is open)
+# 8. Render Active Conversation Messages
 for msg in current_messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
@@ -363,12 +422,10 @@ if not api_key:
 client = genai.Client(api_key=api_key)
 
 # 11. Handle Chat Input
-if user_prompt := st.chat_input("What's your matter?"):
-    # Automatically collapse the history list when typing/sending
+if user_prompt := st.chat_input("How can I help?"):
     st.session_state.show_history = False
     now_str = datetime.now().strftime("%d.%m.%Y, %H:%M")
 
-    # Initialize new chat session if none active
     if not st.session_state.current_chat_id:
         new_id = str(uuid.uuid4())[:8]
         title = user_prompt[:35] + "..." if len(user_prompt) > 35 else user_prompt
@@ -379,12 +436,10 @@ if user_prompt := st.chat_input("What's your matter?"):
         }
         st.session_state.current_chat_id = new_id
 
-    # Append user prompt
     st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
         {"role": "user", "content": user_prompt}
     )
 
-    # Prepare chat payload
     active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
     contents = []
     for msg in active_history:
@@ -396,7 +451,6 @@ if user_prompt := st.chat_input("What's your matter?"):
             )
         )
 
-    # Stream response
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
         full_response = ""
@@ -418,7 +472,6 @@ if user_prompt := st.chat_input("What's your matter?"):
         except Exception as e:
             st.error(f"Error: {e}")
 
-    # Save assistant response
     if full_response:
         st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
             {"role": "assistant", "content": full_response}
