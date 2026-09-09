@@ -28,45 +28,63 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# 3. Permanent Static Layout & Full-Height Scroll Window Styling
+# 3. Viewport Lock: Completely disables outer page scrolling to keep UI 100% static
 st.markdown(
     """
     <style>
-    .stApp { 
-        background-color: #18181b; 
-        color: #f4f4f5; 
+    /* Freeze outer window - no jumping or page scrolling */
+    html, body, [data-testid="stAppViewContainer"], .main, .stMain {
+        overflow: hidden !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        background-color: #18181b !important;
+        color: #f4f4f5 !important;
     }
-    header { visibility: hidden; }
-    footer { visibility: hidden; }
+    header, footer { 
+        visibility: hidden !important; 
+        display: none !important; 
+    }
     .block-container { 
-        padding-top: 2rem !important; 
-        padding-bottom: 1.5rem !important; 
+        padding-top: 1.5rem !important; 
+        padding-bottom: 0 !important; 
         max-width: 750px !important; 
         text-align: center;
+        height: 100vh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
     }
-    /* Fixed Input Box permanently anchored below Header at top */
+    /* Fixed Title Area */
+    .title-area {
+        margin-bottom: 0.4rem;
+        flex-shrink: 0;
+    }
+    /* Fixed Chat Input in static flow below title */
     div[data-testid="stChatInput"], .stChatInput {
-        position: fixed !important; 
-        top: 175px !important; 
+        position: relative !important; 
+        top: auto !important;
         bottom: auto !important;
-        left: 50% !important; 
-        transform: translateX(-50%) !important;
+        left: auto !important;
+        transform: none !important;
+        margin: 0.4rem auto 0.6rem auto !important;
         max-width: 750px !important; 
-        width: 90% !important; 
-        z-index: 100 !important;
+        width: 100% !important; 
+        z-index: 50 !important;
+        flex-shrink: 0;
     }
-    /* Action Buttons Row permanently anchored directly below the input field */
+    /* Action Buttons Row */
     .action-btn-container {
-        margin-top: 130px !important;
-        margin-bottom: 1rem !important;
+        margin-top: 0.2rem !important;
+        margin-bottom: 0.8rem !important;
         width: 100% !important;
+        flex-shrink: 0;
     }
     .action-btn-container .stButton > button {
         background-color: #27272a; 
         color: #f4f4f5; 
         border: 1px solid #3f3f46;
         border-radius: 8px; 
-        padding: 0.6rem 1rem; 
+        padding: 0.5rem 1rem; 
         font-weight: 500;
         width: 100%;
         transition: all 0.2s ease;
@@ -76,16 +94,27 @@ st.markdown(
         border-color: #71717a; 
         color: #ffffff; 
     }
-    /* History List Items */
+    /* History Dropdown Box with internal scroll */
+    .history-dropdown-box {
+        max-height: 35vh;
+        overflow-y: auto;
+        background-color: #1c1c20;
+        border: 1px solid #333338;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.8rem;
+        text-align: left;
+        flex-shrink: 0;
+    }
     .history-item .stButton > button {
         background-color: #202024;
         border: 1px solid #2e2e33;
         color: #d4d4d8;
         text-align: left !important;
         justify-content: flex-start !important;
-        padding: 0.7rem 1rem;
-        margin-bottom: 0.4rem;
-        font-size: 0.9rem;
+        padding: 0.6rem 0.9rem;
+        margin-bottom: 0.3rem;
+        font-size: 0.85rem;
         border-radius: 6px;
     }
     .history-item .stButton > button:hover {
@@ -93,17 +122,18 @@ st.markdown(
         border-color: #52525b;
         color: #ffffff;
     }
-    /* Dedicated Scroll Container dynamically fills remaining vertical space down to bottom */
+    /* Output Window dynamically fills all remaining vertical space */
     div[data-testid="stVerticalBlockBorderWrapper"] {
-        height: calc(100vh - 290px) !important;
-        max-height: calc(100vh - 290px) !important;
-        min-height: 450px !important;
+        flex-grow: 1 !important;
+        min-height: 250px !important;
+        max-height: calc(100vh - 280px) !important;
         background-color: #141416 !important;
         border: 1px solid #27272a !important;
         border-radius: 12px !important;
         padding: 0.8rem !important;
+        overflow-y: auto !important;
     }
-    /* Sleek Custom Scrollbar */
+    /* Sleek Custom Scrollbars */
     ::-webkit-scrollbar {
         width: 6px;
     }
@@ -117,7 +147,6 @@ st.markdown(
     ::-webkit-scrollbar-thumb:hover {
         background: #52525b;
     }
-    /* Chat message alignment */
     .stChatMessage {
         text-align: left !important;
     }
@@ -126,18 +155,18 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 4. Header Section (Static Top)
+# 4. Header Section
 st.markdown(
     """
-    <div style="text-align: center; margin-bottom: 0.8rem;">
-        <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 0.2rem; color: #ffffff;">WITTALVA</h1>
-        <p style="color: #a1a1aa; font-size: 1rem; margin-top: 0;">Your fellow guide and advisor through day-to-day matters</p>
+    <div class="title-area">
+        <h1 style="font-size: 2.4rem; font-weight: 700; margin-bottom: 0.1rem; color: #ffffff;">WITTALVA</h1>
+        <p style="color: #a1a1aa; font-size: 0.95rem; margin-top: 0;">Your fellow guide and advisor through day-to-day matters</p>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-# 5. Buttons Row (Permanently placed one row directly below the input field)
+# 5. Buttons Row (Directly below the input field)
 st.markdown('<div class="action-btn-container">', unsafe_allow_html=True)
 col_b1, col_b2 = st.columns(2)
 with col_b1:
@@ -152,20 +181,20 @@ with col_b2:
         st.rerun()
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 6. Collapsible History List (Renders directly underneath the buttons)
+# 6. Collapsible History Dropdown (Scrolls internally without shifting the page)
 if st.session_state.show_history:
+    st.markdown('<div class="history-dropdown-box">', unsafe_allow_html=True)
     st.markdown(
         """
-        <div style="background-color: #1c1c20; border: 1px solid #333338; border-radius: 10px; padding: 1.2rem; margin-bottom: 1.2rem; text-align: left;">
-            <p style="color: #71717a; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.8rem; font-weight: 600;">
-                Previous Conversations
-            </p>
+        <p style="color: #71717a; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; font-weight: 600;">
+            Previous Conversations
+        </p>
         """,
         unsafe_allow_html=True,
     )
 
     if len(st.session_state.all_chats) == 0:
-        st.markdown("<p style='color: #71717a; font-size: 0.9rem; margin: 0;'>No previous conversations stored yet.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #71717a; font-size: 0.85rem; margin: 0;'>No previous conversations stored yet.</p>", unsafe_allow_html=True)
     else:
         for c_id, c_data in reversed(list(st.session_state.all_chats.items())):
             st.markdown('<div class="history-item">', unsafe_allow_html=True)
@@ -176,37 +205,17 @@ if st.session_state.show_history:
                 st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# 7. JavaScript: Auto-collapse history when user focuses into chat input
-st.components.v1.html(
-    """
-    <script>
-    const doc = window.parent.document;
-    const inputArea = doc.querySelector('textarea[data-testid="stChatInputTextArea"]');
-    if (inputArea) {
-        inputArea.addEventListener('focus', function() {
-            const buttons = Array.from(doc.querySelectorAll('button'));
-            const hideBtn = buttons.find(el => el.innerText.includes('Hide history'));
-            if (hideBtn) {
-                hideBtn.click();
-            }
-        });
-    }
-    </script>
-    """,
-    height=0,
-)
-
-# 8. Dedicated Full-Height Scrollable Output Window for Active Conversation
+# 7. Dedicated Scrollable Output Window for Active Conversation
 if len(current_messages) > 0:
-    chat_box = st.container(height=600)
+    chat_box = st.container(height=520)
     with chat_box:
         for msg in current_messages:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
 
-# 9. Full WITTALVA System Prompt (Version 1.06)
+# 8. Full WITTALVA System Prompt (Version 1.06)
 SYSTEM_PROMPT = """
 <system_config version="1.06" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
@@ -389,7 +398,7 @@ SYSTEM_PROMPT = """
 </system_config>
 """
 
-# 10. Load API Key securely
+# 9. Load API Key securely
 api_key = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 
 if not api_key:
@@ -398,7 +407,7 @@ if not api_key:
 
 client = genai.Client(api_key=api_key)
 
-# 11. Handle Chat Input
+# 10. Handle Chat Input
 if user_prompt := st.chat_input("How can I help?"):
     st.session_state.show_history = False
     now_str = datetime.now().strftime("%d.%m.%Y, %H:%M")
@@ -429,8 +438,8 @@ if user_prompt := st.chat_input("How can I help?"):
             )
         )
 
-    # Render dedicated live stream inside the scrollable container
-    chat_box = st.container(height=600)
+    # Stream response inside dedicated output container
+    chat_box = st.container(height=520)
     with chat_box:
         for msg in active_history[:-1]:
             with st.chat_message(msg["role"]):
