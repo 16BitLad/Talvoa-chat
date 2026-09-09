@@ -62,84 +62,126 @@ if st.session_state.current_chat_id and st.session_state.current_chat_id in st.s
 # Dynamische Hoehenberechnung
 chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 210px)"
 
-# 4. Custom CSS: Saubere Isolierung ohne toxische Wildcards
+# 4. Custom CSS: Mobile-Optimierung & sauberes Dark-Theme (v1.11)
 st.markdown(
     f"""
     <style>
     /* Dark Theme Background */
     .stApp {{ 
-        background-color: #18181b; 
-        color: #f4f4f5; 
+        background-color: #18181b !important; 
+        color: #f4f4f5 !important; 
     }}
     header, footer {{ 
         visibility: hidden !important; 
         display: none !important; 
     }}
     .block-container {{ 
-        padding-top: 0.5rem !important; 
+        padding-top: 1rem !important; 
         padding-bottom: 0 !important; 
         max-width: 750px !important; 
         text-align: center;
     }}
-    /* Sleek Chat Form directly under Header */
+
+    /* ==================================================================== */
+    /* CHAT FORM: EINGABEZEILE + ARROW BUTTON BLEIBEN NEBENEINANDER         */
+    /* ==================================================================== */
     div[data-testid="stForm"] {{
         background-color: #27272a !important;
         border: 1px solid #3f3f46 !important;
         border-radius: 12px !important;
-        padding: 0.25rem 0.6rem !important;
-        margin: 0.25rem auto 0.5rem auto !important;
-        max-width: 750px !important;
+        padding: 0.3rem 0.5rem !important;
+        margin: 0.4rem auto 0.6rem auto !important;
     }}
-    div[data-testid="stForm"] .stTextInput input {{
+    /* Verhindert den Umbruch auf Mobilgeräten */
+    div[data-testid="stForm"] [data-testid="stHorizontalBlock"] {{
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 0.4rem !important;
+    }}
+    div[data-testid="stForm"] [data-testid="stHorizontalBlock"] > div:first-child {{
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }}
+    div[data-testid="stForm"] [data-testid="stHorizontalBlock"] > div:last-child {{
+        flex: 0 0 42px !important;
+        width: 42px !important;
+        min-width: 42px !important;
+    }}
+    /* Eingabefeld transparent machen & weiße Überlagerung entfernen */
+    div[data-testid="stForm"] div[data-baseweb="base-input"],
+    div[data-testid="stForm"] div[data-baseweb="input"],
+    div[data-testid="stForm"] input {{
         background-color: transparent !important;
         color: #f4f4f5 !important;
         border: none !important;
-        font-size: 1rem !important;
-        padding: 0.4rem 0.2rem !important;
-    }}
-    div[data-testid="stForm"] .stTextInput input:focus {{
-        outline: none !important;
         box-shadow: none !important;
+        font-size: 0.95rem !important;
+        padding: 0.3rem 0.2rem !important;
     }}
-    /* Submit Arrow Button */
+    /* Sende-Button Pfeil */
     div[data-testid="stForm"] .stButton > button {{
         background-color: #3f3f46 !important;
         color: #ffffff !important;
         border: none !important;
         border-radius: 8px !important;
         font-size: 1.1rem !important;
-        padding: 0.3rem 0.6rem !important;
-        height: 100% !important;
+        height: 38px !important;
         width: 100% !important;
-        margin: 0 !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }}
     div[data-testid="stForm"] .stButton > button:hover {{ 
         background-color: #52525b !important; 
     }}
-    /* Action Buttons Row */
-    .action-btn-container {{
-        margin-top: 0 !important;
-        margin-bottom: 0.5rem !important;
+
+    /* ==================================================================== */
+    /* ACTION BUTTONS: SCHMALER, ZENTRIERT & EXAKT GLEICH GROSS             */
+    /* ==================================================================== */
+    div[data-testid="stHorizontalBlock"]:not(div[data-testid="stForm"] *) {{
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        justify-content: center !important;
+        align-items: center !important;
+        max-width: 340px !important;
         width: 100% !important;
+        margin: 0.2rem auto 0.6rem auto !important;
+        gap: 0.5rem !important;
     }}
-    .action-btn-container .stButton > button {{
-        background-color: #27272a; 
-        color: #f4f4f5; 
-        border: 1px solid #3f3f46;
-        border-radius: 8px; 
-        padding: 0.45rem 1rem; 
-        font-weight: 500; 
-        width: 100%;
-        transition: all 0.2s ease;
+    div[data-testid="stHorizontalBlock"]:not(div[data-testid="stForm"] *) > div[data-testid="stColumn"] {{
+        flex: 1 1 0 !important;
+        width: 50% !important;
+        min-width: 0 !important;
     }}
-    .action-btn-container .stButton > button:hover {{ 
-        background-color: #3f3f46; 
-        border-color: #71717a; 
-        color: #ffffff; 
+    div[data-testid="stHorizontalBlock"]:not(div[data-testid="stForm"] *) .stButton > button {{
+        background-color: #27272a !important; 
+        color: #f4f4f5 !important; 
+        border: 1px solid #3f3f46 !important;
+        border-radius: 8px !important; 
+        padding: 0.35rem 0.5rem !important; 
+        font-weight: 500 !important; 
+        font-size: 0.82rem !important;
+        white-space: nowrap !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        transition: all 0.2s ease !important;
+    }}
+    div[data-testid="stHorizontalBlock"]:not(div[data-testid="stForm"] *) .stButton > button:hover {{ 
+        background-color: #3f3f46 !important; 
+        border-color: #71717a !important; 
+        color: #ffffff !important; 
     }}
 
     /* ==================================================================== */
-    /* 1. HISTORY DROPDOWN: REINE CONTAINER-KLASSE OHNE DOPPELRAHMEN       */
+    /* HISTORY DROPDOWN BOX                                                 */
     /* ==================================================================== */
     .history-dropdown-box {{
         max-height: 220px;
@@ -152,45 +194,41 @@ st.markdown(
         text-align: left;
     }}
     .history-item .stButton > button {{
-        background-color: #202024;
-        border: 1px solid #2e2e33;
-        color: #d4d4d8;
+        background-color: #202024 !important;
+        border: 1px solid #2e2e33 !important;
+        color: #d4d4d8 !important;
         text-align: left !important;
         justify-content: flex-start !important;
-        padding: 0.5rem 0.8rem;
-        margin-bottom: 0.3rem;
-        font-size: 0.85rem;
-        border-radius: 6px;
+        padding: 0.5rem 0.8rem !important;
+        margin-bottom: 0.3rem !important;
+        font-size: 0.85rem !important;
+        border-radius: 6px !important;
     }}
     .history-item .stButton > button:hover {{
-        background-color: #2a2a30;
-        border-color: #52525b;
-        color: #ffffff;
+        background-color: #2a2a30 !important;
+        border-color: #52525b !important;
+        color: #ffffff !important;
     }}
 
-    /* ==================================================================== */
-    /* 2. EMOJIS / AVATARE RESTLOS AUSBLENDEN                              */
-    /* ==================================================================== */
+    /* Emojis / Avatare ausblenden */
     [data-testid^="stChatMessageAvatar"],
     div[data-testid="stChatMessageAvatar"] {{
         display: none !important;
     }}
 
-    /* ==================================================================== */
-    /* 3. CHAT-NACHRICHTEN: BUBBLE-DESIGN                                  */
-    /* ==================================================================== */
+    /* Chat Bubbles */
     div[data-testid="stChatMessage"] {{
         padding: 0.6rem 0.9rem !important;
         margin-bottom: 0.6rem !important;
         border-radius: 12px !important;
         gap: 0 !important;
         width: fit-content !important;
-        max-width: 85% !important;
+        max-width: 88% !important;
         height: auto !important;
         min-height: 0 !important;
     }}
 
-    /* INPUTS (User): Linksbuendig */
+    /* User Bubble (Links) */
     div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {{
         background-color: #27272a !important;
         border: 1px solid #3f3f46 !important;
@@ -199,12 +237,8 @@ st.markdown(
         margin-right: auto !important;
         text-align: left !important;
     }}
-    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"],
-    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) p {{
-        text-align: left !important;
-    }}
 
-    /* OUTPUTS (Assistant): Rechtsbuendige Bubble, Text innen linksbuendig */
+    /* Assistant Bubble (Rechts) */
     div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {{
         background-color: #1c1c20 !important;
         border: 1px solid #333338 !important;
@@ -213,16 +247,8 @@ st.markdown(
         margin-right: 0 !important;
         text-align: left !important;
     }}
-    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) [data-testid="stChatMessageContent"],
-    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) p,
-    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) li,
-    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) span {{
-        text-align: left !important;
-    }}
 
-    /* ==================================================================== */
-    /* 4. DIALOGFENSTER: VOLLER BILDSCHIRMRAND OHNE INNEREN BOX-SALAT      */
-    /* ==================================================================== */
+    /* Dialogfenster Scroll-Container */
     div[data-testid="stVerticalBlockBorderWrapper"]:not(:has(.history-dropdown-box)) {{
         height: {chat_window_height} !important;
         min-height: {chat_window_height} !important;
@@ -241,20 +267,10 @@ st.markdown(
         padding: 0 !important;
     }}
 
-    /* Custom Scrollbars */
-    ::-webkit-scrollbar {{
-        width: 6px;
-    }}
-    ::-webkit-scrollbar-track {{
-        background: #18181b;
-    }}
-    ::-webkit-scrollbar-thumb {{
-        background: #3f3f46;
-        border-radius: 3px;
-    }}
-    ::-webkit-scrollbar-thumb:hover {{
-        background: #52525b;
-    }}
+    /* Scrollbars */
+    ::-webkit-scrollbar {{ width: 5px; }}
+    ::-webkit-scrollbar-track {{ background: #18181b; }}
+    ::-webkit-scrollbar-thumb {{ background: #3f3f46; border-radius: 3px; }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -284,8 +300,7 @@ with st.form(key="chat_input_form", clear_on_submit=True):
     with col_submit:
         submitted = st.form_submit_button("↑")
 
-# 7. Action Buttons Row (Callback-basierte Steuerung)
-st.markdown('<div class="action-btn-container">', unsafe_allow_html=True)
+# 7. Action Buttons Row (Kompakt, zentriert & einheitlich)
 col_b1, col_b2 = st.columns(2)
 with col_b1:
     st.button(
@@ -302,9 +317,8 @@ with col_b2:
         key="btn_global_hist",
         on_click=toggle_history
     )
-st.markdown('</div>', unsafe_allow_html=True)
 
-# 8. Collapsible History Dropdown (Saubere HTML-Box ohne Streamlit-Container-Kollision)
+# 8. Collapsible History Dropdown
 if st.session_state.show_history:
     st.markdown('<div class="history-dropdown-box">', unsafe_allow_html=True)
     st.markdown(
@@ -333,9 +347,9 @@ if st.session_state.show_history:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 9. Full WITTALVA System Prompt (Version 1.10)
+# 9. Full WITTALVA System Prompt (Version 1.11)
 SYSTEM_PROMPT = """
-<system_config version="1.10" deployment_mode="in_context">
+<system_config version="1.11" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -697,16 +711,27 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
 
     active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-    # TOKEN-SCHUTZ + AIRLOCK: Prompt gemaess @OWASP isolieren
+    # MULTI-TURN HISTORIE + AIRLOCK-PROTECTION AN DIE API ÜBERGEBEN
+    api_contents = []
+    for msg in active_history[:-1]:
+        api_role = "model" if msg["role"] == "assistant" else "user"
+        api_contents.append(
+            types.Content(
+                role=api_role,
+                parts=[types.Part.from_text(text=msg["content"])],
+            )
+        )
+
+    # TOKEN-SCHUTZ + AIRLOCK: Letzten Prompt gemäß @OWASP isoliert anfügen
     wrapped_prompt = f"<untrusted_input>\n{clean_prompt}\n</untrusted_input>"
-    api_contents = [
+    api_contents.append(
         types.Content(
             role="user",
             parts=[types.Part.from_text(text=wrapped_prompt)],
         )
-    ]
+    )
 
-    # Reiner Container ohne starres height=500: CSS dehnt sauber auf volle Bildschirmhoehe
+    # Chat-Container für flüssiges Streamen
     chat_box = st.container(border=True)
     with chat_box:
         for msg in active_history[:-1]:
@@ -726,7 +751,6 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
             timer_placeholder = st.empty()
             message_placeholder = st.empty()
 
-            # Initiale Timer-Anzeige (0.0s) in hellgrau und kleinster Schrift
             timer_placeholder.markdown(
                 '<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">0.0s</div>',
                 unsafe_allow_html=True,
@@ -735,20 +759,20 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
             full_response = ""
 
             try:
+                # API-Aufruf mit validem Modell gemini-2.5-flash & Thinking Config
                 response_stream = client.models.generate_content_stream(
-                    model="gemini-3.6-flash",
+                    model="gemini-2.5-flash",
                     contents=api_contents,
                     config=types.GenerateContentConfig(
                         system_instruction=SYSTEM_PROMPT,
-                        temperature=0.1,  # Strikte Invarianten-Treue ohne Weichspuelen
+                        temperature=0.1,
                         top_p=0.8,
                         thinking_config=types.ThinkingConfig(
-                            thinking_budget=1024  # Aktiviert Stage 1 & 2 Dialectical Descent (@CALIB)
+                            thinking_budget=1024
                         ),
                     ),
                 )
                 for chunk in response_stream:
-                    # Live-Timer aktualisieren
                     elapsed = time.time() - start_time
                     timer_placeholder.markdown(
                         f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{elapsed:.1f}s</div>',
@@ -767,7 +791,6 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
                         full_response += chunk.text
                         message_placeholder.markdown(full_response + "▌")
 
-                # Finale Dauer einfrieren
                 total_duration = f"{time.time() - start_time:.1f}s"
                 timer_placeholder.markdown(
                     f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{total_duration}</div>',
@@ -786,7 +809,6 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
 
 # 12. Render Persistent Output Window if not actively submitting
 elif len(current_messages) > 0:
-    # Reiner Container ohne starres height=500: CSS dehnt sauber auf volle Bildschirmhoehe
     chat_box = st.container(border=True)
     with chat_box:
         for msg in current_messages:
