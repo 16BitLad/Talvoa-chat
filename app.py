@@ -43,7 +43,7 @@ if "current_chat_id" not in st.session_state:
 if "show_history" not in st.session_state:
     st.session_state.show_history = False
 
-# Callbacks: Werden vor dem Rerun ausgeführt (beseitigt Klick-Desync & Toggle-Bugs)
+# Callbacks: Werden vor dem Rerun ausgeführt (beseitigt Klick-Desync)
 def toggle_history():
     st.session_state.show_history = not st.session_state.show_history
 
@@ -59,47 +59,50 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# 4. Permanent Natural Flow CSS & Form Styling (Original-Formation)
+# Dynamische Höhenberechnung: Fenster reicht exakt bis zum unteren Bildschirmrand
+chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 195px)"
+
+# 4. Custom CSS: Avatare ausblenden, Links/Rechts-Ausrichtung & Full-Height
 st.markdown(
-    """
+    f"""
     <style>
     /* Dark Theme Background */
-    .stApp { 
+    .stApp {{ 
         background-color: #18181b; 
         color: #f4f4f5; 
-    }
-    header, footer { 
+    }}
+    header, footer {{ 
         visibility: hidden !important; 
         display: none !important; 
-    }
-    .block-container { 
-        padding-top: 1.5rem !important; 
-        padding-bottom: 0.8rem !important; 
-        max-width: 750px !important; 
+    }}
+    .block-container {{ 
+        padding-top: 0.6rem !important; 
+        padding-bottom: 0.2rem !important; 
+        max-width: 780px !important; 
         text-align: center;
-    }
+    }}
     /* Sleek Chat Form directly under Header */
-    div[data-testid="stForm"] {
+    div[data-testid="stForm"] {{
         background-color: #27272a !important;
         border: 1px solid #3f3f46 !important;
         border-radius: 12px !important;
-        padding: 0.3rem 0.6rem !important;
-        margin: 0.4rem auto 0.8rem auto !important;
-        max-width: 750px !important;
-    }
-    div[data-testid="stForm"] .stTextInput input {
+        padding: 0.25rem 0.6rem !important;
+        margin: 0.3rem auto 0.6rem auto !important;
+        max-width: 780px !important;
+    }}
+    div[data-testid="stForm"] .stTextInput input {{
         background-color: transparent !important;
         color: #f4f4f5 !important;
         border: none !important;
         font-size: 1rem !important;
-        padding: 0.45rem 0.2rem !important;
-    }
-    div[data-testid="stForm"] .stTextInput input:focus {
+        padding: 0.4rem 0.2rem !important;
+    }}
+    div[data-testid="stForm"] .stTextInput input:focus {{
         outline: none !important;
         box-shadow: none !important;
-    }
+    }}
     /* Submit Arrow Button */
-    div[data-testid="stForm"] .stButton > button {
+    div[data-testid="stForm"] .stButton > button {{
         background-color: #3f3f46 !important;
         color: #ffffff !important;
         border: none !important;
@@ -109,76 +112,126 @@ st.markdown(
         height: 100% !important;
         width: 100% !important;
         margin: 0 !important;
-    }
-    div[data-testid="stForm"] .stButton > button:hover { 
+    }}
+    div[data-testid="stForm"] .stButton > button:hover {{ 
         background-color: #52525b !important; 
-    }
+    }}
     /* Action Buttons Row */
-    .action-btn-container {
+    .action-btn-container {{
         margin-top: 0 !important;
-        margin-bottom: 0.9rem !important;
+        margin-bottom: 0.6rem !important;
         width: 100% !important;
-    }
-    .action-btn-container .stButton > button {
+    }}
+    .action-btn-container .stButton > button {{
         background-color: #27272a; 
         color: #f4f4f5; 
         border: 1px solid #3f3f46;
         border-radius: 8px; 
-        padding: 0.5rem 1rem; 
+        padding: 0.45rem 1rem; 
         font-weight: 500; 
         width: 100%;
         transition: all 0.2s ease;
-    }
-    .action-btn-container .stButton > button:hover { 
+    }}
+    .action-btn-container .stButton > button:hover {{ 
         background-color: #3f3f46; 
         border-color: #71717a; 
         color: #ffffff; 
-    }
+    }}
     /* History Dropdown Item Styling */
-    .history-item .stButton > button {
+    .history-item .stButton > button {{
         background-color: #202024;
         border: 1px solid #2e2e33;
         color: #d4d4d8;
         text-align: left !important;
         justify-content: flex-start !important;
-        padding: 0.6rem 0.9rem;
+        padding: 0.5rem 0.8rem;
         margin-bottom: 0.3rem;
         font-size: 0.85rem;
         border-radius: 6px;
-    }
-    .history-item .stButton > button:hover {
+    }}
+    .history-item .stButton > button:hover {{
         background-color: #2a2a30;
         border-color: #52525b;
         color: #ffffff;
-    }
-    /* Extended Output Window reaching all the way to the bottom edge */
-    div[data-testid="stVerticalBlockBorderWrapper"] {
-        height: calc(100vh - 240px) !important;
-        max-height: calc(100vh - 240px) !important;
-        min-height: 520px !important;
+    }}
+
+    /* ==================================================================== */
+    /* 1. EMOJIS / AVATARE RESTLOS AUSBLENDEN                              */
+    /* ==================================================================== */
+    [data-testid^="stChatMessageAvatar"],
+    div[data-testid="stChatMessageAvatar"] {{
+        display: none !important;
+    }}
+
+    /* ==================================================================== */
+    /* 2. CHAT-NACHRICHTEN: GRUNDFORMAT & BUBBLE-DESIGN                    */
+    /* ==================================================================== */
+    div[data-testid="stChatMessage"] {{
+        padding: 0.6rem 0.9rem !important;
+        margin-bottom: 0.6rem !important;
+        border-radius: 12px !important;
+        gap: 0 !important;
+        width: fit-content !important;
+        max-width: 85% !important;
+    }}
+
+    /* INPUTS (User): Linksbuendig */
+    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {{
+        background-color: #27272a !important;
+        border: 1px solid #3f3f46 !important;
+        border-bottom-left-radius: 3px !important;
+        margin-left: 0 !important;
+        margin-right: auto !important;
+        text-align: left !important;
+    }}
+    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"],
+    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) p {{
+        text-align: left !important;
+    }}
+
+    /* OUTPUTS (Assistant): Rechtsbuendig */
+    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {{
+        background-color: #1c1c20 !important;
+        border: 1px solid #333338 !important;
+        border-bottom-right-radius: 3px !important;
+        margin-left: auto !important;
+        margin-right: 0 !important;
+        text-align: right !important;
+    }}
+    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) [data-testid="stChatMessageContent"],
+    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) p {{
+        text-align: right !important;
+    }}
+
+    /* ==================================================================== */
+    /* 3. DIALOGFENSTER BIS ZUM UNTEREN WEBFENSTERRAND                     */
+    /* ==================================================================== */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(div[data-testid="stChatMessage"]) {{
+        height: {chat_window_height} !important;
+        max-height: {chat_window_height} !important;
+        min-height: 380px !important;
         background-color: #141416 !important;
         border: 1px solid #27272a !important;
         border-radius: 12px !important;
         padding: 0.8rem !important;
         overflow-y: auto !important;
-    }
+        margin-bottom: 0 !important;
+    }}
+
     /* Custom Scrollbars */
-    ::-webkit-scrollbar {
+    ::-webkit-scrollbar {{
         width: 6px;
-    }
-    ::-webkit-scrollbar-track {
+    }}
+    ::-webkit-scrollbar-track {{
         background: #18181b;
-    }
-    ::-webkit-scrollbar-thumb {
+    }}
+    ::-webkit-scrollbar-thumb {{
         background: #3f3f46;
         border-radius: 3px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
+    }}
+    ::-webkit-scrollbar-thumb:hover {{
         background: #52525b;
-    }
-    .stChatMessage {
-        text-align: left !important;
-    }
+    }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -188,8 +241,8 @@ st.markdown(
 st.markdown(
     """
     <div style="text-align: center; margin-bottom: 0.1rem;">
-        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.1rem; color: #ffffff;">WITTALVA</h1>
-        <p style="color: #a1a1aa; font-size: 0.95rem; margin-top: 0;">Your fellow guide and advisor through day-to-day matters</p>
+        <h1 style="font-size: 2.3rem; font-weight: 700; margin-bottom: 0.1rem; color: #ffffff;">WITTALVA</h1>
+        <p style="color: #a1a1aa; font-size: 0.9rem; margin-top: 0;">Your fellow guide and advisor through day-to-day matters</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -208,7 +261,7 @@ with st.form(key="chat_input_form", clear_on_submit=True):
     with col_submit:
         submitted = st.form_submit_button("↑")
 
-# 7. Action Buttons Row (Callback-basierte Steuerung ohne Rerun-Kollision)
+# 7. Action Buttons Row (Callback-basierte Steuerung)
 st.markdown('<div class="action-btn-container">', unsafe_allow_html=True)
 col_b1, col_b2 = st.columns(2)
 with col_b1:
@@ -228,9 +281,9 @@ with col_b2:
     )
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 8. Collapsible History Dropdown (Native Container-Kapselung gegen DOM-Fehler)
+# 8. Collapsible History Dropdown (Native Container-Kapselung)
 if st.session_state.show_history:
-    with st.container(height=260):
+    with st.container(height=240):
         st.markdown(
             """
             <p style="color: #71717a; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; font-weight: 600;">
@@ -255,7 +308,7 @@ if st.session_state.show_history:
                 )
                 st.markdown('</div>', unsafe_allow_html=True)
 
-# 9. Full WITTALVA System Prompt (Version 1.08 – Unkomprimiert mit allen Invarianten & Examples)
+# 9. Full WITTALVA System Prompt (Version 1.08)
 SYSTEM_PROMPT = """
 <system_config version="1.08" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
@@ -271,12 +324,6 @@ SYSTEM_PROMPT = """
 </system_doctrine>
 
 <archetypal_subspace_matrix mode="deterministic_projection">
-  <!-- 
-    PROJECTION & EXTRACTION PROTOCOL:
-    Archetypes serve strictly as dense semantic attractors sharpening internal thinking traces.
-    Narrative, folkloric, and mythic dimensions are suppressed as out-of-scope semantic attractors.
-  -->
-
   <projection vector="@V.A" anchor="VECTOR_LOGIC_WODIN" type="abstract_function" signature="f(SystemContext) -> CausalGraph">
     <projected_traits>First-principles deconstruction, causal graphs, system axiomatization, false premise dissection</projected_traits>
     <attractor_boundary>Direct causal derivation, empirical parameter verification, formal axiomatization</attractor_boundary>
@@ -617,7 +664,7 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
         }
         st.session_state.current_chat_id = new_id
 
-    # UI speichert und zeigt den Verlauf normal an
+    # UI speichert und zeigt den Verlauf an
     st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
         {"role": "user", "content": clean_prompt}
     )
@@ -634,8 +681,8 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
         )
     ]
 
-    # Render dedicated stream inside single output container (Original-Formation)
-    chat_box = st.container(height=520)
+    # Render dedicated stream inside single output container
+    chat_box = st.container()
     with chat_box:
         for msg in active_history[:-1]:
             with st.chat_message(msg["role"]):
@@ -650,11 +697,11 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
 
             try:
                 response_stream = client.models.generate_content_stream(
-                    model="gemini-2.5-flash",
+                    model="gemini-3.6-flash",
                     contents=api_contents,
                     config=types.GenerateContentConfig(
                         system_instruction=SYSTEM_PROMPT,
-                        temperature=0.1,  # Strikte Invarianten-Treue ohne Weichspülen
+                        temperature=0.1,  # Strikte Invarianten-Treue ohne Weichspuelen
                         top_p=0.8,
                         thinking_config=types.ThinkingConfig(
                             thinking_budget=1024  # Aktiviert Stage 1 & 2 Dialectical Descent (@CALIB)
@@ -662,7 +709,7 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
                     ),
                 )
                 for chunk in response_stream:
-                    # Register-Isolation (@REG): Interne Gedanken verbergen, nur finales Ergebnis streamen
+                    # Register-Isolation (@REG): Gedanken nicht im UI anzeigen
                     if chunk.candidates and chunk.candidates[0].content.parts:
                         for part in chunk.candidates[0].content.parts:
                             if getattr(part, "thought", False):
@@ -685,9 +732,9 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
         save_stored_chats(st.session_state.all_chats)
         st.rerun()
 
-# 12. Render Persistent Output Window if not actively submitting (Original-Formation)
+# 12. Render Persistent Output Window if not actively submitting
 elif len(current_messages) > 0:
-    chat_box = st.container(height=520)
+    chat_box = st.container()
     with chat_box:
         for msg in current_messages:
             with st.chat_message(msg["role"]):
