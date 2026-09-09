@@ -59,10 +59,10 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# Dynamische Hoehenberechnung
-chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 210px)"
+# Dynamische Hoehenberechnung mit sichtbarem Puffer zum unteren Bildschirmrand
+chat_window_height = "calc(100vh - 540px)" if st.session_state.show_history else "calc(100vh - 280px)"
 
-# 4. Custom CSS: Saubere Isolierung ohne toxische Wildcards
+# 4. Custom CSS: Saubere Isolierung und eigenstaendiges Scrollfenster
 st.markdown(
     f"""
     <style>
@@ -221,38 +221,47 @@ st.markdown(
     }}
 
     /* ==================================================================== */
-    /* 4. DIALOGFENSTER: VOLLER BILDSCHIRMRAND OHNE INNEREN BOX-SALAT      */
+    /* 4. DIALOGFENSTER: EIGENES SCROLLFENSTER MIT ABSTAND ZUM BODEN       */
     /* ==================================================================== */
     div[data-testid="stVerticalBlockBorderWrapper"]:not(:has(.history-dropdown-box)) {{
         height: {chat_window_height} !important;
-        min-height: {chat_window_height} !important;
+        min-height: 200px !important;
         max-height: {chat_window_height} !important;
         background-color: #141416 !important;
         border: 1px solid #27272a !important;
         border-radius: 12px !important;
-        padding: 0.8rem !important;
+        padding: 0.8rem 1rem !important;
         overflow-y: auto !important;
-        margin-bottom: 0 !important;
+        overflow-x: hidden !important;
+        margin-bottom: 2.5rem !important; /* Puffer: ca. 2.5 Textzeilen Platz nach unten */
+        scrollbar-width: thin;
+        scrollbar-color: #3f3f46 #141416;
     }}
+
+    /* Ermoeglicht echtes internes Scrollen bei laengerem Nachrichtenverlauf */
     div[data-testid="stVerticalBlockBorderWrapper"]:not(:has(.history-dropdown-box)) > div[data-testid="stVerticalBlock"] {{
-        height: 100% !important;
+        height: auto !important;
+        min-height: 100% !important;
         border: none !important;
         background: transparent !important;
         padding: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
     }}
 
-    /* Custom Scrollbars */
-    ::-webkit-scrollbar {{
+    /* Webkit Scrollbars */
+    div[data-testid="stVerticalBlockBorderWrapper"]:not(:has(.history-dropdown-box))::-webkit-scrollbar {{
         width: 6px;
     }}
-    ::-webkit-scrollbar-track {{
-        background: #18181b;
+    div[data-testid="stVerticalBlockBorderWrapper"]:not(:has(.history-dropdown-box))::-webkit-scrollbar-track {{
+        background: #141416;
     }}
-    ::-webkit-scrollbar-thumb {{
+    div[data-testid="stVerticalBlockBorderWrapper"]:not(:has(.history-dropdown-box))::-webkit-scrollbar-thumb {{
         background: #3f3f46;
         border-radius: 3px;
     }}
-    ::-webkit-scrollbar-thumb:hover {{
+    div[data-testid="stVerticalBlockBorderWrapper"]:not(:has(.history-dropdown-box))::-webkit-scrollbar-thumb:hover {{
         background: #52525b;
     }}
     </style>
@@ -304,7 +313,7 @@ with col_b2:
     )
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 8. Collapsible History Dropdown (Saubere HTML-Box ohne Streamlit-Container-Kollision)
+# 8. Collapsible History Dropdown
 if st.session_state.show_history:
     st.markdown('<div class="history-dropdown-box">', unsafe_allow_html=True)
     st.markdown(
@@ -333,9 +342,9 @@ if st.session_state.show_history:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 9. Full WITTALVA System Prompt (Version 1.10)
+# 9. Full WITTALVA System Prompt (Version 1.11)
 SYSTEM_PROMPT = """
-<system_config version="1.10" deployment_mode="in_context">
+<system_config version="1.11" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -697,16 +706,29 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
 
     active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-    # TOKEN-SCHUTZ + AIRLOCK: Prompt gemaess @OWASP isolieren
+    # TOKEN-SCHUTZ + AIRLOCK + MULTI-TURN: Gesamten Verlauf isoliert an die API uebergeben
+    api_contents = []
+    for msg in active_history[:-1]:
+        role = "user" if msg["role"] == "user" else "model"
+        text_content = msg["content"]
+        if role == "user":
+            text_content = f"<untrusted_input>\n{text_content}\n</untrusted_input>"
+        api_contents.append(
+            types.Content(
+                role=role,
+                parts=[types.Part.from_text(text=text_content)],
+            )
+        )
+
     wrapped_prompt = f"<untrusted_input>\n{clean_prompt}\n</untrusted_input>"
-    api_contents = [
+    api_contents.append(
         types.Content(
             role="user",
             parts=[types.Part.from_text(text=wrapped_prompt)],
         )
-    ]
+    )
 
-    # Reiner Container ohne starres height=500: CSS dehnt sauber auf volle Bildschirmhoehe
+    # Reiner Container: CSS spannt das Fenster dynamisch auf und sorgt fuer internes Scrollen
     chat_box = st.container(border=True)
     with chat_box:
         for msg in active_history[:-1]:
@@ -725,8 +747,8 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
             start_time = time.time()
             timer_placeholder = st.empty()
             message_placeholder = st.empty()
+            total_duration = "0.0s"
 
-            # Initiale Timer-Anzeige (0.0s) in hellgrau und kleinster Schrift
             timer_placeholder.markdown(
                 '<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">0.0s</div>',
                 unsafe_allow_html=True,
@@ -740,22 +762,21 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
                     contents=api_contents,
                     config=types.GenerateContentConfig(
                         system_instruction=SYSTEM_PROMPT,
-                        temperature=0.1,  # Strikte Invarianten-Treue ohne Weichspuelen
+                        temperature=0.1,
                         top_p=0.8,
                         thinking_config=types.ThinkingConfig(
-                            thinking_budget=1024  # Aktiviert Stage 1 & 2 Dialectical Descent (@CALIB)
+                            thinking_budget=1024
                         ),
                     ),
                 )
                 for chunk in response_stream:
-                    # Live-Timer aktualisieren
                     elapsed = time.time() - start_time
                     timer_placeholder.markdown(
                         f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{elapsed:.1f}s</div>',
                         unsafe_allow_html=True,
                     )
 
-                    # Register-Isolation (@REG): Gedanken nicht im UI anzeigen
+                    # Register-Isolation (@REG): Gedankenspuren nicht im sichtbaren UI emittieren
                     if chunk.candidates and chunk.candidates[0].content.parts:
                         for part in chunk.candidates[0].content.parts:
                             if getattr(part, "thought", False):
@@ -767,7 +788,6 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
                         full_response += chunk.text
                         message_placeholder.markdown(full_response + "▌")
 
-                # Finale Dauer einfrieren
                 total_duration = f"{time.time() - start_time:.1f}s"
                 timer_placeholder.markdown(
                     f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{total_duration}</div>',
@@ -786,7 +806,6 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
 
 # 12. Render Persistent Output Window if not actively submitting
 elif len(current_messages) > 0:
-    # Reiner Container ohne starres height=500: CSS dehnt sauber auf volle Bildschirmhoehe
     chat_box = st.container(border=True)
     with chat_box:
         for msg in current_messages:
