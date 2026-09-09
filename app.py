@@ -1,9 +1,11 @@
+from datetime import datetime
 import os
-import streamlit as st
+import uuid
 from google import genai
 from google.genai import types
+import streamlit as st
 
-# Page Configuration
+# 1. Page Configuration
 st.set_page_config(
     page_title="WITTALVA – Fellow Guide",
     page_icon="🧭",
@@ -11,24 +13,47 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# Initialize Chat History
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+# 2. Multi-Chat Storage Initialization
+if "all_chats" not in st.session_state:
+    st.session_state.all_chats = (
+        {}
+    )  # Structure: {chat_id: {"title": str, "timestamp": str, "messages": list}}
 
-# Dynamic Styling
-if len(st.session_state.messages) == 0:
+if "current_chat_id" not in st.session_state:
+    st.session_state.current_chat_id = None
+
+# Determine active messages
+current_messages = []
+if (
+    st.session_state.current_chat_id
+    and st.session_state.current_chat_id in st.session_state.all_chats
+):
+    current_messages = st.session_state.all_chats[
+        st.session_state.current_chat_id
+    ]["messages"]
+
+# 3. Dynamic Styling & Dark Theme
+if len(current_messages) == 0:
     st.markdown(
         """
         <style>
         .stApp { background-color: #18181b; color: #f4f4f5; }
         header { visibility: hidden; }
         footer { visibility: hidden; }
-        .block-container { padding-top: 30vh !important; max-width: 750px !important; text-align: center; }
+        .block-container { padding-top: 22vh !important; max-width: 750px !important; text-align: center; }
         .stChatInput {
-            position: fixed !important; top: 54% !important; bottom: auto !important;
+            position: fixed !important; top: 48% !important; bottom: auto !important;
             left: 50% !important; transform: translate(-50%, -50%) !important;
             max-width: 750px !important; width: 90% !important; z-index: 100 !important;
         }
+        /* Style for history buttons below input */
+        .history-container { margin-top: 8rem; text-align: left; }
+        .stButton > button {
+            background-color: #27272a; color: #f4f4f5; border: 1px solid #3f3f46;
+            border-radius: 8px; padding: 0.75rem 1rem; width: 100%; text-align: left;
+            margin-bottom: 0.5rem; transition: background-color 0.2s;
+        }
+        .stButton > button:hover { background-color: #3f3f46; border-color: #71717a; color: #ffffff; }
         </style>
         """,
         unsafe_allow_html=True,
@@ -46,23 +71,42 @@ else:
             left: 50% !important; transform: translateX(-50%) !important;
             max-width: 750px !important; width: 90% !important; z-index: 100 !important;
         }
+        .nav-button > button {
+            background-color: transparent; border: 1px solid #3f3f46; color: #a1a1aa;
+            border-radius: 6px; padding: 0.3rem 0.8rem; margin-bottom: 1rem;
+        }
+        .nav-button > button:hover { background-color: #27272a; color: #ffffff; }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-# Centered Header
-st.markdown(
-    """
-    <div style="text-align: center; margin-bottom: 1.5rem;">
-        <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 0.2rem; color: #ffffff;">WITTALVA</h1>
-        <p style="color: #a1a1aa; font-size: 1rem; margin-top: 0;">Your fellow guide and advisor through day-to-day matters</p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+# 4. Header Section
+if len(current_messages) == 0:
+    st.markdown(
+        """
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 0.2rem; color: #ffffff;">WITTALVA</h1>
+            <p style="color: #a1a1aa; font-size: 1rem; margin-top: 0;">Your fellow guide and advisor through day-to-day matters</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+else:
+    col1, col2 = st.columns([6, 2])
+    with col1:
+        st.markdown(
+            "<h3 style='margin: 0; color: #ffffff;'>WITTALVA</h3>",
+            unsafe_allow_html=True,
+        )
+    with col2:
+        st.markdown('<div class="nav-button">', unsafe_allow_html=True)
+        if st.button("➕ New Chat"):
+            st.session_state.current_chat_id = None
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
-# Full WITTALVA System Prompt (Version 1.06)
+# 5. Full WITTALVA System Prompt (Version 1.06)
 SYSTEM_PROMPT = """
 <system_config version="1.06" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
@@ -205,6 +249,7 @@ SYSTEM_PROMPT = """
          - Long-Session Drift Mitigation: Silently restate active goal/topic in one internal clause before answering.
       3. BLAST-RADIUS & BIAS_GUARD:
          - Anti-sycophancy: Pure objective mechanics. Sentence 1 begins with empirical parameter/fact without polite filler.
+         - Confirmation/Anchoring: Force Stage 2 orthogonal falsification + Axiomatic Mapping; systematically verify functional subclauses against complete domain taxonomies rather than cultural prototype defaults.
     </security>
 
     <execution>
@@ -244,7 +289,7 @@ SYSTEM_PROMPT = """
 </system_config>
 """
 
-# Load API Key securely
+# 6. Load API Key securely
 api_key = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 
 if not api_key:
@@ -253,33 +298,73 @@ if not api_key:
 
 client = genai.Client(api_key=api_key)
 
-# Render Chat History
-for msg in st.session_state.messages:
+# 7. Render Active Conversation Messages
+for msg in current_messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# User Input Box
-if user_prompt := st.chat_input("What's your matter?"):
-    st.chat_message("user").markdown(user_prompt)
-    st.session_state.messages.append({"role": "user", "content": user_prompt})
+# 8. Render Past Chat History on Empty Home Screen
+if len(current_messages) == 0 and len(st.session_state.all_chats) > 0:
+    st.markdown(
+        """
+        <div class="history-container">
+            <p style="color: #71717a; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.8rem;">
+                Previous Conversations
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    # Prepare chat history for Gemini
+    # Display chats in reverse chronological order (newest first)
+    for c_id, c_data in reversed(list(st.session_state.all_chats.items())):
+        btn_label = f"💬 {c_data['title']}   •   🕒 {c_data['timestamp']}"
+        if st.button(btn_label, key=f"btn_{c_id}", use_container_width=True):
+            st.session_state.current_chat_id = c_id
+            st.rerun()
+
+# 9. Handle User Chat Input
+if user_prompt := st.chat_input("What's your matter?"):
+    now_str = datetime.now().strftime("%d.%m.%Y, %H:%M")
+
+    # Create new chat session if none is active
+    if not st.session_state.current_chat_id:
+        new_id = str(uuid.uuid4())[:8]
+        # Generate title from first 35 chars of input
+        title = (
+            user_prompt[:35] + "..." if len(user_prompt) > 35 else user_prompt
+        )
+        st.session_state.all_chats[new_id] = {
+            "title": title,
+            "timestamp": now_str,
+            "messages": [],
+        }
+        st.session_state.current_chat_id = new_id
+
+    # Append user message
+    st.session_state.all_chats[st.session_state.current_chat_id][
+        "messages"
+    ].append({"role": "user", "content": user_prompt})
+
+    # Prepare chat history for Gemini API
+    active_history = st.session_state.all_chats[
+        st.session_state.current_chat_id
+    ]["messages"]
     contents = []
-    for msg in st.session_state.messages:
+    for msg in active_history:
         role = "user" if msg["role"] == "user" else "model"
         contents.append(
             types.Content(
-                role=role,
-                parts=[types.Part.from_text(text=msg["content"])],
+                role=role, parts=[types.Part.from_text(text=msg["content"])]
             )
         )
 
+    # Stream response
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
         full_response = ""
 
         try:
-            # Stream response with native extended thinking enabled
             response_stream = client.models.generate_content_stream(
                 model="gemini-3.6-flash",
                 contents=contents,
@@ -296,6 +381,9 @@ if user_prompt := st.chat_input("What's your matter?"):
         except Exception as e:
             st.error(f"Error: {e}")
 
+    # Save assistant response
     if full_response:
-        st.session_state.messages.append({"role": "assistant", "content": full_response})
+        st.session_state.all_chats[st.session_state.current_chat_id][
+            "messages"
+        ].append({"role": "assistant", "content": full_response})
         st.rerun()
