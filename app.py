@@ -62,7 +62,7 @@ if st.session_state.current_chat_id and st.session_state.current_chat_id in st.s
 # Dynamische Hoehenberechnung
 chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 210px)"
 
-# 4. Custom CSS: Mobile-Optimierung & sauberes Dark-Theme (v1.11)
+# 4. Custom CSS: Mobile-Optimierung & sauberes Dark-Theme (v1.12)
 st.markdown(
     f"""
     <style>
@@ -83,7 +83,7 @@ st.markdown(
     }}
 
     /* ==================================================================== */
-    /* CHAT FORM: EINGABEZEILE + ARROW BUTTON BLEIBEN NEBENEINANDER         */
+    /* CHAT FORM: EINGABEZEILE + ARROW BUTTON (DUNKEL & REPARIERT)           */
     /* ==================================================================== */
     div[data-testid="stForm"] {{
         background-color: #27272a !important;
@@ -109,33 +109,50 @@ st.markdown(
         width: 42px !important;
         min-width: 42px !important;
     }}
-    /* Eingabefeld transparent machen & weiße Überlagerung entfernen */
-    div[data-testid="stForm"] div[data-baseweb="base-input"],
-    div[data-testid="stForm"] div[data-baseweb="input"],
-    div[data-testid="stForm"] input {{
-        background-color: transparent !important;
+
+    /* EINGABEFELD DUNKEL MACHEN */
+    div[data-testid="stTextInput"],
+    div[data-testid="stTextInput"] div[data-baseweb="base-input"],
+    div[data-testid="stTextInput"] div[data-baseweb="input"],
+    div[data-testid="stTextInput"] input {{
+        background-color: #27272a !important;
         color: #f4f4f5 !important;
         border: none !important;
         box-shadow: none !important;
         font-size: 0.95rem !important;
-        padding: 0.3rem 0.2rem !important;
     }}
-    /* Sende-Button Pfeil */
-    div[data-testid="stForm"] .stButton > button {{
+    /* Entfernt den roten/grauen Fokus-Rahmen beim Tippen */
+    div[data-baseweb="input"]:focus-within,
+    div[data-baseweb="base-input"]:focus-within {{
+        border-color: transparent !important;
+        box-shadow: none !important;
+    }}
+    /* Blendet den störenden Hinweis "Press Enter to submit form" aus */
+    div[data-testid="stInputInstructions"] {{
+        display: none !important;
+    }}
+
+    /* SENDE-BUTTON (stFormSubmitButton) DUNKEL STYLEN */
+    div[data-testid="stFormSubmitButton"] button,
+    div[data-testid="stForm"] button {{
         background-color: #3f3f46 !important;
         color: #ffffff !important;
-        border: none !important;
+        border: 1px solid #52525b !important;
         border-radius: 8px !important;
-        font-size: 1.1rem !important;
-        height: 38px !important;
+        font-size: 1.2rem !important;
+        height: 40px !important;
+        min-height: 40px !important;
         width: 100% !important;
         padding: 0 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
     }}
-    div[data-testid="stForm"] .stButton > button:hover {{ 
+    div[data-testid="stFormSubmitButton"] button:hover,
+    div[data-testid="stForm"] button:hover {{ 
         background-color: #52525b !important; 
+        color: #ffffff !important;
+        border-color: #71717a !important;
     }}
 
     /* ==================================================================== */
@@ -347,9 +364,9 @@ if st.session_state.show_history:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 9. Full WITTALVA System Prompt (Version 1.11)
+# 9. Full WITTALVA System Prompt (Version 1.12)
 SYSTEM_PROMPT = """
-<system_config version="1.11" deployment_mode="in_context">
+<system_config version="1.12" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
