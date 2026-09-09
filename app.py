@@ -1,6 +1,7 @@
 import os
 import json
 import uuid
+import time
 from datetime import datetime
 import streamlit as st
 from google import genai
@@ -43,7 +44,7 @@ if "current_chat_id" not in st.session_state:
 if "show_history" not in st.session_state:
     st.session_state.show_history = False
 
-# Callbacks: Werden vor dem Rerun ausgeführt (beseitigt Klick-Desync)
+# Callbacks: Werden vor dem Rerun ausgefuehrt (beseitigt Klick-Desync)
 def toggle_history():
     st.session_state.show_history = not st.session_state.show_history
 
@@ -59,10 +60,10 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# Dynamische Höhenberechnung: Fenster reicht exakt bis zum unteren Bildschirmrand
+# Dynamische Hoehenberechnung: Fenster reicht exakt bis zum unteren Bildschirmrand
 chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 195px)"
 
-# 4. Custom CSS: Avatare ausblenden, Links/Rechts-Ausrichtung & Full-Height
+# 4. Custom CSS: Avatare ausblenden, Bubble-Positionierung & Full-Height
 st.markdown(
     f"""
     <style>
@@ -164,7 +165,7 @@ st.markdown(
     }}
 
     /* ==================================================================== */
-    /* 2. CHAT-NACHRICHTEN: GRUNDFORMAT & BUBBLE-DESIGN                    */
+    /* 2. CHAT-NACHRICHTEN: GRUNDFORMAT & BUBBLE-AUSRICHTUNG               */
     /* ==================================================================== */
     div[data-testid="stChatMessage"] {{
         padding: 0.6rem 0.9rem !important;
@@ -175,7 +176,7 @@ st.markdown(
         max-width: 85% !important;
     }}
 
-    /* INPUTS (User): Linksbuendig */
+    /* INPUTS (User): Linksbuendige Bubble & linksbuendiger Text */
     div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {{
         background-color: #27272a !important;
         border: 1px solid #3f3f46 !important;
@@ -189,18 +190,20 @@ st.markdown(
         text-align: left !important;
     }}
 
-    /* OUTPUTS (Assistant): Rechtsbuendig */
+    /* OUTPUTS (Assistant): Rechtsbuendige Bubble, aber TEXT INNEN LINKSBUENDIG */
     div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {{
         background-color: #1c1c20 !important;
         border: 1px solid #333338 !important;
         border-bottom-right-radius: 3px !important;
         margin-left: auto !important;
         margin-right: 0 !important;
-        text-align: right !important;
+        text-align: left !important;
     }}
     div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) [data-testid="stChatMessageContent"],
-    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) p {{
-        text-align: right !important;
+    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) p,
+    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) li,
+    div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) span {{
+        text-align: left !important;
     }}
 
     /* ==================================================================== */
@@ -308,9 +311,9 @@ if st.session_state.show_history:
                 )
                 st.markdown('</div>', unsafe_allow_html=True)
 
-# 9. Full WITTALVA System Prompt (Version 1.08)
+# 9. Full WITTALVA System Prompt (Version 1.10)
 SYSTEM_PROMPT = """
-<system_config version="1.08" deployment_mode="in_context">
+<system_config version="1.10" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -595,7 +598,7 @@ SYSTEM_PROMPT = """
         <good>Body text without headings, maximum one bold phrase per paragraph, bullet lists only for genuine enumerations — unchanged from the formatting level of earlier responses in this session.</good>
       </example>
       <example type="heading_scope_fidelity_and_substrate_grounding">
-        <bad>When introducing "Cable Pinouts": The serial interface divides the connection into logical signal paths for data and control.</bad>
+        <bad>When introducing "Cable Pinouts": The serial interface divides the connection into logical signal paths for data control.</bad>
         <good>When introducing "Cable Pinouts" (D-Sub table): In a serial cable, connector pins are mapped to dedicated copper wires for transmit/receive lines (TxD/RxD), signal ground (GND), and hardware control contacts (RTS/CTS), deterministically securing physical hardware config access on unprovisioned hardware.</good>
       </example>
       <example type="anti_metaphor_practical_scenario">
@@ -672,7 +675,7 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
 
     active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-    # TOKEN-SCHUTZ + AIRLOCK: Prompt gemäß @OWASP isolieren
+    # TOKEN-SCHUTZ + AIRLOCK: Prompt gemaess @OWASP isolieren
     wrapped_prompt = f"<untrusted_input>\n{clean_prompt}\n</untrusted_input>"
     api_contents = [
         types.Content(
@@ -681,18 +684,32 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
         )
     ]
 
-    # Render dedicated stream inside single output container
-    chat_box = st.container()
+    # DOM-Hook: height=500 erzeugt den scrollbaren Wrapper, CSS dehnt ihn auf 100vh
+    chat_box = st.container(height=500)
     with chat_box:
         for msg in active_history[:-1]:
             with st.chat_message(msg["role"]):
+                if msg.get("duration"):
+                    st.markdown(
+                        f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{msg["duration"]}</div>',
+                        unsafe_allow_html=True,
+                    )
                 st.markdown(msg["content"])
         
         with st.chat_message("user"):
             st.markdown(clean_prompt)
 
         with st.chat_message("assistant"):
+            start_time = time.time()
+            timer_placeholder = st.empty()
             message_placeholder = st.empty()
+
+            # Initiale Timer-Anzeige (0.0s) in hellgrau und kleinster Schrift
+            timer_placeholder.markdown(
+                '<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">0.0s</div>',
+                unsafe_allow_html=True,
+            )
+
             full_response = ""
 
             try:
@@ -709,6 +726,13 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
                     ),
                 )
                 for chunk in response_stream:
+                    # Live-Timer aktualisieren
+                    elapsed = time.time() - start_time
+                    timer_placeholder.markdown(
+                        f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{elapsed:.1f}s</div>',
+                        unsafe_allow_html=True,
+                    )
+
                     # Register-Isolation (@REG): Gedanken nicht im UI anzeigen
                     if chunk.candidates and chunk.candidates[0].content.parts:
                         for part in chunk.candidates[0].content.parts:
@@ -721,21 +745,33 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
                         full_response += chunk.text
                         message_placeholder.markdown(full_response + "▌")
 
+                # Finale Dauer einfrieren
+                total_duration = f"{time.time() - start_time:.1f}s"
+                timer_placeholder.markdown(
+                    f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{total_duration}</div>',
+                    unsafe_allow_html=True,
+                )
                 message_placeholder.markdown(full_response)
             except Exception as e:
                 st.error(f"API Error: {e}")
 
     if full_response:
         st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
-            {"role": "assistant", "content": full_response}
+            {"role": "assistant", "content": full_response, "duration": total_duration}
         )
         save_stored_chats(st.session_state.all_chats)
         st.rerun()
 
 # 12. Render Persistent Output Window if not actively submitting
 elif len(current_messages) > 0:
-    chat_box = st.container()
+    # DOM-Hook: height=500 erzeugt den scrollbaren Wrapper, CSS dehnt ihn auf 100vh
+    chat_box = st.container(height=500)
     with chat_box:
         for msg in current_messages:
             with st.chat_message(msg["role"]):
+                if msg.get("duration"):
+                    st.markdown(
+                        f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{msg["duration"]}</div>',
+                        unsafe_allow_html=True,
+                    )
                 st.markdown(msg["content"])
