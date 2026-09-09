@@ -59,9 +59,8 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# Feste Pixel-Hoehe fuer das native Streamlit-Scrollfenster:
-# 520px laesst bei Standard-Displays ca. 3-4 Textzeilen Puffer zum Bildschirmrand
-chat_height = 320 if st.session_state.show_history else 520
+# Auf ca. 3-4 Textzeilen (~70-90px) Puffer zum unteren Bildschirmrand kalibriert
+chat_height = 240 if st.session_state.show_history else 390
 
 # 4. Custom CSS
 st.markdown(
@@ -78,7 +77,7 @@ st.markdown(
     }
     .block-container { 
         padding-top: 0.5rem !important; 
-        padding-bottom: 3rem !important; /* Puffer zum unteren Rand */
+        padding-bottom: 4rem !important; /* Puffer zum unteren Bildschirmrand */
         max-width: 750px !important; 
         text-align: center;
     }
@@ -222,13 +221,14 @@ st.markdown(
     }
 
     /* ==================================================================== */
-    /* 4. CHAT-CONTAINER: NATIVES SCROLLEN MIT FESTEM DESIGN                */
+    /* 4. CHAT-CONTAINER: NATIVES SCROLLEN MIT FIXIERTEM ABSTAND ZUM BODEN  */
     /* ==================================================================== */
     div[data-testid="stVerticalBlockBorderWrapper"]:not(:has(.history-dropdown-box)) {
         background-color: #141416 !important;
         border: 1px solid #27272a !important;
         border-radius: 12px !important;
-        margin-bottom: 1.5rem !important;
+        margin-bottom: 4rem !important; /* 4rem Freiraum (~3-4 Textzeilen) zum Rand */
+        max-height: calc(100vh - 320px) !important;
     }
 
     /* Custom Scrollbars */
@@ -323,9 +323,9 @@ if st.session_state.show_history:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 9. Full WITTALVA System Prompt (Version 1.12)
+# 9. Full WITTALVA System Prompt (Version 1.13)
 SYSTEM_PROMPT = """
-<system_config version="1.12" deployment_mode="in_context">
+<system_config version="1.13" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -687,7 +687,7 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
 
     active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-    # TOKEN-SCHUTZ + AIRLOCK + MULTI-TURN: Gesamten Verlauf uebergeben
+    # TOKEN-SCHUTZ + AIRLOCK + MULTI-TURN: Gesamten Verlauf isoliert uebergeben
     api_contents = []
     for msg in active_history[:-1]:
         role = "user" if msg["role"] == "user" else "model"
@@ -709,7 +709,7 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
         )
     )
 
-    # Nativer Streamlit-Scrollcontainer mit fester Hoehenbegrenzung
+    # Nativer Streamlit-Scrollcontainer mit fester Hoehe und Freiraum nach unten
     chat_box = st.container(height=chat_height, border=True)
     with chat_box:
         for msg in active_history[:-1]:
