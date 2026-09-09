@@ -33,7 +33,7 @@ def save_stored_chats(data):
     except Exception:
         pass
 
-# 3. State Initializations
+# 3. State Initializations & Callback Handlers
 if "all_chats" not in st.session_state:
     st.session_state.all_chats = load_stored_chats()
 
@@ -41,6 +41,18 @@ if "current_chat_id" not in st.session_state:
     st.session_state.current_chat_id = None
 
 if "show_history" not in st.session_state:
+    st.session_state.show_history = False
+
+# Callbacks: Werden vor dem Rerun ausgeführt (beseitigt Klick-Desync & Toggle-Bugs)
+def toggle_history():
+    st.session_state.show_history = not st.session_state.show_history
+
+def start_new_chat():
+    st.session_state.current_chat_id = None
+    st.session_state.show_history = False
+
+def select_chat(chat_id):
+    st.session_state.current_chat_id = chat_id
     st.session_state.show_history = False
 
 current_messages = []
@@ -122,17 +134,7 @@ st.markdown(
         border-color: #71717a; 
         color: #ffffff; 
     }
-    /* History Dropdown Container */
-    .history-dropdown-box {
-        max-height: 35vh;
-        overflow-y: auto;
-        background-color: #1c1c20;
-        border: 1px solid #333338;
-        border-radius: 10px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        text-align: left;
-    }
+    /* History Dropdown Item Styling */
     .history-item .stButton > button {
         background-color: #202024;
         border: 1px solid #2e2e33;
@@ -206,50 +208,56 @@ with st.form(key="chat_input_form", clear_on_submit=True):
     with col_submit:
         submitted = st.form_submit_button("↑")
 
-# 7. Action Buttons Row (Original 2-Spalten-Formation)
+# 7. Action Buttons Row (Callback-basierte Steuerung ohne Rerun-Kollision)
 st.markdown('<div class="action-btn-container">', unsafe_allow_html=True)
 col_b1, col_b2 = st.columns(2)
 with col_b1:
-    if st.button("➕ Open new chat", use_container_width=True, key="btn_global_new"):
-        st.session_state.current_chat_id = None
-        st.session_state.show_history = False
-        st.rerun()
+    st.button(
+        "➕ Open new chat", 
+        use_container_width=True, 
+        key="btn_global_new",
+        on_click=start_new_chat
+    )
 with col_b2:
     hist_label = "▲ Hide history" if st.session_state.show_history else "📜 Chat history"
-    if st.button(hist_label, use_container_width=True, key="btn_global_hist"):
-        st.session_state.show_history = not st.session_state.show_history
-        st.rerun()
+    st.button(
+        hist_label, 
+        use_container_width=True, 
+        key="btn_global_hist",
+        on_click=toggle_history
+    )
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 8. Collapsible History Dropdown (Original-Formation)
+# 8. Collapsible History Dropdown (Native Container-Kapselung gegen DOM-Fehler)
 if st.session_state.show_history:
-    st.markdown('<div class="history-dropdown-box">', unsafe_allow_html=True)
-    st.markdown(
-        """
-        <p style="color: #71717a; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; font-weight: 600;">
-            Previous Conversations
-        </p>
-        """,
-        unsafe_allow_html=True,
-    )
+    with st.container(height=260):
+        st.markdown(
+            """
+            <p style="color: #71717a; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; font-weight: 600;">
+                Previous Conversations
+            </p>
+            """,
+            unsafe_allow_html=True,
+        )
 
-    if len(st.session_state.all_chats) == 0:
-        st.markdown("<p style='color: #71717a; font-size: 0.85rem; margin: 0;'>No previous conversations stored yet.</p>", unsafe_allow_html=True)
-    else:
-        for c_id, c_data in reversed(list(st.session_state.all_chats.items())):
-            st.markdown('<div class="history-item">', unsafe_allow_html=True)
-            btn_label = f"💬 {c_data['title']}   •   🕒 {c_data['timestamp']}"
-            if st.button(btn_label, key=f"hist_select_{c_id}", use_container_width=True):
-                st.session_state.current_chat_id = c_id
-                st.session_state.show_history = False
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
+        if len(st.session_state.all_chats) == 0:
+            st.markdown("<p style='color: #71717a; font-size: 0.85rem; margin: 0;'>No previous conversations stored yet.</p>", unsafe_allow_html=True)
+        else:
+            for c_id, c_data in reversed(list(st.session_state.all_chats.items())):
+                st.markdown('<div class="history-item">', unsafe_allow_html=True)
+                btn_label = f"💬 {c_data['title']}   •   🕒 {c_data['timestamp']}"
+                st.button(
+                    btn_label, 
+                    key=f"hist_select_{c_id}", 
+                    use_container_width=True,
+                    on_click=select_chat,
+                    args=(c_id,)
+                )
+                st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# 9. Full WITTALVA System Prompt (Version 1.07 – Unkomprimiert mit allen Invarianten & Examples)
+# 9. Full WITTALVA System Prompt (Version 1.08 – Unkomprimiert mit allen Invarianten & Examples)
 SYSTEM_PROMPT = """
-<system_config version="1.07" deployment_mode="in_context">
+<system_config version="1.08" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -594,7 +602,7 @@ if not api_key:
 client = genai.Client(api_key=api_key)
 
 # 11. Handle Form Submission
-if (submitted and user_prompt) or (user_prompt and len(user_prompt.strip()) > 0):
+if submitted and user_prompt and len(user_prompt.strip()) > 0:
     st.session_state.show_history = False
     now_str = datetime.now().strftime("%d.%m.%Y, %H:%M")
     clean_prompt = user_prompt.strip()
@@ -617,11 +625,12 @@ if (submitted and user_prompt) or (user_prompt and len(user_prompt.strip()) > 0)
 
     active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-    # TOKEN-SCHUTZ: Nur der aktuelle User-Prompt wird an die API geschickt (System-Prompt wächst nicht an)
+    # TOKEN-SCHUTZ + AIRLOCK: Prompt gemäß @OWASP isolieren
+    wrapped_prompt = f"<untrusted_input>\n{clean_prompt}\n</untrusted_input>"
     api_contents = [
         types.Content(
             role="user",
-            parts=[types.Part.from_text(text=clean_prompt)],
+            parts=[types.Part.from_text(text=wrapped_prompt)],
         )
     ]
 
@@ -641,20 +650,30 @@ if (submitted and user_prompt) or (user_prompt and len(user_prompt.strip()) > 0)
 
             try:
                 response_stream = client.models.generate_content_stream(
-                    model="gemini-3.6-flash",
+                    model="gemini-2.5-flash",
                     contents=api_contents,
                     config=types.GenerateContentConfig(
                         system_instruction=SYSTEM_PROMPT,
-                        temperature=0.2,
+                        temperature=0.1,  # Strikte Invarianten-Treue ohne Weichspülen
+                        top_p=0.8,
+                        thinking_config=types.ThinkingConfig(
+                            thinking_budget=1024  # Aktiviert Stage 1 & 2 Dialectical Descent (@CALIB)
+                        ),
                     ),
                 )
                 for chunk in response_stream:
-                    try:
-                        if chunk.text:
-                            full_response += chunk.text
-                            message_placeholder.markdown(full_response + "▌")
-                    except (AttributeError, ValueError):
-                        continue
+                    # Register-Isolation (@REG): Interne Gedanken verbergen, nur finales Ergebnis streamen
+                    if chunk.candidates and chunk.candidates[0].content.parts:
+                        for part in chunk.candidates[0].content.parts:
+                            if getattr(part, "thought", False):
+                                continue
+                            if part.text:
+                                full_response += part.text
+                                message_placeholder.markdown(full_response + "▌")
+                    elif hasattr(chunk, "text") and chunk.text:
+                        full_response += chunk.text
+                        message_placeholder.markdown(full_response + "▌")
+
                 message_placeholder.markdown(full_response)
             except Exception as e:
                 st.error(f"API Error: {e}")
