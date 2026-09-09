@@ -1,8 +1,8 @@
 import os
+import json
 import uuid
 from datetime import datetime
 import streamlit as st
-from streamlit_local_storage import LocalStorage
 from google import genai
 from google.genai import types
 
@@ -14,17 +14,28 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 2. LocalStorage & State Initializations
-local_storage = LocalStorage()
+# 2. JSON Storage Handlers
+STORAGE_FILE = "chats_history.json"
 
+def load_stored_chats():
+    if os.path.exists(STORAGE_FILE):
+        try:
+            with open(STORAGE_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+def save_stored_chats(data):
+    try:
+        with open(STORAGE_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+# 3. State Initializations (Hydrates from persistent storage on F5 reload)
 if "all_chats" not in st.session_state:
-    st.session_state.all_chats = {}
-
-# Hydrate conversation history from browser local storage on page load
-if len(st.session_state.all_chats) == 0:
-    cached_data = local_storage.getItem("wittalva_user_chats")
-    if cached_data and isinstance(cached_data, dict):
-        st.session_state.all_chats = cached_data
+    st.session_state.all_chats = load_stored_chats()
 
 if "current_chat_id" not in st.session_state:
     st.session_state.current_chat_id = None
@@ -37,7 +48,7 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# 3. Permanent Natural Flow CSS & Form Styling
+# 4. Permanent Natural Flow CSS & Form Styling
 st.markdown(
     """
     <style>
@@ -51,8 +62,8 @@ st.markdown(
         display: none !important; 
     }
     .block-container { 
-        padding-top: 2rem !important; 
-        padding-bottom: 2rem !important; 
+        padding-top: 1.5rem !important; 
+        padding-bottom: 0.8rem !important; 
         max-width: 750px !important; 
         text-align: center;
     }
@@ -139,7 +150,7 @@ st.markdown(
         border-color: #52525b;
         color: #ffffff;
     }
-    /* Output Window dynamically fills all remaining vertical space */
+    /* Extended Output Window reaching all the way to the bottom edge */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         height: calc(100vh - 240px) !important;
         max-height: calc(100vh - 240px) !important;
@@ -172,7 +183,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 4. Header Section
+# 5. Header Section
 st.markdown(
     """
     <div style="text-align: center; margin-bottom: 0.1rem;">
@@ -183,7 +194,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 5. Form Input Field
+# 6. Form Input Field
 with st.form(key="chat_input_form", clear_on_submit=True):
     col_input, col_submit = st.columns([9, 1])
     with col_input:
@@ -196,7 +207,7 @@ with st.form(key="chat_input_form", clear_on_submit=True):
     with col_submit:
         submitted = st.form_submit_button("↑")
 
-# 6. Action Buttons Row
+# 7. Action Buttons Row
 st.markdown('<div class="action-btn-container">', unsafe_allow_html=True)
 col_b1, col_b2 = st.columns(2)
 with col_b1:
@@ -211,7 +222,7 @@ with col_b2:
         st.rerun()
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 7. Collapsible History Dropdown
+# 8. Collapsible History Dropdown
 if st.session_state.show_history:
     st.markdown('<div class="history-dropdown-box">', unsafe_allow_html=True)
     st.markdown(
@@ -237,7 +248,7 @@ if st.session_state.show_history:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 8. Full WITTALVA System Prompt (Version 1.06)
+# 9. Full WITTALVA System Prompt (Version 1.06)
 SYSTEM_PROMPT = """
 <system_config version="1.06" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
@@ -420,7 +431,7 @@ SYSTEM_PROMPT = """
 </system_config>
 """
 
-# 9. Load API Key securely
+# 10. Load API Key securely
 api_key = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 
 if not api_key:
@@ -429,11 +440,10 @@ if not api_key:
 
 client = genai.Client(api_key=api_key)
 
-# 10. Handle Submission
+# 11. Handle Form Submission
 if (submitted and user_prompt) or (user_prompt and len(user_prompt.strip()) > 0):
     st.session_state.show_history = False
     now_str = datetime.now().strftime("%d.%m.%Y, %H:%M")
-
     clean_prompt = user_prompt.strip()
 
     if not st.session_state.current_chat_id:
@@ -450,8 +460,8 @@ if (submitted and user_prompt) or (user_prompt and len(user_prompt.strip()) > 0)
         {"role": "user", "content": clean_prompt}
     )
 
-    # Persist immediately to browser local storage
-    local_storage.setItem("wittalva_user_chats", st.session_state.all_chats)
+    # Save to JSON file on server
+    save_stored_chats(st.session_state.all_chats)
 
     active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
     contents = []
@@ -464,8 +474,8 @@ if (submitted and user_prompt) or (user_prompt and len(user_prompt.strip()) > 0)
             )
         )
 
-    # Render streaming inside output container
-    chat_box = st.container(height=500)
+    # Render dedicated stream inside single output container
+    chat_box = st.container(height=520)
     with chat_box:
         for msg in active_history[:-1]:
             with st.chat_message(msg["role"]):
@@ -499,13 +509,12 @@ if (submitted and user_prompt) or (user_prompt and len(user_prompt.strip()) > 0)
         st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
             {"role": "assistant", "content": full_response}
         )
-        # Save updated conversation to browser local storage
-        local_storage.setItem("wittalva_user_chats", st.session_state.all_chats)
+        save_stored_chats(st.session_state.all_chats)
         st.rerun()
 
-# 11. Render Persistent Output Window if active conversation exists and not submitting
+# 12. Render Persistent Output Window if not actively submitting
 elif len(current_messages) > 0:
-    chat_box = st.container(height=500)
+    chat_box = st.container(height=520)
     with chat_box:
         for msg in current_messages:
             with st.chat_message(msg["role"]):
