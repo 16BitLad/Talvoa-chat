@@ -59,8 +59,8 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# Dynamische CSS-Berechnung fuer exakt 1 Zeile Abstand zum unteren Bildschirmrand
-chat_window_height = "calc(100vh - 450px)" if st.session_state.show_history else "calc(100vh - 230px)"
+# Dynamische CSS-Berechnung fuer genau 1 Zeile Abstand zum unteren Bildschirmrand
+chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 220px)"
 
 # 4. Custom CSS
 st.markdown(
@@ -221,28 +221,40 @@ st.markdown(
     }}
 
     /* ==================================================================== */
-    /* 4. CHAT-CONTAINER: EXAKT 1 ZEILE ABSTAND ZUM UNTEREN RAND            */
+    /* 4. CHAT-CONTAINER: DYNAMISCHE HOEHE BIS EXAKT 1 ZEILE VOR DEM BODEN  */
     /* ==================================================================== */
     .st-key-chat_box {{
-        background-color: #141416 !important;
-        border: 1px solid #27272a !important;
-        border-radius: 12px !important;
         height: {chat_window_height} !important;
         max-height: {chat_window_height} !important;
     }}
 
+    .st-key-chat_box > div[data-testid="stVerticalBlockBorderWrapper"] {{
+        height: 100% !important;
+        max-height: 100% !important;
+        background-color: #141416 !important;
+        border: 1px solid #27272a !important;
+        border-radius: 12px !important;
+    }}
+
+    .st-key-chat_box div[data-testid="stVerticalBlock"] {{
+        height: 100% !important;
+        max-height: 100% !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }}
+
     /* Custom Scrollbars */
-    .st-key-chat_box::-webkit-scrollbar {{
+    .st-key-chat_box div[data-testid="stVerticalBlock"]::-webkit-scrollbar {{
         width: 6px;
     }}
-    .st-key-chat_box::-webkit-scrollbar-track {{
+    .st-key-chat_box div[data-testid="stVerticalBlock"]::-webkit-scrollbar-track {{
         background: #141416;
     }}
-    .st-key-chat_box::-webkit-scrollbar-thumb {{
+    .st-key-chat_box div[data-testid="stVerticalBlock"]::-webkit-scrollbar-thumb {{
         background: #3f3f46;
         border-radius: 3px;
     }}
-    .st-key-chat_box::-webkit-scrollbar-thumb:hover {{
+    .st-key-chat_box div[data-testid="stVerticalBlock"]::-webkit-scrollbar-thumb:hover {{
         background: #52525b;
     }}
     </style>
@@ -323,9 +335,9 @@ if st.session_state.show_history:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 9. Full WITTALVA System Prompt (Version 1.19)
+# 9. Full WITTALVA System Prompt (Version 1.20)
 SYSTEM_PROMPT = """
-<system_config version="1.19" deployment_mode="in_context">
+<system_config version="1.20" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -709,8 +721,8 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
         )
     )
 
-    # Nativer Streamlit-Scrollcontainer mit isoliertem Key
-    chat_box = st.container(height=350, border=True, key="chat_box")
+    # Nativer Container (Steuerung vollstaendig ueber CSS .st-key-chat_box)
+    chat_box = st.container(border=True, key="chat_box")
     with chat_box:
         for msg in active_history[:-1]:
             with st.chat_message(msg["role"]):
@@ -787,7 +799,7 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
 
 # 12. Render Persistent Output Window if not actively submitting
 elif len(current_messages) > 0:
-    chat_box = st.container(height=350, border=True, key="chat_box")
+    chat_box = st.container(border=True, key="chat_box")
     with chat_box:
         for msg in current_messages:
             with st.chat_message(msg["role"]):
