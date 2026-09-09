@@ -28,63 +28,52 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# 3. Viewport Lock: Completely disables outer page scrolling to keep UI 100% static
+# 3. Permanent Natural Flow CSS (Completely disables Streamlit bottom-docking)
 st.markdown(
     """
     <style>
-    /* Freeze outer window - no jumping or page scrolling */
-    html, body, [data-testid="stAppViewContainer"], .main, .stMain {
-        overflow: hidden !important;
-        height: 100vh !important;
-        max-height: 100vh !important;
-        background-color: #18181b !important;
-        color: #f4f4f5 !important;
+    /* Dark Theme Background */
+    .stApp { 
+        background-color: #18181b; 
+        color: #f4f4f5; 
     }
     header, footer { 
         visibility: hidden !important; 
         display: none !important; 
     }
     .block-container { 
-        padding-top: 1.5rem !important; 
-        padding-bottom: 0 !important; 
+        padding-top: 2.5rem !important; 
+        padding-bottom: 2rem !important; 
         max-width: 750px !important; 
         text-align: center;
-        height: 100vh !important;
-        display: flex !important;
-        flex-direction: column !important;
-        overflow: hidden !important;
     }
-    /* Fixed Title Area */
-    .title-area {
-        margin-bottom: 0.4rem;
-        flex-shrink: 0;
+    /* Neutralize Streamlit's hidden bottom container completely */
+    div[data-testid="stBottom"], .stBottom {
+        position: static !important;
+        background: transparent !important;
+        padding: 0 !important;
+        width: 100% !important;
     }
-    /* Fixed Chat Input in static flow below title */
+    /* Chat Input strictly positioned in natural flow under header */
     div[data-testid="stChatInput"], .stChatInput {
-        position: relative !important; 
-        top: auto !important;
-        bottom: auto !important;
-        left: auto !important;
-        transform: none !important;
-        margin: 0.4rem auto 0.6rem auto !important;
-        max-width: 750px !important; 
-        width: 100% !important; 
+        position: static !important;
+        margin: 0.8rem auto 1rem auto !important;
+        max-width: 750px !important;
+        width: 100% !important;
         z-index: 50 !important;
-        flex-shrink: 0;
     }
     /* Action Buttons Row */
     .action-btn-container {
-        margin-top: 0.2rem !important;
-        margin-bottom: 0.8rem !important;
+        margin-top: 0 !important;
+        margin-bottom: 1.2rem !important;
         width: 100% !important;
-        flex-shrink: 0;
     }
     .action-btn-container .stButton > button {
         background-color: #27272a; 
         color: #f4f4f5; 
         border: 1px solid #3f3f46;
         border-radius: 8px; 
-        padding: 0.5rem 1rem; 
+        padding: 0.6rem 1rem; 
         font-weight: 500;
         width: 100%;
         transition: all 0.2s ease;
@@ -94,7 +83,7 @@ st.markdown(
         border-color: #71717a; 
         color: #ffffff; 
     }
-    /* History Dropdown Box with internal scroll */
+    /* History Dropdown Container */
     .history-dropdown-box {
         max-height: 35vh;
         overflow-y: auto;
@@ -102,9 +91,8 @@ st.markdown(
         border: 1px solid #333338;
         border-radius: 10px;
         padding: 1rem;
-        margin-bottom: 0.8rem;
+        margin-bottom: 1.2rem;
         text-align: left;
-        flex-shrink: 0;
     }
     .history-item .stButton > button {
         background-color: #202024;
@@ -122,18 +110,18 @@ st.markdown(
         border-color: #52525b;
         color: #ffffff;
     }
-    /* Output Window dynamically fills all remaining vertical space */
+    /* Dedicated Scroll Container for Conversation Messages */
     div[data-testid="stVerticalBlockBorderWrapper"] {
-        flex-grow: 1 !important;
-        min-height: 250px !important;
-        max-height: calc(100vh - 280px) !important;
+        height: calc(100vh - 360px) !important;
+        max-height: calc(100vh - 360px) !important;
+        min-height: 420px !important;
         background-color: #141416 !important;
         border: 1px solid #27272a !important;
         border-radius: 12px !important;
         padding: 0.8rem !important;
         overflow-y: auto !important;
     }
-    /* Sleek Custom Scrollbars */
+    /* Custom Scrollbars */
     ::-webkit-scrollbar {
         width: 6px;
     }
@@ -158,15 +146,18 @@ st.markdown(
 # 4. Header Section
 st.markdown(
     """
-    <div class="title-area">
-        <h1 style="font-size: 2.4rem; font-weight: 700; margin-bottom: 0.1rem; color: #ffffff;">WITTALVA</h1>
-        <p style="color: #a1a1aa; font-size: 0.95rem; margin-top: 0;">Your fellow guide and advisor through day-to-day matters</p>
+    <div style="text-align: center; margin-bottom: 0.2rem;">
+        <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 0.2rem; color: #ffffff;">WITTALVA</h1>
+        <p style="color: #a1a1aa; font-size: 1rem; margin-top: 0;">Your fellow guide and advisor through day-to-day matters</p>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-# 5. Buttons Row (Directly below the input field)
+# 5. Chat Input Field (Renders directly underneath the header in natural flow)
+user_prompt = st.chat_input("How can I help?")
+
+# 6. Action Buttons Row (Directly underneath the input field)
 st.markdown('<div class="action-btn-container">', unsafe_allow_html=True)
 col_b1, col_b2 = st.columns(2)
 with col_b1:
@@ -181,7 +172,7 @@ with col_b2:
         st.rerun()
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 6. Collapsible History Dropdown (Scrolls internally without shifting the page)
+# 7. Collapsible History Dropdown (Expands directly underneath the buttons)
 if st.session_state.show_history:
     st.markdown('<div class="history-dropdown-box">', unsafe_allow_html=True)
     st.markdown(
@@ -206,14 +197,6 @@ if st.session_state.show_history:
             st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
-
-# 7. Dedicated Scrollable Output Window for Active Conversation
-if len(current_messages) > 0:
-    chat_box = st.container(height=520)
-    with chat_box:
-        for msg in current_messages:
-            with st.chat_message(msg["role"]):
-                st.markdown(msg["content"])
 
 # 8. Full WITTALVA System Prompt (Version 1.06)
 SYSTEM_PROMPT = """
@@ -407,70 +390,71 @@ if not api_key:
 
 client = genai.Client(api_key=api_key)
 
-# 10. Handle Chat Input
-if user_prompt := st.chat_input("How can I help?"):
-    st.session_state.show_history = False
-    now_str = datetime.now().strftime("%d.%m.%Y, %H:%M")
-
-    if not st.session_state.current_chat_id:
-        new_id = str(uuid.uuid4())[:8]
-        title = user_prompt[:35] + "..." if len(user_prompt) > 35 else user_prompt
-        st.session_state.all_chats[new_id] = {
-            "title": title,
-            "timestamp": now_str,
-            "messages": [],
-        }
-        st.session_state.current_chat_id = new_id
-
-    st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
-        {"role": "user", "content": user_prompt}
-    )
-
-    # Format history safely for google-genai SDK
-    active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
-    contents = []
-    for msg in active_history:
-        role = "user" if msg["role"] == "user" else "model"
-        contents.append(
-            types.Content(
-                role=role,
-                parts=[types.Part(text=msg["content"])],
-            )
-        )
-
-    # Stream response inside dedicated output container
-    chat_box = st.container(height=520)
+# 10. Dedicated Scroll Container for Conversation Messages
+if len(current_messages) > 0 or user_prompt:
+    chat_box = st.container(height=480)
     with chat_box:
-        for msg in active_history[:-1]:
+        for msg in current_messages:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
-        
-        with st.chat_message("user"):
-            st.markdown(user_prompt)
 
-        with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            full_response = ""
+        # Handle active streaming directly inside the scroll box
+        if user_prompt:
+            st.session_state.show_history = False
+            now_str = datetime.now().strftime("%d.%m.%Y, %H:%M")
 
-            try:
-                response_stream = client.models.generate_content_stream(
-                    model="gemini-3.6-flash",
-                    contents=contents,
-                    config=types.GenerateContentConfig(
-                        system_instruction=SYSTEM_PROMPT,
-                        temperature=0.2,
-                    ),
+            if not st.session_state.current_chat_id:
+                new_id = str(uuid.uuid4())[:8]
+                title = user_prompt[:35] + "..." if len(user_prompt) > 35 else user_prompt
+                st.session_state.all_chats[new_id] = {
+                    "title": title,
+                    "timestamp": now_str,
+                    "messages": [],
+                }
+                st.session_state.current_chat_id = new_id
+
+            st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
+                {"role": "user", "content": user_prompt}
+            )
+
+            with st.chat_message("user"):
+                st.markdown(user_prompt)
+
+            active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
+            contents = []
+            for msg in active_history:
+                role = "user" if msg["role"] == "user" else "model"
+                contents.append(
+                    types.Content(
+                        role=role,
+                        parts=[types.Part(text=msg["content"])],
+                    )
                 )
-                for chunk in response_stream:
-                    if chunk.text:
-                        full_response += chunk.text
-                        message_placeholder.markdown(full_response + "▌")
-                message_placeholder.markdown(full_response)
-            except Exception as e:
-                st.error(f"API Error: {e}")
 
-    if full_response:
-        st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
-            {"role": "assistant", "content": full_response}
-        )
-        st.rerun()
+            with st.chat_message("assistant"):
+                message_placeholder = st.empty()
+                full_response = ""
+
+                try:
+                    response_stream = client.models.generate_content_stream(
+                        model="gemini-3.6-flash",
+                        contents=contents,
+                        config=types.GenerateContentConfig(
+                            system_instruction=SYSTEM_PROMPT,
+                            temperature=0.2,
+                        ),
+                    )
+                    for chunk in response_stream:
+                        if chunk.text:
+                            full_response += chunk.text
+                            message_placeholder.markdown(full_response + "▌")
+                    message_placeholder.markdown(full_response)
+                except Exception as e:
+                    st.error(f"API Error: {e}")
+
+            if full_response:
+                st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
+                    {"role": "assistant", "content": full_response}
+                )
+                st.rerun()
+                
