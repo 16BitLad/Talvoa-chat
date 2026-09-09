@@ -2,6 +2,7 @@ import os
 import uuid
 from datetime import datetime
 import streamlit as st
+from streamlit_local_storage import LocalStorage
 from google import genai
 from google.genai import types
 
@@ -13,9 +14,17 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 2. State Initializations
+# 2. LocalStorage & State Initializations
+local_storage = LocalStorage()
+
 if "all_chats" not in st.session_state:
     st.session_state.all_chats = {}
+
+# Hydrate conversation history from browser local storage on page load
+if len(st.session_state.all_chats) == 0:
+    cached_data = local_storage.getItem("wittalva_user_chats")
+    if cached_data and isinstance(cached_data, dict):
+        st.session_state.all_chats = cached_data
 
 if "current_chat_id" not in st.session_state:
     st.session_state.current_chat_id = None
@@ -28,7 +37,7 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# 3. Permanent Natural Flow CSS & Extended Full-Height Window Styling
+# 3. Permanent Natural Flow CSS & Form Styling
 st.markdown(
     """
     <style>
@@ -42,8 +51,8 @@ st.markdown(
         display: none !important; 
     }
     .block-container { 
-        padding-top: 1.5rem !important; 
-        padding-bottom: 0.8rem !important; 
+        padding-top: 2rem !important; 
+        padding-bottom: 2rem !important; 
         max-width: 750px !important; 
         text-align: center;
     }
@@ -130,7 +139,7 @@ st.markdown(
         border-color: #52525b;
         color: #ffffff;
     }
-    /* Extended Output Window reaching all the way to the bottom edge */
+    /* Output Window dynamically fills all remaining vertical space */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         height: calc(100vh - 240px) !important;
         max-height: calc(100vh - 240px) !important;
@@ -420,76 +429,84 @@ if not api_key:
 
 client = genai.Client(api_key=api_key)
 
-# 10. Dedicated Full-Height Output Container
-if len(current_messages) > 0 or (submitted and user_prompt.strip()):
-    chat_box = st.container(height=650)
-    
+# 10. Handle Submission
+if (submitted and user_prompt) or (user_prompt and len(user_prompt.strip()) > 0):
+    st.session_state.show_history = False
+    now_str = datetime.now().strftime("%d.%m.%Y, %H:%M")
+
+    clean_prompt = user_prompt.strip()
+
+    if not st.session_state.current_chat_id:
+        new_id = str(uuid.uuid4())[:8]
+        title = clean_prompt[:35] + "..." if len(clean_prompt) > 35 else clean_prompt
+        st.session_state.all_chats[new_id] = {
+            "title": title,
+            "timestamp": now_str,
+            "messages": [],
+        }
+        st.session_state.current_chat_id = new_id
+
+    st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
+        {"role": "user", "content": clean_prompt}
+    )
+
+    # Persist immediately to browser local storage
+    local_storage.setItem("wittalva_user_chats", st.session_state.all_chats)
+
+    active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
+    contents = []
+    for msg in active_history:
+        role = "user" if msg["role"] == "user" else "model"
+        contents.append(
+            types.Content(
+                role=role,
+                parts=[types.Part(text=msg["content"])],
+            )
+        )
+
+    # Render streaming inside output container
+    chat_box = st.container(height=500)
     with chat_box:
-        # Render existing messages
-        for msg in current_messages:
+        for msg in active_history[:-1]:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
         
-        # Process new submission exclusively once
-        if submitted and user_prompt.strip():
-            clean_prompt = user_prompt.strip()
-            now_str = datetime.now().strftime("%d.%m.%Y, %H:%M")
+        with st.chat_message("user"):
+            st.markdown(clean_prompt)
 
-            if not st.session_state.current_chat_id:
-                new_id = str(uuid.uuid4())[:8]
-                title = clean_prompt[:35] + "..." if len(clean_prompt) > 35 else clean_prompt
-                st.session_state.all_chats[new_id] = {
-                    "title": title,
-                    "timestamp": now_str,
-                    "messages": [],
-                }
-                st.session_state.current_chat_id = new_id
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            full_response = ""
 
-            # Save user prompt
-            st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
-                {"role": "user", "content": clean_prompt}
-            )
-
-            # Render current user prompt
-            with st.chat_message("user"):
-                st.markdown(clean_prompt)
-
-            # Prepare API history
-            active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
-            contents = []
-            for msg in active_history:
-                role = "user" if msg["role"] == "user" else "model"
-                contents.append(
-                    types.Content(
-                        role=role,
-                        parts=[types.Part(text=msg["content"])],
-                    )
+            try:
+                response_stream = client.models.generate_content_stream(
+                    model="gemini-3.6-flash",
+                    contents=contents,
+                    config=types.GenerateContentConfig(
+                        system_instruction=SYSTEM_PROMPT,
+                        temperature=0.2,
+                    ),
                 )
+                for chunk in response_stream:
+                    if chunk.text:
+                        full_response += chunk.text
+                        message_placeholder.markdown(full_response + "▌")
+                message_placeholder.markdown(full_response)
+            except Exception as e:
+                st.error(f"API Error: {e}")
 
-            # Stream response
-            with st.chat_message("assistant"):
-                message_placeholder = st.empty()
-                full_response = ""
+    if full_response:
+        st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
+            {"role": "assistant", "content": full_response}
+        )
+        # Save updated conversation to browser local storage
+        local_storage.setItem("wittalva_user_chats", st.session_state.all_chats)
+        st.rerun()
 
-                try:
-                    response_stream = client.models.generate_content_stream(
-                        model="gemini-3.6-flash",
-                        contents=contents,
-                        config=types.GenerateContentConfig(
-                            system_instruction=SYSTEM_PROMPT,
-                            temperature=0.2,
-                        ),
-                    )
-                    for chunk in response_stream:
-                        if chunk.text:
-                            full_response += chunk.text
-                            message_placeholder.markdown(full_response + "▌")
-                    message_placeholder.markdown(full_response)
-                except Exception as e:
-                    st.error(f"API Error: {e}")
-
-            if full_response:
-                st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
-                    {"role": "assistant", "content": full_response}
-                )
-                st.rerun()
+# 11. Render Persistent Output Window if active conversation exists and not submitting
+elif len(current_messages) > 0:
+    chat_box = st.container(height=500)
+    with chat_box:
+        for msg in current_messages:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
