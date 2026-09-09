@@ -28,7 +28,7 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# 3. Permanent Static Layout & Scroll Window Styling
+# 3. Permanent Static Layout & Full-Height Scroll Window Styling
 st.markdown(
     """
     <style>
@@ -40,7 +40,7 @@ st.markdown(
     footer { visibility: hidden; }
     .block-container { 
         padding-top: 2rem !important; 
-        padding-bottom: 2rem !important; 
+        padding-bottom: 1.5rem !important; 
         max-width: 750px !important; 
         text-align: center;
     }
@@ -58,7 +58,7 @@ st.markdown(
     /* Action Buttons Row permanently anchored directly below the input field */
     .action-btn-container {
         margin-top: 130px !important;
-        margin-bottom: 1.2rem !important;
+        margin-bottom: 1rem !important;
         width: 100% !important;
     }
     .action-btn-container .stButton > button {
@@ -93,12 +93,15 @@ st.markdown(
         border-color: #52525b;
         color: #ffffff;
     }
-    /* Dedicated Scroll Container Styling */
+    /* Dedicated Scroll Container dynamically fills remaining vertical space down to bottom */
     div[data-testid="stVerticalBlockBorderWrapper"] {
+        height: calc(100vh - 290px) !important;
+        max-height: calc(100vh - 290px) !important;
+        min-height: 450px !important;
         background-color: #141416 !important;
         border: 1px solid #27272a !important;
         border-radius: 12px !important;
-        padding: 0.5rem !important;
+        padding: 0.8rem !important;
     }
     /* Sleek Custom Scrollbar */
     ::-webkit-scrollbar {
@@ -195,9 +198,9 @@ st.components.v1.html(
     height=0,
 )
 
-# 8. Dedicated Scrollable Output Window for Active Conversation
+# 8. Dedicated Full-Height Scrollable Output Window for Active Conversation
 if len(current_messages) > 0:
-    chat_box = st.container(height=460)
+    chat_box = st.container(height=600)
     with chat_box:
         for msg in current_messages:
             with st.chat_message(msg["role"]):
@@ -427,7 +430,7 @@ if user_prompt := st.chat_input("How can I help?"):
         )
 
     # Render dedicated live stream inside the scrollable container
-    chat_box = st.container(height=460)
+    chat_box = st.container(height=600)
     with chat_box:
         for msg in active_history[:-1]:
             with st.chat_message(msg["role"]):
