@@ -40,20 +40,26 @@ if len(current_messages) == 0:
         .stApp { background-color: #18181b; color: #f4f4f5; }
         header { visibility: hidden; }
         footer { visibility: hidden; }
-        .block-container { padding-top: 22vh !important; max-width: 750px !important; text-align: center; }
+        .block-container { padding-top: 20vh !important; max-width: 750px !important; text-align: center; }
         .stChatInput {
-            position: fixed !important; top: 48% !important; bottom: auto !important;
+            position: fixed !important; top: 44% !important; bottom: auto !important;
             left: 50% !important; transform: translate(-50%, -50%) !important;
             max-width: 750px !important; width: 90% !important; z-index: 100 !important;
         }
-        /* Style for history buttons below input */
-        .history-container { margin-top: 8rem; text-align: left; }
+        /* Buttons below input */
+        .home-actions { margin-top: 7rem; }
         .stButton > button {
             background-color: #27272a; color: #f4f4f5; border: 1px solid #3f3f46;
             border-radius: 8px; padding: 0.75rem 1rem; width: 100%; text-align: left;
             margin-bottom: 0.5rem; transition: background-color 0.2s;
         }
         .stButton > button:hover { background-color: #3f3f46; border-color: #71717a; color: #ffffff; }
+        /* Distinct style for Open New Chat button */
+        .new-chat-btn > button {
+            background-color: #2e2e33 !important; border-color: #52525b !important;
+            text-align: center !important; font-weight: 500 !important; margin-bottom: 1.5rem !important;
+        }
+        .new-chat-btn > button:hover { background-color: #3f3f46 !important; border-color: #a1a1aa !important; }
         </style>
         """,
         unsafe_allow_html=True,
@@ -101,7 +107,7 @@ else:
         )
     with col2:
         st.markdown('<div class="nav-button">', unsafe_allow_html=True)
-        if st.button("➕ New Chat"):
+        if st.button("➕ Open new chat"):
             st.session_state.current_chat_id = None
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
@@ -303,25 +309,37 @@ for msg in current_messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# 8. Render Past Chat History on Empty Home Screen
-if len(current_messages) == 0 and len(st.session_state.all_chats) > 0:
-    st.markdown(
-        """
-        <div class="history-container">
-            <p style="color: #71717a; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.8rem;">
-                Previous Conversations
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+# 8. Render Home Actions & History on Empty Home Screen
+if len(current_messages) == 0:
+    st.markdown('<div class="home-actions">', unsafe_allow_html=True)
 
-    # Display chats in reverse chronological order (newest first)
-    for c_id, c_data in reversed(list(st.session_state.all_chats.items())):
-        btn_label = f"💬 {c_data['title']}   •   🕒 {c_data['timestamp']}"
-        if st.button(btn_label, key=f"btn_{c_id}", use_container_width=True):
-            st.session_state.current_chat_id = c_id
-            st.rerun()
+    # Centered Open New Chat Button
+    st.markdown('<div class="new-chat-btn">', unsafe_allow_html=True)
+    if st.button("➕ Open new chat", key="btn_open_new_chat"):
+        st.session_state.current_chat_id = None
+        st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # History List underneath
+    if len(st.session_state.all_chats) > 0:
+        st.markdown(
+            """
+            <div style="text-align: left; margin-bottom: 0.8rem;">
+                <p style="color: #71717a; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">
+                    Previous Conversations
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        for c_id, c_data in reversed(list(st.session_state.all_chats.items())):
+            btn_label = f"💬 {c_data['title']}   •   🕒 {c_data['timestamp']}"
+            if st.button(btn_label, key=f"btn_{c_id}", use_container_width=True):
+                st.session_state.current_chat_id = c_id
+                st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # 9. Handle User Chat Input
 if user_prompt := st.chat_input("What's your matter?"):
@@ -330,7 +348,6 @@ if user_prompt := st.chat_input("What's your matter?"):
     # Create new chat session if none is active
     if not st.session_state.current_chat_id:
         new_id = str(uuid.uuid4())[:8]
-        # Generate title from first 35 chars of input
         title = (
             user_prompt[:35] + "..." if len(user_prompt) > 35 else user_prompt
         )
