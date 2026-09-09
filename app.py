@@ -59,10 +59,7 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# Stabile native Container-Hoehe (in Pixeln)
-chat_height = 300 if st.session_state.show_history else 500
-
-# 4. Custom CSS: Schlank und ohne bruechige Layout-Hacks
+# 4. Custom CSS
 st.markdown(
     """
     <style>
@@ -77,7 +74,7 @@ st.markdown(
     }
     .block-container { 
         padding-top: 0.5rem !important; 
-        padding-bottom: 2rem !important; 
+        padding-bottom: 3rem !important; /* Sauberer Abstand am Ende der Seite */
         max-width: 750px !important; 
         text-align: center;
     }
@@ -214,7 +211,7 @@ st.markdown(
         text-align: left !important;
     }
 
-    /* FARBANPASSUNG DES NATIVEN CONTAINERS (OHNE LAYOUT-HACKS) */
+    /* CONTAINER STYLING */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #141416 !important;
         border: 1px solid #27272a !important;
@@ -298,9 +295,9 @@ if st.session_state.show_history:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 9. Full WITTALVA System Prompt (Version 1.23)
+# 9. Full WITTALVA System Prompt (Version 1.25)
 SYSTEM_PROMPT = """
-<system_config version="1.23" deployment_mode="in_context">
+<system_config version="1.25" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -684,8 +681,8 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
         )
     )
 
-    # Nativer Streamlit-Scrollcontainer
-    chat_box = st.container(height=chat_height, border=True)
+    # Nativer Streamlit-Container
+    chat_box = st.container(border=True)
     with chat_box:
         for msg in active_history[:-1]:
             with st.chat_message(msg["role"]):
@@ -762,7 +759,7 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
 
 # 12. Render Persistent Output Window if not actively submitting
 elif len(current_messages) > 0:
-    chat_box = st.container(height=chat_height, border=True)
+    chat_box = st.container(border=True)
     with chat_box:
         for msg in current_messages:
             with st.chat_message(msg["role"]):
