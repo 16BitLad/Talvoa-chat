@@ -28,7 +28,7 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# 3. Permanent Natural Flow CSS & Form Styling
+# 3. Permanent Natural Flow CSS & Extended Full-Height Window Styling
 st.markdown(
     """
     <style>
@@ -42,8 +42,8 @@ st.markdown(
         display: none !important; 
     }
     .block-container { 
-        padding-top: 2rem !important; 
-        padding-bottom: 2rem !important; 
+        padding-top: 1.5rem !important; 
+        padding-bottom: 0.8rem !important; 
         max-width: 750px !important; 
         text-align: center;
     }
@@ -52,8 +52,8 @@ st.markdown(
         background-color: #27272a !important;
         border: 1px solid #3f3f46 !important;
         border-radius: 12px !important;
-        padding: 0.35rem 0.6rem !important;
-        margin: 0.5rem auto 1rem auto !important;
+        padding: 0.3rem 0.6rem !important;
+        margin: 0.4rem auto 0.8rem auto !important;
         max-width: 750px !important;
     }
     div[data-testid="stForm"] .stTextInput input {
@@ -61,7 +61,7 @@ st.markdown(
         color: #f4f4f5 !important;
         border: none !important;
         font-size: 1rem !important;
-        padding: 0.5rem 0.2rem !important;
+        padding: 0.45rem 0.2rem !important;
     }
     div[data-testid="stForm"] .stTextInput input:focus {
         outline: none !important;
@@ -85,7 +85,7 @@ st.markdown(
     /* Action Buttons Row */
     .action-btn-container {
         margin-top: 0 !important;
-        margin-bottom: 1.2rem !important;
+        margin-bottom: 0.9rem !important;
         width: 100% !important;
     }
     .action-btn-container .stButton > button {
@@ -93,8 +93,8 @@ st.markdown(
         color: #f4f4f5; 
         border: 1px solid #3f3f46;
         border-radius: 8px; 
-        padding: 0.55rem 1rem; 
-        font-weight: 500;
+        padding: 0.5rem 1rem; 
+        font-weight: 500; 
         width: 100%;
         transition: all 0.2s ease;
     }
@@ -111,7 +111,7 @@ st.markdown(
         border: 1px solid #333338;
         border-radius: 10px;
         padding: 1rem;
-        margin-bottom: 1.2rem;
+        margin-bottom: 1rem;
         text-align: left;
     }
     .history-item .stButton > button {
@@ -130,11 +130,11 @@ st.markdown(
         border-color: #52525b;
         color: #ffffff;
     }
-    /* Dedicated Scroll Container */
+    /* Extended Output Window reaching all the way to the bottom edge */
     div[data-testid="stVerticalBlockBorderWrapper"] {
-        height: calc(100vh - 340px) !important;
-        max-height: calc(100vh - 340px) !important;
-        min-height: 420px !important;
+        height: calc(100vh - 240px) !important;
+        max-height: calc(100vh - 240px) !important;
+        min-height: 520px !important;
         background-color: #141416 !important;
         border: 1px solid #27272a !important;
         border-radius: 12px !important;
@@ -166,9 +166,9 @@ st.markdown(
 # 4. Header Section
 st.markdown(
     """
-    <div style="text-align: center; margin-bottom: 0.2rem;">
-        <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 0.2rem; color: #ffffff;">WITTALVA</h1>
-        <p style="color: #a1a1aa; font-size: 1rem; margin-top: 0;">Your fellow guide and advisor through day-to-day matters</p>
+    <div style="text-align: center; margin-bottom: 0.1rem;">
+        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.1rem; color: #ffffff;">WITTALVA</h1>
+        <p style="color: #a1a1aa; font-size: 0.95rem; margin-top: 0;">Your fellow guide and advisor through day-to-day matters</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -420,9 +420,9 @@ if not api_key:
 
 client = genai.Client(api_key=api_key)
 
-# 10. Dedicated Single Output Container
+# 10. Dedicated Full-Height Output Container
 if len(current_messages) > 0 or (submitted and user_prompt.strip()):
-    chat_box = st.container(height=520)
+    chat_box = st.container(height=650)
     
     with chat_box:
         # Render existing messages
