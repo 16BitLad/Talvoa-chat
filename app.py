@@ -61,7 +61,7 @@ if st.session_state.current_chat_id and st.session_state.current_chat_id in st.s
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
 # Dynamische Hoehenberechnung: Fenster reicht exakt bis zum unteren Bildschirmrand
-chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 195px)"
+chat_window_height = "calc(100vh - 450px)" if st.session_state.show_history else "calc(100vh - 185px)"
 
 # 4. Custom CSS: Avatare ausblenden, Bubble-Positionierung & Full-Height
 st.markdown(
@@ -77,8 +77,8 @@ st.markdown(
         display: none !important; 
     }}
     .block-container {{ 
-        padding-top: 0.6rem !important; 
-        padding-bottom: 0.2rem !important; 
+        padding-top: 0.5rem !important; 
+        padding-bottom: 0 !important; 
         max-width: 780px !important; 
         text-align: center;
     }}
@@ -88,7 +88,7 @@ st.markdown(
         border: 1px solid #3f3f46 !important;
         border-radius: 12px !important;
         padding: 0.25rem 0.6rem !important;
-        margin: 0.3rem auto 0.6rem auto !important;
+        margin: 0.25rem auto 0.5rem auto !important;
         max-width: 780px !important;
     }}
     div[data-testid="stForm"] .stTextInput input {{
@@ -120,7 +120,7 @@ st.markdown(
     /* Action Buttons Row */
     .action-btn-container {{
         margin-top: 0 !important;
-        margin-bottom: 0.6rem !important;
+        margin-bottom: 0.5rem !important;
         width: 100% !important;
     }}
     .action-btn-container .stButton > button {{
@@ -207,9 +207,10 @@ st.markdown(
     }}
 
     /* ==================================================================== */
-    /* 3. DIALOGFENSTER BIS ZUM UNTEREN WEBFENSTERRAND                     */
+    /* 3. DIALOGFENSTER: BEDINGUNGSLOS BIS ZUM UNTEREN WEBFENSTERRAND      */
     /* ==================================================================== */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(div[data-testid="stChatMessage"]) {{
+    /* Generelle Regel fuer das Chatfenster: dehnt sich IMMER bis zum unteren Rand */
+    div[data-testid="stVerticalBlockBorderWrapper"] {{
         height: {chat_window_height} !important;
         max-height: {chat_window_height} !important;
         min-height: 380px !important;
@@ -219,6 +220,21 @@ st.markdown(
         padding: 0.8rem !important;
         overflow-y: auto !important;
         margin-bottom: 0 !important;
+    }}
+    div[data-testid="stVerticalBlockBorderWrapper"] > div[data-testid="stVerticalBlock"] {{
+        height: 100% !important;
+        max-height: 100% !important;
+    }}
+
+    /* Spezifische Ausnahme: Das History-Dropdown bleibt kompakt bei 240px */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.history-item),
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(p.history-title-marker) {{
+        height: 240px !important;
+        max-height: 240px !important;
+        min-height: 120px !important;
+        background-color: #1c1c20 !important;
+        border: 1px solid #333338 !important;
+        margin-bottom: 0.6rem !important;
     }}
 
     /* Custom Scrollbars */
@@ -289,7 +305,7 @@ if st.session_state.show_history:
     with st.container(height=240):
         st.markdown(
             """
-            <p style="color: #71717a; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; font-weight: 600;">
+            <p class="history-title-marker" style="color: #71717a; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; font-weight: 600;">
                 Previous Conversations
             </p>
             """,
@@ -297,7 +313,7 @@ if st.session_state.show_history:
         )
 
         if len(st.session_state.all_chats) == 0:
-            st.markdown("<p style='color: #71717a; font-size: 0.85rem; margin: 0;'>No previous conversations stored yet.</p>", unsafe_allow_html=True)
+            st.markdown("<p class='history-item' style='color: #71717a; font-size: 0.85rem; margin: 0;'>No previous conversations stored yet.</p>", unsafe_allow_html=True)
         else:
             for c_id, c_data in reversed(list(st.session_state.all_chats.items())):
                 st.markdown('<div class="history-item">', unsafe_allow_html=True)
@@ -684,7 +700,7 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
         )
     ]
 
-    # DOM-Hook: height=500 erzeugt den scrollbaren Wrapper, CSS dehnt ihn auf 100vh
+    # DOM-Hook: height=500 erzeugt den scrollbaren Wrapper, CSS dehnt ihn bedingungslos
     chat_box = st.container(height=500)
     with chat_box:
         for msg in active_history[:-1]:
@@ -764,7 +780,7 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
 
 # 12. Render Persistent Output Window if not actively submitting
 elif len(current_messages) > 0:
-    # DOM-Hook: height=500 erzeugt den scrollbaren Wrapper, CSS dehnt ihn auf 100vh
+    # DOM-Hook: height=500 erzeugt den scrollbaren Wrapper, CSS dehnt ihn bedingungslos
     chat_box = st.container(height=500)
     with chat_box:
         for msg in current_messages:
