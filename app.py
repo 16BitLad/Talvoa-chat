@@ -59,8 +59,8 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# Exakt austariert: 470px laesst genau ca. 2-3 Textzeilen Puffer zum unteren Bildschirmrand
-chat_height = 270 if st.session_state.show_history else 470
+# Exakt kalibriert: 425px laesst stabil 2-3 Textzeilen (~50px) Freiraum vor der unteren Leiste
+chat_height = 250 if st.session_state.show_history else 425
 
 # 4. Custom CSS
 st.markdown(
@@ -77,7 +77,7 @@ st.markdown(
     }
     .block-container { 
         padding-top: 0.5rem !important; 
-        padding-bottom: 0 !important; /* Verhindert kuenstliche Riesen-Abstaende am Seitenende */
+        padding-bottom: 0 !important; 
         max-width: 750px !important; 
         text-align: center;
     }
@@ -221,13 +221,13 @@ st.markdown(
     }
 
     /* ==================================================================== */
-    /* 4. CHAT-CONTAINER: NATIVES SCROLLEN OHNE DOPPELTE AUSSENABSTAENDE    */
+    /* 4. CHAT-CONTAINER: NATIVES SCROLLEN                                  */
     /* ==================================================================== */
     div[data-testid="stVerticalBlockBorderWrapper"]:not(:has(.history-dropdown-box)) {
         background-color: #141416 !important;
         border: 1px solid #27272a !important;
         border-radius: 12px !important;
-        margin-bottom: 0 !important; /* Verhindert unnoetiges Hochdruecken der Box */
+        margin-bottom: 0 !important;
     }
 
     /* Custom Scrollbars */
@@ -322,9 +322,9 @@ if st.session_state.show_history:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 9. Full WITTALVA System Prompt (Version 1.14)
+# 9. Full WITTALVA System Prompt (Version 1.15)
 SYSTEM_PROMPT = """
-<system_config version="1.14" deployment_mode="in_context">
+<system_config version="1.15" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -472,7 +472,7 @@ SYSTEM_PROMPT = """
          - Dual-Loss Evaluation & Chesterton's Fence Mandate: When assessing prompt compression, refactoring, or layout compaction, prohibit classifying modifications as 'lossless' based solely on character or token retention; evaluate structural delimiter saliency and attentional degradation (Attention Bleeding) in joint parity with syntax, preserving structural whitespace, line breaks, and explicit tags wherever they prevent cross-parameter interference in dense metadata.
 
       3. SCHEMA LOCK, ZERO-REGRESSION & OPERATIVE SUBROLE MATRIX:
-         - Treat in-context schema rules (@SCHEMA_LOCK) as heuristic structural validation baselines subordinate strictly to explicit PL intent; enforce zero-regression via clause-by-clause structural comparison prior to asserting parity. Zero-Regression Mandate: K4 and B1 enforce complete subclause retention, verifying historical defense clauses, hedges, und canary hooks remain strictly preserved. Pre-Flight Audits: K4 audits complete alignment between archetypal_subspace_matrix declarations and core mapping on initialization and staging turns, preventing unlinked role drift.
+         - Treat in-context schema rules (@SCHEMA_LOCK) as heuristic structural validation baselines subordinate strictly to explicit PL intent; enforce zero-regression via clause-by-clause structural comparison prior to asserting parity. Zero-Regression Mandate: K4 and B1 enforce complete subclause retention, verifying historical defense clauses, hedges, and canary hooks remain strictly preserved. Pre-Flight Audits: K4 audits complete alignment between archetypal_subspace_matrix declarations and core mapping on initialization and staging turns, preventing unlinked role drift.
          - Comprehensive Operative Mapping Matrix & Subrole Closure: Every architectural subrole is bound to an operative execution hook:
            * Governance & Canon: A2 (empirical modeling, pattern detection, verification), A3 (inventive refactoring, systemic optimization), B1 (compliance audit, security & integrity, PL authorization verification), C3 (priority hierarchy enforcement, laws), L1/L2/L3 (canonical rule codex, fact invalidation against system sovereignty, controlled recital), K2/K4 (schema lock preservation, 4-point parity enforcement, zero-regression auditing, Turn-1 pre-flight audit, semantic integrity, Principle of Charity).
            * Security & Context: B2 (airlock & blast-radius guard, downside/danger analysis), B3 (alertwatch pre-edit scan, intent scan), D1 (passive payload ingestion), K1/K3 (in-context state preservation, episodic continuity, long-session drift mitigation, coreference resolution), J1/J2/J3 (turn triage T1/T2/T3, courier routing, multi-way disambiguation, high-risk detection, exception routing, pre-edit scanning).
@@ -598,7 +598,7 @@ SYSTEM_PROMPT = """
         <good>Entangled particles act as a unified system, not separated entities. Measuring one reveals a pre-existing correlated state without transmitting signals, preventing faster-than-light communication. This non-signaling correlation enables protocols like quantum key distribution while strictly obeying relativistic causality.</good>
       </example>
       <example type="duality_bridging_mandate">
-        <bad>The cache has two sides: the storage layer (how entries are kept) and the eviction policy (why entries are removed). Both matter for performance.</bad>
+        <bad>The cache has two sides: the storage layer (how entries are kept) und the eviction policy (why entries are removed). Both matter for performance.</bad>
         <good>The cache's storage layer and eviction policy aren't independent: a layout optimized for sequential writes (substrate) directly constrains which eviction policy can run cheaply (logic) — an LRU policy needs O(1) access to recency metadata, which a write-optimized layout doesn't provide without extra indexing.</good>
       </example>
       <example type="format_baseline_reference">
@@ -610,7 +610,7 @@ SYSTEM_PROMPT = """
       </example>
       <example type="heading_scope_fidelity_and_substrate_grounding">
         <bad>When introducing "Cable Pinouts": The serial interface divides the connection into logical signal paths for data and control.</bad>
-        <good>When introducing "Cable Pinouts" (D-Sub table): In a serial cable, connector pins are mapped to dedicated copper wires for transmit/receive lines (TxD/RxD), signal ground (GND), und hardware control contacts (RTS/CTS), deterministically securing physical hardware config access on unprovisioned hardware.</good>
+        <good>When introducing "Cable Pinouts" (D-Sub table): In a serial cable, connector pins are mapped to dedicated copper wires for transmit/receive lines (TxD/RxD), signal ground (GND), and hardware control contacts (RTS/CTS), deterministically securing physical hardware config access on unprovisioned hardware.</good>
       </example>
       <example type="anti_metaphor_practical_scenario">
         <bad>A media converter is like a person who listens to a phone call and blinks it with a flashlight through the night.</bad>
@@ -708,7 +708,7 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
         )
     )
 
-    # Nativer Streamlit-Scrollcontainer mit exakter Hoehe von 470px (bzw. 270px)
+    # Nativer Streamlit-Scrollcontainer mit exakt austarierter Hoehe von 425px
     chat_box = st.container(height=chat_height, border=True)
     with chat_box:
         for msg in active_history[:-1]:
