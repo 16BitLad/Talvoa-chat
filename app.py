@@ -1,9 +1,9 @@
-from datetime import datetime
 import os
 import uuid
+from datetime import datetime
+import streamlit as st
 from google import genai
 from google.genai import types
-import streamlit as st
 
 # 1. Page Configuration
 st.set_page_config(
@@ -15,22 +15,15 @@ st.set_page_config(
 
 # 2. Multi-Chat Storage Initialization
 if "all_chats" not in st.session_state:
-    st.session_state.all_chats = (
-        {}
-    )  # Structure: {chat_id: {"title": str, "timestamp": str, "messages": list}}
+    st.session_state.all_chats = {}
 
 if "current_chat_id" not in st.session_state:
     st.session_state.current_chat_id = None
 
 # Determine active messages
 current_messages = []
-if (
-    st.session_state.current_chat_id
-    and st.session_state.current_chat_id in st.session_state.all_chats
-):
-    current_messages = st.session_state.all_chats[
-        st.session_state.current_chat_id
-    ]["messages"]
+if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
+    current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
 # 3. Dynamic Styling & Dark Theme
 if len(current_messages) == 0:
@@ -40,26 +33,58 @@ if len(current_messages) == 0:
         .stApp { background-color: #18181b; color: #f4f4f5; }
         header { visibility: hidden; }
         footer { visibility: hidden; }
-        .block-container { padding-top: 20vh !important; max-width: 750px !important; text-align: center; }
+        .block-container { 
+            padding-top: 18vh !important; 
+            max-width: 750px !important; 
+            text-align: center; 
+        }
+        /* Fixed centered input field */
         .stChatInput {
-            position: fixed !important; top: 44% !important; bottom: auto !important;
-            left: 50% !important; transform: translate(-50%, -50%) !important;
-            max-width: 750px !important; width: 90% !important; z-index: 100 !important;
+            position: fixed !important; 
+            top: 40% !important; 
+            bottom: auto !important;
+            left: 50% !important; 
+            transform: translate(-50%, -50%) !important;
+            max-width: 750px !important; 
+            width: 90% !important; 
+            z-index: 100 !important;
         }
-        /* Buttons below input */
-        .home-actions { margin-top: 7rem; }
+        /* Container below input field */
+        .home-actions { 
+            margin-top: 14rem !important; 
+            width: 100% !important;
+        }
         .stButton > button {
-            background-color: #27272a; color: #f4f4f5; border: 1px solid #3f3f46;
-            border-radius: 8px; padding: 0.75rem 1rem; width: 100%; text-align: left;
-            margin-bottom: 0.5rem; transition: background-color 0.2s;
+            background-color: #27272a; 
+            color: #f4f4f5; 
+            border: 1px solid #3f3f46;
+            border-radius: 8px; 
+            padding: 0.75rem 1rem; 
+            width: 100%; 
+            text-align: left;
+            margin-bottom: 0.5rem; 
+            transition: background-color 0.2s;
         }
-        .stButton > button:hover { background-color: #3f3f46; border-color: #71717a; color: #ffffff; }
-        /* Distinct style for Open New Chat button */
+        .stButton > button:hover { 
+            background-color: #3f3f46; 
+            border-color: #71717a; 
+            color: #ffffff; 
+        }
+        /* Centered button styling */
         .new-chat-btn > button {
-            background-color: #2e2e33 !important; border-color: #52525b !important;
-            text-align: center !important; font-weight: 500 !important; margin-bottom: 1.5rem !important;
+            background-color: #27272a !important; 
+            border: 1px solid #52525b !important;
+            border-radius: 20px !important;
+            text-align: center !important; 
+            font-weight: 500 !important; 
+            margin: 0 auto 1.5rem auto !important;
+            max-width: 240px !important;
+            display: block !important;
         }
-        .new-chat-btn > button:hover { background-color: #3f3f46 !important; border-color: #a1a1aa !important; }
+        .new-chat-btn > button:hover { 
+            background-color: #3f3f46 !important; 
+            border-color: #a1a1aa !important; 
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -71,17 +96,33 @@ else:
         .stApp { background-color: #18181b; color: #f4f4f5; }
         header { visibility: hidden; }
         footer { visibility: hidden; }
-        .block-container { padding-top: 2rem !important; padding-bottom: 100px !important; max-width: 750px !important; }
+        .block-container { 
+            padding-top: 2rem !important; 
+            padding-bottom: 100px !important; 
+            max-width: 750px !important; 
+        }
         .stChatInput {
-            position: fixed !important; bottom: 20px !important; top: auto !important;
-            left: 50% !important; transform: translateX(-50%) !important;
-            max-width: 750px !important; width: 90% !important; z-index: 100 !important;
+            position: fixed !important; 
+            bottom: 20px !important; 
+            top: auto !important;
+            left: 50% !important; 
+            transform: translateX(-50%) !important;
+            max-width: 750px !important; 
+            width: 90% !important; 
+            z-index: 100 !important;
         }
         .nav-button > button {
-            background-color: transparent; border: 1px solid #3f3f46; color: #a1a1aa;
-            border-radius: 6px; padding: 0.3rem 0.8rem; margin-bottom: 1rem;
+            background-color: transparent; 
+            border: 1px solid #3f3f46; 
+            color: #a1a1aa;
+            border-radius: 6px; 
+            padding: 0.3rem 0.8rem; 
+            margin-bottom: 1rem;
         }
-        .nav-button > button:hover { background-color: #27272a; color: #ffffff; }
+        .nav-button > button:hover { 
+            background-color: #27272a; 
+            color: #ffffff; 
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -101,16 +142,13 @@ if len(current_messages) == 0:
 else:
     col1, col2 = st.columns([6, 2])
     with col1:
-        st.markdown(
-            "<h3 style='margin: 0; color: #ffffff;'>WITTALVA</h3>",
-            unsafe_allow_html=True,
-        )
+        st.markdown("<h3 style='margin: 0; color: #ffffff;'>WITTALVA</h3>", unsafe_allow_html=True)
     with col2:
         st.markdown('<div class="nav-button">', unsafe_allow_html=True)
         if st.button("➕ Open new chat"):
             st.session_state.current_chat_id = None
             st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # 5. Full WITTALVA System Prompt (Version 1.06)
 SYSTEM_PROMPT = """
@@ -312,14 +350,14 @@ for msg in current_messages:
 # 8. Render Home Actions & History on Empty Home Screen
 if len(current_messages) == 0:
     st.markdown('<div class="home-actions">', unsafe_allow_html=True)
-
+    
     # Centered Open New Chat Button
     st.markdown('<div class="new-chat-btn">', unsafe_allow_html=True)
     if st.button("➕ Open new chat", key="btn_open_new_chat"):
         st.session_state.current_chat_id = None
         st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
-
+    st.markdown('</div>', unsafe_allow_html=True)
+    
     # History List underneath
     if len(st.session_state.all_chats) > 0:
         st.markdown(
@@ -332,25 +370,23 @@ if len(current_messages) == 0:
             """,
             unsafe_allow_html=True,
         )
-
+        
         for c_id, c_data in reversed(list(st.session_state.all_chats.items())):
             btn_label = f"💬 {c_data['title']}   •   🕒 {c_data['timestamp']}"
             if st.button(btn_label, key=f"btn_{c_id}", use_container_width=True):
                 st.session_state.current_chat_id = c_id
                 st.rerun()
-
-    st.markdown("</div>", unsafe_allow_html=True)
+                
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # 9. Handle User Chat Input
 if user_prompt := st.chat_input("What's your matter?"):
     now_str = datetime.now().strftime("%d.%m.%Y, %H:%M")
-
+    
     # Create new chat session if none is active
     if not st.session_state.current_chat_id:
         new_id = str(uuid.uuid4())[:8]
-        title = (
-            user_prompt[:35] + "..." if len(user_prompt) > 35 else user_prompt
-        )
+        title = user_prompt[:35] + "..." if len(user_prompt) > 35 else user_prompt
         st.session_state.all_chats[new_id] = {
             "title": title,
             "timestamp": now_str,
@@ -359,20 +395,17 @@ if user_prompt := st.chat_input("What's your matter?"):
         st.session_state.current_chat_id = new_id
 
     # Append user message
-    st.session_state.all_chats[st.session_state.current_chat_id][
-        "messages"
-    ].append({"role": "user", "content": user_prompt})
-
+    st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append({"role": "user", "content": user_prompt})
+    
     # Prepare chat history for Gemini API
-    active_history = st.session_state.all_chats[
-        st.session_state.current_chat_id
-    ]["messages"]
+    active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
     contents = []
     for msg in active_history:
         role = "user" if msg["role"] == "user" else "model"
         contents.append(
             types.Content(
-                role=role, parts=[types.Part.from_text(text=msg["content"])]
+                role=role,
+                parts=[types.Part.from_text(text=msg["content"])],
             )
         )
 
@@ -400,7 +433,5 @@ if user_prompt := st.chat_input("What's your matter?"):
 
     # Save assistant response
     if full_response:
-        st.session_state.all_chats[st.session_state.current_chat_id][
-            "messages"
-        ].append({"role": "assistant", "content": full_response})
+        st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append({"role": "assistant", "content": full_response})
         st.rerun()
