@@ -440,6 +440,7 @@ if user_prompt := st.chat_input("How can I help?"):
         {"role": "user", "content": user_prompt}
     )
 
+    # Format history safely for google-genai SDK
     active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
     contents = []
     for msg in active_history:
@@ -447,7 +448,7 @@ if user_prompt := st.chat_input("How can I help?"):
         contents.append(
             types.Content(
                 role=role,
-                parts=[types.Part.from_text(text=msg["content"])],
+                parts=[types.Part(text=msg["content"])],
             )
         )
 
@@ -456,7 +457,6 @@ if user_prompt := st.chat_input("How can I help?"):
         full_response = ""
 
         try:
-            # Clean generation call without budget deadlock
             response_stream = client.models.generate_content_stream(
                 model="gemini-3.6-flash",
                 contents=contents,
@@ -471,7 +471,7 @@ if user_prompt := st.chat_input("How can I help?"):
                     message_placeholder.markdown(full_response + "▌")
             message_placeholder.markdown(full_response)
         except Exception as e:
-            st.error(f"Error: {e}")
+            st.error(f"API Error: {e}")
 
     if full_response:
         st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
