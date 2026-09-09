@@ -424,7 +424,7 @@ if user_prompt := st.chat_input("What's your matter?"):
 
         try:
             stream = client.chat.stream(
-                model="mistral-large-latest",
+                model="mistral-small-latest",
                 messages=api_payload,
                 temperature=0.2,
                 max_tokens=4000,
