@@ -59,8 +59,8 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# 380px laesst auf deinem Display exakt 3-4 Textzeilen (~90px) echten Freiraum unten
-chat_height = 230 if st.session_state.show_history else 380
+# 350px laesst bei jedem Display garantiert 3-4 Textzeilen (~80px) echten Freiraum unten
+chat_height = 220 if st.session_state.show_history else 350
 
 # 4. Custom CSS
 st.markdown(
@@ -221,27 +221,26 @@ st.markdown(
     }
 
     /* ==================================================================== */
-    /* 4. CHAT-CONTAINER: OPTIK DES NATIVEN SCROLLFENSTERS                  */
+    /* 4. CHAT-CONTAINER: TARGETING ST-KEY-CHAT_BOX DIRECTLY                */
     /* ==================================================================== */
-    div[data-testid="stVerticalBlockBorderWrapper"]:not(:has(.history-dropdown-box)) {
+    .st-key-chat_box {
         background-color: #141416 !important;
         border: 1px solid #27272a !important;
         border-radius: 12px !important;
-        margin-bottom: 0 !important;
     }
 
     /* Custom Scrollbars */
-    div[data-testid="stVerticalBlockBorderWrapper"]::-webkit-scrollbar {
+    .st-key-chat_box::-webkit-scrollbar {
         width: 6px;
     }
-    div[data-testid="stVerticalBlockBorderWrapper"]::-webkit-scrollbar-track {
+    .st-key-chat_box::-webkit-scrollbar-track {
         background: #141416;
     }
-    div[data-testid="stVerticalBlockBorderWrapper"]::-webkit-scrollbar-thumb {
+    .st-key-chat_box::-webkit-scrollbar-thumb {
         background: #3f3f46;
         border-radius: 3px;
     }
-    div[data-testid="stVerticalBlockBorderWrapper"]::-webkit-scrollbar-thumb:hover {
+    .st-key-chat_box::-webkit-scrollbar-thumb:hover {
         background: #52525b;
     }
     </style>
@@ -322,9 +321,9 @@ if st.session_state.show_history:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 9. Full WITTALVA System Prompt (Version 1.17)
+# 9. Full WITTALVA System Prompt (Version 1.18)
 SYSTEM_PROMPT = """
-<system_config version="1.17" deployment_mode="in_context">
+<system_config version="1.18" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -708,8 +707,8 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
         )
     )
 
-    # Nativer Streamlit-Scrollcontainer mit expliziter Hoehenangabe
-    chat_box = st.container(height=chat_height, border=True)
+    # Nativer Streamlit-Scrollcontainer mit isoliertem Key
+    chat_box = st.container(height=chat_height, border=True, key="chat_box")
     with chat_box:
         for msg in active_history[:-1]:
             with st.chat_message(msg["role"]):
@@ -786,7 +785,7 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
 
 # 12. Render Persistent Output Window if not actively submitting
 elif len(current_messages) > 0:
-    chat_box = st.container(height=chat_height, border=True)
+    chat_box = st.container(height=chat_height, border=True, key="chat_box")
     with chat_box:
         for msg in current_messages:
             with st.chat_message(msg["role"]):
