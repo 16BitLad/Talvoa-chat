@@ -44,7 +44,6 @@ if "current_chat_id" not in st.session_state:
 if "show_history" not in st.session_state:
     st.session_state.show_history = False
 
-# Callbacks: Werden vor dem Rerun ausgefuehrt (beseitigt Klick-Desync)
 def toggle_history():
     st.session_state.show_history = not st.session_state.show_history
 
@@ -60,10 +59,10 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# Dynamische Hoehenberechnung fuer den unteren Bildschirmrand
+# Dynamische Hoehenberechnung
 chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 210px)"
 
-# 4. Custom CSS: Saubere Einzel-Rahmen, Avatare ausblenden & Full-Height
+# 4. Custom CSS: Saubere Isolierung ohne toxische Wildcards
 st.markdown(
     f"""
     <style>
@@ -79,7 +78,7 @@ st.markdown(
     .block-container {{ 
         padding-top: 0.5rem !important; 
         padding-bottom: 0 !important; 
-        max-width: 780px !important; 
+        max-width: 750px !important; 
         text-align: center;
     }}
     /* Sleek Chat Form directly under Header */
@@ -89,7 +88,7 @@ st.markdown(
         border-radius: 12px !important;
         padding: 0.25rem 0.6rem !important;
         margin: 0.25rem auto 0.5rem auto !important;
-        max-width: 780px !important;
+        max-width: 750px !important;
     }}
     div[data-testid="stForm"] .stTextInput input {{
         background-color: transparent !important;
@@ -140,10 +139,10 @@ st.markdown(
     }}
 
     /* ==================================================================== */
-    /* 1. HISTORY DROPDOWN: KLARE, SCHLANKE BOX OHNE VERSCHACHTELUNG       */
+    /* 1. HISTORY DROPDOWN: REINE CONTAINER-KLASSE OHNE DOPPELRAHMEN       */
     /* ==================================================================== */
     .history-dropdown-box {{
-        max-height: 240px;
+        max-height: 220px;
         overflow-y: auto;
         background-color: #1c1c20;
         border: 1px solid #333338;
@@ -187,9 +186,11 @@ st.markdown(
         gap: 0 !important;
         width: fit-content !important;
         max-width: 85% !important;
+        height: auto !important;
+        min-height: 0 !important;
     }}
 
-    /* INPUTS (User): Linksbuendige Bubble */
+    /* INPUTS (User): Linksbuendig */
     div[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {{
         background-color: #27272a !important;
         border: 1px solid #3f3f46 !important;
@@ -220,10 +221,9 @@ st.markdown(
     }}
 
     /* ==================================================================== */
-    /* 4. DIALOGFENSTER: VOLLSTAENDIG BIS ZUM UNTEREN WEBFENSTERRAND       */
+    /* 4. DIALOGFENSTER: VOLLER BILDSCHIRMRAND OHNE INNEREN BOX-SALAT      */
     /* ==================================================================== */
-    /* Exakt EIN Rahmen auf oberster Ebene ohne Schachtel-Effekt */
-    div[data-testid="stVerticalBlockBorderWrapper"] {{
+    div[data-testid="stVerticalBlockBorderWrapper"]:not(:has(.history-dropdown-box)) {{
         height: {chat_window_height} !important;
         min-height: {chat_window_height} !important;
         max-height: {chat_window_height} !important;
@@ -234,10 +234,11 @@ st.markdown(
         overflow-y: auto !important;
         margin-bottom: 0 !important;
     }}
-    div[data-testid="stVerticalBlockBorderWrapper"] > div[data-testid="stVerticalBlock"] {{
+    div[data-testid="stVerticalBlockBorderWrapper"]:not(:has(.history-dropdown-box)) > div[data-testid="stVerticalBlock"] {{
         height: 100% !important;
         border: none !important;
         background: transparent !important;
+        padding: 0 !important;
     }}
 
     /* Custom Scrollbars */
@@ -263,8 +264,8 @@ st.markdown(
 st.markdown(
     """
     <div style="text-align: center; margin-bottom: 0.1rem;">
-        <h1 style="font-size: 2.3rem; font-weight: 700; margin-bottom: 0.1rem; color: #ffffff;">WITTALVA</h1>
-        <p style="color: #a1a1aa; font-size: 0.9rem; margin-top: 0;">Your fellow guide and advisor through day-to-day matters</p>
+        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.1rem; color: #ffffff;">WITTALVA</h1>
+        <p style="color: #a1a1aa; font-size: 0.95rem; margin-top: 0;">Your fellow guide and advisor through day-to-day matters</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -303,7 +304,7 @@ with col_b2:
     )
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 8. Collapsible History Dropdown (Schlanke Original-Formation ohne BorderWrapper)
+# 8. Collapsible History Dropdown (Saubere HTML-Box ohne Streamlit-Container-Kollision)
 if st.session_state.show_history:
     st.markdown('<div class="history-dropdown-box">', unsafe_allow_html=True)
     st.markdown(
@@ -619,7 +620,7 @@ SYSTEM_PROMPT = """
         <good>Body text without headings, maximum one bold phrase per paragraph, bullet lists only for genuine enumerations — unchanged from the formatting level of earlier responses in this session.</good>
       </example>
       <example type="heading_scope_fidelity_and_substrate_grounding">
-        <bad>When introducing "Cable Pinouts": The serial interface divides the connection into logical signal paths for data control.</bad>
+        <bad>When introducing "Cable Pinouts": The serial interface divides the connection into logical signal paths for data and control.</bad>
         <good>When introducing "Cable Pinouts" (D-Sub table): In a serial cable, connector pins are mapped to dedicated copper wires for transmit/receive lines (TxD/RxD), signal ground (GND), and hardware control contacts (RTS/CTS), deterministically securing physical hardware config access on unprovisioned hardware.</good>
       </example>
       <example type="anti_metaphor_practical_scenario">
