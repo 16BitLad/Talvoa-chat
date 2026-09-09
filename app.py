@@ -456,12 +456,13 @@ if user_prompt := st.chat_input("How can I help?"):
         full_response = ""
 
         try:
+            # Clean generation call without budget deadlock
             response_stream = client.models.generate_content_stream(
                 model="gemini-3.6-flash",
                 contents=contents,
                 config=types.GenerateContentConfig(
                     system_instruction=SYSTEM_PROMPT,
-                    thinking_config=types.ThinkingConfig(thinking_budget=-1),
+                    temperature=0.2,
                 ),
             )
             for chunk in response_stream:
