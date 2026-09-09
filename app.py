@@ -28,144 +28,84 @@ current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
-# 3. Dynamic Styling: Centered on Empty Home, Docked Bottom on Active Chat
-if len(current_messages) == 0:
-    st.markdown(
-        """
-        <style>
-        .stApp { 
-            background-color: #18181b; 
-            color: #f4f4f5; 
-        }
-        header { visibility: hidden; }
-        footer { visibility: hidden; }
-        .block-container { 
-            padding-top: 12vh !important; 
-            max-width: 750px !important; 
-            text-align: center; 
-        }
-        /* Centered Input Box in the Middle */
-        .stChatInput {
-            position: fixed !important; 
-            top: 36% !important; 
-            bottom: auto !important;
-            left: 50% !important; 
-            transform: translate(-50%, -50%) !important;
-            max-width: 750px !important; 
-            width: 90% !important; 
-            z-index: 100 !important;
-        }
-        /* Buttons container placed directly one row beneath the centered input box */
-        .home-actions-row { 
-            margin-top: 10.5rem !important; 
-            width: 100% !important;
-        }
-        .action-btn-container .stButton > button {
-            background-color: #27272a; 
-            color: #f4f4f5; 
-            border: 1px solid #3f3f46;
-            border-radius: 8px; 
-            padding: 0.6rem 1rem; 
-            font-weight: 500;
-            width: 100%;
-            transition: all 0.2s ease;
-        }
-        .action-btn-container .stButton > button:hover { 
-            background-color: #3f3f46; 
-            border-color: #71717a; 
-            color: #ffffff; 
-        }
-        /* History list items */
-        .history-item .stButton > button {
-            background-color: #202024;
-            border: 1px solid #2e2e33;
-            color: #d4d4d8;
-            text-align: left !important;
-            justify-content: flex-start !important;
-            padding: 0.7rem 1rem;
-            margin-bottom: 0.4rem;
-            font-size: 0.9rem;
-            border-radius: 6px;
-        }
-        .history-item .stButton > button:hover {
-            background-color: #2a2a30;
-            border-color: #52525b;
-            color: #ffffff;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-else:
-    st.markdown(
-        """
-        <style>
-        .stApp { 
-            background-color: #18181b; 
-            color: #f4f4f5; 
-        }
-        header { visibility: hidden; }
-        footer { visibility: hidden; }
-        .block-container { 
-            padding-top: 2rem !important; 
-            padding-bottom: 120px !important; 
-            max-width: 750px !important; 
-        }
-        /* Fixed bottom input field during active chat */
-        .stChatInput {
-            position: fixed !important; 
-            bottom: 25px !important; 
-            top: auto !important;
-            left: 50% !important; 
-            transform: translateX(-50%) !important;
-            max-width: 750px !important; 
-            width: 90% !important; 
-            z-index: 100 !important;
-        }
-        .home-actions-row {
-            margin-top: 0 !important;
-            margin-bottom: 1.5rem !important;
-        }
-        .action-btn-container .stButton > button {
-            background-color: #27272a; 
-            color: #f4f4f5; 
-            border: 1px solid #3f3f46;
-            border-radius: 8px; 
-            padding: 0.5rem 1rem; 
-            font-weight: 500;
-            width: 100%;
-            transition: all 0.2s ease;
-        }
-        .action-btn-container .stButton > button:hover { 
-            background-color: #3f3f46; 
-            border-color: #71717a; 
-            color: #ffffff; 
-        }
-        .history-item .stButton > button {
-            background-color: #202024;
-            border: 1px solid #2e2e33;
-            color: #d4d4d8;
-            text-align: left !important;
-            justify-content: flex-start !important;
-            padding: 0.7rem 1rem;
-            margin-bottom: 0.4rem;
-            font-size: 0.9rem;
-            border-radius: 6px;
-        }
-        .history-item .stButton > button:hover {
-            background-color: #2a2a30;
-            border-color: #52525b;
-            color: #ffffff;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+# 3. Permanent Static Layout (Zero Layout Jumps)
+st.markdown(
+    """
+    <style>
+    .stApp { 
+        background-color: #18181b; 
+        color: #f4f4f5; 
+    }
+    header { visibility: hidden; }
+    footer { visibility: hidden; }
+    .block-container { 
+        padding-top: 2.5rem !important; 
+        padding-bottom: 5rem !important; 
+        max-width: 750px !important; 
+        text-align: center;
+    }
+    /* Fixed Input Box permanently anchored below Header at top */
+    div[data-testid="stChatInput"], .stChatInput {
+        position: fixed !important; 
+        top: 175px !important; 
+        bottom: auto !important;
+        left: 50% !important; 
+        transform: translateX(-50%) !important;
+        max-width: 750px !important; 
+        width: 90% !important; 
+        z-index: 100 !important;
+    }
+    /* Action Buttons Row permanently anchored directly below the input field */
+    .action-btn-container {
+        margin-top: 130px !important;
+        margin-bottom: 1.5rem !important;
+        width: 100% !important;
+    }
+    .action-btn-container .stButton > button {
+        background-color: #27272a; 
+        color: #f4f4f5; 
+        border: 1px solid #3f3f46;
+        border-radius: 8px; 
+        padding: 0.6rem 1rem; 
+        font-weight: 500;
+        width: 100%;
+        transition: all 0.2s ease;
+    }
+    .action-btn-container .stButton > button:hover { 
+        background-color: #3f3f46; 
+        border-color: #71717a; 
+        color: #ffffff; 
+    }
+    /* History List Items */
+    .history-item .stButton > button {
+        background-color: #202024;
+        border: 1px solid #2e2e33;
+        color: #d4d4d8;
+        text-align: left !important;
+        justify-content: flex-start !important;
+        padding: 0.7rem 1rem;
+        margin-bottom: 0.4rem;
+        font-size: 0.9rem;
+        border-radius: 6px;
+    }
+    .history-item .stButton > button:hover {
+        background-color: #2a2a30;
+        border-color: #52525b;
+        color: #ffffff;
+    }
+    /* Chat message text styling */
+    .stChatMessage {
+        text-align: left !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # 4. Header Section
 st.markdown(
     """
-    <div style="text-align: center; margin-bottom: 1.2rem;">
+    <div style="text-align: center; margin-bottom: 0.8rem;">
         <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 0.2rem; color: #ffffff;">WITTALVA</h1>
         <p style="color: #a1a1aa; font-size: 1rem; margin-top: 0;">Your fellow guide and advisor through day-to-day matters</p>
     </div>
@@ -173,8 +113,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 5. Buttons Row (Centered one line below the input field on home screen)
-st.markdown('<div class="home-actions-row action-btn-container">', unsafe_allow_html=True)
+# 5. Buttons Row (Permanently placed one row directly below the input field)
+st.markdown('<div class="action-btn-container">', unsafe_allow_html=True)
 col_b1, col_b2 = st.columns(2)
 with col_b1:
     if st.button("➕ Open new chat", use_container_width=True, key="btn_global_new"):
@@ -188,11 +128,11 @@ with col_b2:
         st.rerun()
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 6. Collapsible History List (Renders directly underneath the buttons)
+# 6. Collapsible History List (Expands directly underneath the buttons)
 if st.session_state.show_history:
     st.markdown(
         """
-        <div style="background-color: #1c1c20; border: 1px solid #333338; border-radius: 10px; padding: 1.2rem; margin-top: 1rem; margin-bottom: 1.8rem; text-align: left;">
+        <div style="background-color: #1c1c20; border: 1px solid #333338; border-radius: 10px; padding: 1.2rem; margin-bottom: 1.8rem; text-align: left;">
             <p style="color: #71717a; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.8rem; font-weight: 600;">
                 Previous Conversations
             </p>
@@ -234,7 +174,7 @@ st.components.v1.html(
     height=0,
 )
 
-# 8. Render Active Conversation Messages
+# 8. Render Active Conversation Messages (Flows smoothly downward underneath buttons/history)
 for msg in current_messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
