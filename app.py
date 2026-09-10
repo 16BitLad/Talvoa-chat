@@ -110,7 +110,7 @@ else:
 # Dynamische Hoehenberechnung
 chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 210px)"
 
-# 4. Custom CSS: Art-Déco Font-Import, Kontrast & Dark-Theme (v1.17)
+# 4. Custom CSS: Art-Déco & Runen Font-Import, Kontrast & Dark-Theme (v1.18)
 st.markdown(
     f"""
     <style>
@@ -133,18 +133,40 @@ st.markdown(
         text-align: center;
     }}
 
-    /* STYLISIERTER ART-DÉCO TITEL (WITTALVA) */
+    /* HEADER TITEL: LATEINISCH + RUNEN */
+    .header-title-container {{
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.4rem !important;
+        flex-wrap: wrap !important;
+        margin-bottom: 0.1rem !important;
+    }}
     .wittalva-title {{
         font-family: 'Six Caps', 'Arial Narrow', sans-serif !important;
-        font-size: 4.8rem !important;
+        font-size: 4.2rem !important;
         font-weight: 400 !important;
         letter-spacing: 0.12em !important;
         text-transform: uppercase !important;
         line-height: 0.85 !important;
         color: #ffffff !important;
-        margin-bottom: 0.1rem !important;
-        display: block !important;
-        text-shadow: 0 0 10px rgba(255,255,255,0.05);
+        display: inline-block !important;
+    }}
+    .rune-divider {{
+        color: #52525b !important;
+        font-size: 2.2rem !important;
+        font-weight: 300 !important;
+        line-height: 0.85 !important;
+        margin: 0 0.2rem !important;
+    }}
+    .rune-text {{
+        font-family: 'Segoe UI Historic', 'Noto Sans Runic', sans-serif !important;
+        font-size: 2.3rem !important;
+        letter-spacing: 0.15em !important;
+        color: #a1a1aa !important;
+        font-weight: normal !important;
+        line-height: 0.85 !important;
+        display: inline-block !important;
     }}
 
     /* GLOBAL BUTTON DEFAULT: DUNKLE HISTORIEN-BUTTONS */
@@ -349,12 +371,16 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 5. Header Section (Art-Déco Titel & Dynamisch lokalisiert)
+# 5. Header Section (Lateinisch + Runen & Dynamisch lokalisiert)
 st.markdown(
     f"""
     <div style="text-align: center; margin-bottom: 0.1rem;">
-        <span class="wittalva-title">WITTALVA</span>
-        <p style="color: #a1a1aa; font-size: 0.95rem; margin-top: 0;">{txt["subtitle"]}</p>
+        <div class="header-title-container">
+            <span class="wittalva-title">WITTALVA</span>
+            <span class="rune-divider">/</span>
+            <span class="rune-text">ᚹᛁᛏᛏᚨᛚᚹᚨ</span>
+        </div>
+        <p style="color: #a1a1aa; font-size: 0.95rem; margin-top: 0.1rem;">{txt["subtitle"]}</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -411,9 +437,9 @@ if st.session_state.show_history:
                     args=(c_id,)
                 )
 
-# 9. Full WITTALVA System Prompt (Version 1.17)
+# 9. Full WITTALVA System Prompt (Version 1.18)
 SYSTEM_PROMPT = """
-<system_config version="1.17" deployment_mode="in_context">
+<system_config version="1.18" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
