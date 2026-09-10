@@ -75,7 +75,7 @@ UI_TEXTS = {
         "history_show": "📜 Historial de chats",
         "history_hide": "▲ Ocultar historial",
         "prev_conv": "Conversaciones anteriores",
-        "no_conv": "Aún no hay conversaciones previas guardadas.",
+        "no_conv": "Aún no hay conversations previas guardadas.",
     },
     "fr": {
         "subtitle": "Votre guide et conseiller pour les affaires du quotidien",
@@ -989,6 +989,7 @@ if active_prompt:
             models_to_try = BASE_MODELS[start_idx:] + BASE_MODELS[:start_idx]
 
             MAX_WAIT_TIME = 15.0
+            last_error = None
 
             for attempt_idx, current_model in enumerate(models_to_try):
                 try:
@@ -1034,17 +1035,21 @@ if active_prompt:
                         break
 
                 except Exception as e:
+                    last_error = e
                     err_text = str(e).lower()
                     if any(auth_kw in err_text for auth_kw in ["api_key", "unauthenticated", "permission", "unauthorized"]):
                         status_info_placeholder.empty()
                         st.error(f"API-Konfigurationsfehler: {e}")
                         break
-                    status_info_placeholder.info("Server derzeit ausgelastet, Anfrage wird umgeleitet...")
+                    status_info_placeholder.info(f"Anfrage an {current_model} fehlgeschlagen. Versuche Ausweichoption...")
                     time.sleep(0.3)
 
             if not success:
                 status_info_placeholder.empty()
-                st.error("Alle Mistral-Server-Endpunkte sind derzeit überlastet. Bitte versuchen Sie es in Kürze erneut.")
+                st.error("Alle Mistral-Server-Endpunkte sind derzeit überlastet oder nicht erreichbar. Bitte versuchen Sie es in Kürze erneut.")
+                if last_error:
+                    with st.expander("Fehlerdiagnose (Technische Details)", expanded=True):
+                        st.exception(last_error)
 
             if success and full_response:
                 total_duration = f"{time.time() - start_time:.1f}s"
