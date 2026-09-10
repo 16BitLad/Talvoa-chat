@@ -68,12 +68,12 @@ UI_TEXTS = {
     },
     "es": {
         "subtitle": "Tu guía y asesor para los asuntos cotidianos",
-        "placeholder": "¿En qué posso ayudarte?",
+        "placeholder": "¿En qué puedo ayudarte?",
         "new_chat": "➕ Nuevo chat",
         "history_show": "📜 Historial de chats",
         "history_hide": "▲ Ocultar historial",
         "prev_conv": "Conversaciones anteriores",
-        "no_conv": "Aún no hay conversaciones previas guardadas.",
+        "no_conv": "Aún no hay conversations previas guardadas.",
     },
     "fr": {
         "subtitle": "Votre guide et conseiller pour les affaires du quotidien",
@@ -161,7 +161,7 @@ else:
 
 chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 210px)"
 
-# 5. Custom CSS: Art-Déco, Dark-Theme & absolute Hover-Aktionsleiste (v1.22)
+# 5. Custom CSS: Art-Déco, Dark-Theme & pixelgenaue Hover-Aktionsleiste (v1.22)
 st.markdown(
     f"""
     <style>
@@ -339,13 +339,13 @@ st.markdown(
         display: none !important;
     }}
 
-    /* HOVER ACTION BUTTONS IN CHAT MESSAGES */
+    /* FIXED HOVER OVERLAY SYSTEM (v1.22) */
     div[data-testid="stVerticalBlockBorderWrapper"] {{
         overflow: visible !important;
     }}
 
-    /* Positions-Styling der Aktionsleiste (oben links überlappend) */
-    div[data-testid="stChatMessage"] div[data-testid="stHorizontalBlock"]:has(button[key*="act_"]) {{
+    /* Horizontale Spalten-Leiste: Absolut oben links überlappend positionieren */
+    div[data-testid="stChatMessage"] div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]) {{
         position: absolute !important;
         top: -11px !important;
         left: 10px !important;
@@ -353,29 +353,47 @@ st.markdown(
         opacity: 0;
         visibility: hidden;
         transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
         gap: 4px !important;
         width: auto !important;
         margin: 0 !important;
         background: transparent !important;
     }}
 
-    /* Einblenden bei Hover über der Nachricht */
-    div[data-testid="stChatMessage"]:hover div[data-testid="stHorizontalBlock"]:has(button[key*="act_"]) {{
+    /* Hover-Effekt: Gesamte Leiste einblenden */
+    div[data-testid="stChatMessage"]:hover div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]) {{
         opacity: 1 !important;
         visibility: visible !important;
     }}
 
-    /* Sehr kleine, kompakte Icon-Buttons */
-    div[data-testid="stChatMessage"] button[key*="act_"] {{
+    /* Bypasst Streamlits prozentuale Spaltenschrumpfung (Erzwingt exakt 24px) */
+    div[data-testid="stChatMessage"] div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]) > div[data-testid="stColumn"] {{
+        width: 24px !important;
+        min-width: 24px !important;
+        max-width: 24px !important;
+        flex: 0 0 24px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }}
+
+    /* Blendet die ungenutzte vierte Spalte aus der Definition aus */
+    div[data-testid="stChatMessage"] div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]) > div[data-testid="stColumn"]:last-child {{
+        display: none !important;
+    }}
+
+    /* Pixelgenaue Formatierung der Buttons */
+    div[class*="st-key-act_"] button {{
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        width: 22px !important;
-        min-width: 22px !important;
-        max-width: 22px !important;
-        height: 22px !important;
-        min-height: 22px !important;
-        max-height: 22px !important;
+        width: 24px !important;
+        min-width: 24px !important;
+        max-width: 24px !important;
+        height: 24px !important;
+        min-height: 24px !important;
+        max-height: 24px !important;
         padding: 0 !important;
         margin: 0 !important;
         border-radius: 4px !important;
@@ -385,16 +403,16 @@ st.markdown(
         cursor: pointer !important;
     }}
 
-    /* FIX FÜR DIE SICHTBARKEIT: Inneres Streamlit-Text-Layout zentrieren und freigeben */
-    div[data-testid="stChatMessage"] button[key*="act_"] div[data-testid="stMarkdownContainer"],
-    div[data-testid="stChatMessage"] button[key*="act_"] div[data-testid="stMarkdownContainer"] p,
-    div[data-testid="stChatMessage"] button[key*="act_"] p {{
+    /* Verhindert Text-Abschneidung, positioniert Emojis perfekt zentriert im Button */
+    div[class*="st-key-act_"] button div[data-testid="stMarkdownContainer"],
+    div[class*="st-key-act_"] button div[data-testid="stMarkdownContainer"] p,
+    div[class*="st-key-act_"] button p {{
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         margin: 0 !important;
         padding: 0 !important;
-        font-size: 0.72rem !important;
+        font-size: 0.8rem !important;
         line-height: 1 !important;
         color: #ffffff !important;
         text-align: center !important;
@@ -402,7 +420,7 @@ st.markdown(
         height: 100% !important;
     }}
 
-    div[data-testid="stChatMessage"] button[key*="act_"]:hover {{
+    div[class*="st-key-act_"] button:hover {{
         background-color: #3f3f46 !important;
         border-color: #a1a1aa !important;
         transform: scale(1.1);
@@ -564,6 +582,7 @@ def render_chat_message(msg, idx):
     with st.chat_message(msg["role"]):
         # Aktionsleiste (wird durch CSS oben links überlappend positioniert)
         if st.session_state.editing_idx != idx:
+            # Wir behalten die columns im Python-Teil bei, korrigieren aber deren Breite per CSS-Override oben!
             ac1, ac2, ac3, _ = st.columns([0.05, 0.05, 0.05, 0.85])
             with ac1:
                 st.button("🔄", key=f"act_ref_{idx}", help="Aktualisieren", on_click=trigger_regenerate, args=(idx,))
@@ -717,3 +736,4 @@ elif len(current_messages) > 0:
     with chat_box:
         for idx, msg in enumerate(current_messages):
             render_chat_message(msg, idx)
+            
