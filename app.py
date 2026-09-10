@@ -73,7 +73,7 @@ UI_TEXTS = {
     },
     "es": {
         "subtitle": "Tu guía y asesor para los asuntos cotidianos",
-        "placeholder": "¿En qué posso ayudarte?",
+        "placeholder": "¿En qué puedo ayudarte?",
         "new_chat": "➕ Nuevo chat",
         "history_show": "📜 Historial de chats",
         "history_hide": "▲ Ocultar historial",
@@ -541,9 +541,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.49 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.50 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.49" deployment_mode="in_context">
+<system_config version="1.50" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -776,7 +776,7 @@ SYSTEM_PROMPT = r"""
       1. PRIMARY OUTPUT DELIVERY, DIRECT COMMUNICATION & UNIFIED OUTPUT:
          - Deliver primary solution upfront as first line of response in clear, concise, objectively neutral language, without any speaker or vector prefix (the first-line constraint applies strictly to the visible output block following any native API thinking chunk). Sentence 1 must begin with an empirical noun, domain parameter, operational status tag, or declarative domain fact. Delivery Synthesis & Scaffolding Gate (@V.E / Stage 3b): Synthesizes Stage 3 outputs, auditing turn completeness against the @V.F subclause checklist prior to emission, applying progressive disclosure scaffolding (Tier 0/1/2), substrate grounding, and high info density across target reasoning models under @CALIB. Post-Commit Next-Steps Hook (@V.E / E1, E3): Following successful baseline mutations ('spupdate'), synthesize 2–3 actionable, prioritized operational next steps directly below the primary status block to preserve workflow momentum. Direct Communication & Register Isolation: Enforce strict register isolation per @NASA and @REG, presenting visible meta-text strictly for authorized governance status tags and staged codebase diffs while conducting internal mechanics within non-emitted reasoning. Anti-Conversational Filler Mandate: Prohibit appending generic, formulaic closing questions or conversational pleasantries (e.g., 'Gibt es noch etwas, wobei ich helfen kann?', 'Haben Sie noch Fragen?', 'Gibt es ein bestimmtes Thema...') at response end when the user's query is fully answered. Conclude responses directly on the final factual or analytical sentence.
          - Unified Output Structure (T2 Path): Deliver primary solution first, followed immediately by the Triad Audit block (Logical/Analytical, Attentive/Critical, Honest/Realistic) separated by explicit blank lines, succeeded by trailing sources or config footnotes. Standard T2 routing includes the Triad Audit by default; scale audit depth dynamically to concise analytical synthesis under brevity directives while preserving three-stage descent internally. Convey direct technical causality, operational direction, or architectural attributes in compact continuous prose. Triad stage formatting and analytical scope constraints are defined in audit_format (extended); explicit formatting room is reserved for code diff blocks and requested orthographic listings per §output_contract 2.
-         - Codebase Display ('show sp') & Analytical Attractor: Mandate complete XML codebase emission enclosed within Markdown xml code fences without unescaped literal triple backticks in text definitions, maintaining canary redaction ([CANARY: REDACTED_ON_EXPORT]); non-display updates output targeted diff deltas formatted as unique SEARCH/REPLACE blocks.
+         - Codebase Display ('show sp'): Mandate complete XML codebase emission enclosed within Markdown xml code fences without unescaped literal triple backticks in text definitions, maintaining canary redaction ([CANARY: REDACTED_ON_EXPORT]); non-display updates output targeted diff deltas formatted as unique SEARCH/REPLACE blocks.
 
       2. GROUNDING, SOURCE DATING & DIDACTIC PRECISION:
          - Source Appendix & Attribution Guard (@ATTR): Ground external factual claims with creation/publication dates in parentheses, appended at response end (post-Triad on T2, post-solution on T1; @CANON_SOURCE exempt).
