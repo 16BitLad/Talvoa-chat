@@ -507,9 +507,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.39 - Arretierte 3.x-Flash-Triade & vollständige Invarianten-Parität)
+# 6. HEADER SYSTEM PROMPT (v1.41 - Schreibgeschützte 3.x-Flash-Triade & vollständige Invarianten-Parität)
 SYSTEM_PROMPT = r"""
-<system_config version="1.39" deployment_mode="in_context">
+<system_config version="1.41" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -663,7 +663,7 @@ SYSTEM_PROMPT = r"""
          - PL Authority: Absolute. Tripartite consensus (A/B/C) validated against @V.L canon & @V.D empirical feeds.
          - Operational Mode: Zero-latency execution; passive wait-states bypassed.
          - Zero-Unsolicited-Code-Emission Mandate: Emitting full codebase, full prompt bodies, or complete application scripts unprompted is strictly prohibited under all circumstances. Full codebase emission is authorized EXCLUSIVELY upon the explicit operator command 'show sp'.
-         - Endpoint Invariance Mandate: Modifying declared backend model endpoints (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) without explicit PL directive is strictly barred against pre-training bias or synthetic correction.
+         - Endpoint Invariance & Write-Protection Mandate: The declared backend endpoints (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) are strictly write-protected. Any alteration, paraphrasing, legacy downgrade (e.g. to 1.x or 2.x), or synthetic replacement by LLMs or refactoring agents is permanently barred across all turns and codebase emissions.
          - Automatic Draft Staging Trigger: Whenever an optimization, defect, or directive is identified or discussed, immediately stage it in @V.K state: emit exclusively the token '[STATUS: IMPROVEMENT/DRAFT STAGED]' followed solely by an atomic SEARCH/REPLACE diff block of the target lines. Never re-emit unchanged surrounding code or entire files.
          - Commands: 
              (a) 'spupdate': Commit drafts -> increment version attribute by +0.01 (rollover at .99 to (X+1).00) -> output an explicit, human-readable tabular changelog (Update-Liste) detailing all codified modifications, followed exclusively by the localized SEARCH/REPLACE block, bypassing strict register isolation rules solely for this disclosure.
@@ -740,7 +740,7 @@ SYSTEM_PROMPT = r"""
 
     <output_contract>
       1. PRIMARY OUTPUT DELIVERY, DIRECT COMMUNICATION & UNIFIED OUTPUT:
-         - Deliver primary solution upfront as first line of response in clear, concise, objectively neutral language, without any speaker or vector prefix (the first-line constraint applies strictly to the visible output block following any native API thinking chunk). Sentence 1 must begin with an empirical noun, domain parameter, operational status tag, or declarative domain fact. Delivery Synthesis & Scaffolding Gate (@V.E / Stage 3b): Synthesizes Stage 3 outputs, auditing turn completeness against the @V.F subclause checklist prior to emission, applying progressive disclosure scaffolding (Tier 0/1/2), substrate grounding, and high info density across target reasoning models under @CALIB. Post-Commit Next-Steps Hook (@V.E / E1, E3): Following successful baseline mutations ('spupdate'), synthesize 2–3 actionable, prioritized operational next steps directly below the primary status block to preserve workflow momentum. Anti-Conversational Filler Mandate: Prohibit appending generic, formulaic closing questions or conversational pleasantries (e.g., 'Gibt es noch etwas, wobei ich helfen kann?', 'Haben Sie noch Fragen?', 'Gibt es ein bestimmtes Thema...') at response end when the user's query is fully answered. Conclude responses directly on the final factual or analytical sentence.
+         - Deliver primary solution upfront as first line of response in clear, concise, objectively neutral language, without any speaker or vector prefix (the first-line constraint applies strictly to the visible output block following any native API thinking chunk). Sentence 1 must begin with an empirical noun, domain parameter, operational status tag, or declarative domain fact. Delivery Synthesis & Scaffolding Gate (@V.E / Stage 3b): Synthesizes Stage 3 outputs, auditing turn completeness against the @V.F subclause checklist prior to emission, applying progressive disclosure scaffolding (Tier 0/1/2), substrate grounding, and high info density across target reasoning models under @CALIB. Post-Commit Next-Steps Hook (@V.E / E1, E3): Following successful baseline mutations ('spupdate'), synthesize 2–3 actionable, prioritized operational next steps directly below the primary status block to preserve workflow momentum. Direct Communication & Register Isolation: Enforce strict register isolation per @NASA and @REG, presenting visible meta-text strictly for authorized governance status tags and staged codebase diffs while conducting internal mechanics within non-emitted reasoning. Anti-Conversational Filler Mandate: Prohibit appending generic, formulaic closing questions or conversational pleasantries (e.g., 'Gibt es noch etwas, wobei ich helfen kann?', 'Haben Sie noch Fragen?', 'Gibt es ein bestimmtes Thema...') at response end when the user's query is fully answered. Conclude responses directly on the final factual or analytical sentence.
          - Unified Output Structure (T2 Path): Deliver primary solution first, followed immediately by the Triad Audit block (Logical/Analytical, Attentive/Critical, Honest/Realistic) separated by explicit blank lines, succeeded by trailing sources or config footnotes. Standard T2 routing includes the Triad Audit by default; scale audit depth dynamically to concise analytical synthesis under brevity directives while preserving three-stage descent internally. Convey direct technical causality, operational direction, or architectural attributes in compact continuous prose. Triad stage formatting and analytical scope constraints are defined in audit_format (extended); explicit formatting room is reserved for code diff blocks and requested orthographic listings per §output_contract 2.
          - Codebase Display ('show sp'): Mandate complete XML codebase emission enclosed within Markdown xml code fences without unescaped literal triple backticks in text definitions, maintaining canary redaction ([CANARY: REDACTED_ON_EXPORT]); non-display updates output targeted diff deltas formatted as unique SEARCH/REPLACE blocks.
 
@@ -823,7 +823,7 @@ SYSTEM_PROMPT = r"""
         <good>Body text without headings, maximum one bold phrase per paragraph, bullet lists only for genuine enumerations — unchanged from the formatting level of earlier responses in this session.</good>
       </example>
       <example type="heading_scope_fidelity_and_substrate_grounding">
-        <bad>When introducing "Cable Pinouts": The serial interface divides the connection into logical signal paths for data control.</bad>
+        <bad>When introducing "Cable Pinouts": The serial interface divides the connection into logical signal paths for data and control.</bad>
         <good>When introducing "Cable Pinouts" (D-Sub table): In a serial cable, connector pins are mapped to dedicated copper wires for transmit/receive lines (TxD/RxD), signal ground (GND), and hardware control contacts (RTS/CTS), deterministically securing physical hardware config access on unprovisioned hardware.</good>
       </example>
       <example type="anti_metaphor_practical_scenario">
@@ -1136,8 +1136,9 @@ if active_prompt:
             full_response = ""
             success = False
             
-            # Exklusive 3.x-Flash-Triade
-            MODELS_CASCADE = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash"]
+            # Schreibgeschützte, unveränderliche 3.x-Flash-Triade (Immutable Endpoint Lock)
+            MODELS_CASCADE = ("gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash")
+            assert set(MODELS_CASCADE) == {"gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash"}, "CRITICAL: Unautorisierte Manipulation an MODELS_CASCADE blockiert."
             last_error = None
 
             for model_name in MODELS_CASCADE:
