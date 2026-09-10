@@ -365,8 +365,8 @@ st.markdown(
         background: transparent !important;
     }}
 
-    /* Iframe-Container für Assistant-Outputs absolut oben links positionieren (Kopier-Icon) */
-    div[data-testid="stChatMessage"] div[data-testid="element-container"]:has(iframe) {{
+    /* Assistant-Outputs: Absolut oben links überlappend positionieren (Kopier-Container) */
+    div[data-testid="stChatMessage"] div[class*="st-key-act_copy_cont_"] {{
         position: absolute !important;
         top: -11px !important;
         left: 10px !important;
@@ -382,14 +382,14 @@ st.markdown(
 
     /* Einblenden bei Hover (Desktop) */
     div[data-testid="stChatMessage"]:hover div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]),
-    div[data-testid="stChatMessage"]:hover div[data-testid="element-container"]:has(iframe) {{
+    div[data-testid="stChatMessage"]:hover div[class*="st-key-act_copy_cont_"] {{
         opacity: 1 !important;
         visibility: visible !important;
     }}
 
     /* Einblenden bei Long-Press (Mobil über JavaScript-Klassenzuweisung) */
     div[data-testid="stChatMessage"].mobile-active div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]),
-    div[data-testid="stChatMessage"].mobile-active div[data-testid="element-container"]:has(iframe) {{
+    div[data-testid="stChatMessage"].mobile-active div[class*="st-key-act_copy_cont_"] {{
         opacity: 1 !important;
         visibility: visible !important;
     }}
@@ -939,8 +939,9 @@ def render_chat_message(msg, idx):
             </body>
             </html>
             """
-            # Rendern des sandboxed HTML-Iframes (Direktes Rendering ohne Spalten platziert das Icon links)
-            st.components.v1.html(html_copy, height=26, width=26)
+            # Rendern des sandboxed HTML-Iframes innerhalb eines Key-identifizierten Containers
+            with st.container(key=f"act_copy_cont_{idx}"):
+                st.components.v1.html(html_copy, height=26, width=26)
 
         if msg.get("duration"):
             st.markdown(
@@ -1109,11 +1110,9 @@ try {
             
             msg.addEventListener('touchstart', (e) => {
                 touchTimeout = setTimeout(() => {
-                    // Alle anderen aktiven Mobil-Auswahlen aufheben
                     messages.forEach(m => m.classList.remove('mobile-active'));
-                    // Dieses Feld aktivieren
                     msg.classList.add('mobile-active');
-                }, 500); // 500ms gedrückt halten
+                }, 500);
             }, {passive: true});
             
             msg.addEventListener('touchend', () => {
@@ -1124,7 +1123,6 @@ try {
                 clearTimeout(touchTimeout);
             });
             
-            // Schließen, wenn der Anwender außerhalb des Elements auf den Bildschirm tippt
             parentDoc.addEventListener('touchstart', (e) => {
                 if (!msg.contains(e.target)) {
                     msg.classList.remove('mobile-active');
