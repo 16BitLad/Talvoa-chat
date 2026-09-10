@@ -314,6 +314,8 @@ st.markdown(
         position: relative !important;
         overflow: visible !important;
         padding-top: 0.8rem !important;
+        -webkit-user-select: text !important;
+        user-select: text !important;
     }}
     div[data-testid="stChatMessage"] * {{
         color: #f4f4f5 !important;
@@ -345,9 +347,8 @@ st.markdown(
         overflow: visible !important;
     }}
 
-    /* Horizontale Spalten-Leiste: Absolut oben links überlappend positionieren (User & Assistant) */
-    div[data-testid="stChatMessage"] div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]),
-    div[data-testid="stChatMessage"] div[data-testid="stHorizontalBlock"]:has(iframe) {{
+    /* Horizontale Spalten-Leiste: Absolut oben links überlappend positionieren (User/Inputs) */
+    div[data-testid="stChatMessage"] div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]) {{
         position: absolute !important;
         top: -11px !important;
         left: 10px !important;
@@ -364,16 +365,37 @@ st.markdown(
         background: transparent !important;
     }}
 
-    /* Hover-Effekt: Gesamte Leiste einblenden */
+    /* Iframe-Container für Assistant-Outputs absolut oben links positionieren (Kopier-Icon) */
+    div[data-testid="stChatMessage"] div[data-testid="element-container"]:has(iframe) {{
+        position: absolute !important;
+        top: -11px !important;
+        left: 10px !important;
+        z-index: 999 !important;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+        width: 26px !important;
+        height: 26px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }}
+
+    /* Einblenden bei Hover (Desktop) */
     div[data-testid="stChatMessage"]:hover div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]),
-    div[data-testid="stChatMessage"]:hover div[data-testid="stHorizontalBlock"]:has(iframe) {{
+    div[data-testid="stChatMessage"]:hover div[data-testid="element-container"]:has(iframe) {{
+        opacity: 1 !important;
+        visibility: visible !important;
+    }}
+
+    /* Einblenden bei Long-Press (Mobil über JavaScript-Klassenzuweisung) */
+    div[data-testid="stChatMessage"].mobile-active div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]),
+    div[data-testid="stChatMessage"].mobile-active div[data-testid="element-container"]:has(iframe) {{
         opacity: 1 !important;
         visibility: visible !important;
     }}
 
     /* Bypasst Streamlits prozentuale Spaltenschrumpfung (Erzwingt exakt 24px) */
-    div[data-testid="stChatMessage"] div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]) > div[data-testid="stColumn"],
-    div[data-testid="stChatMessage"] div[data-testid="stHorizontalBlock"]:has(iframe) > div[data-testid="stColumn"] {{
+    div[data-testid="stChatMessage"] div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]) > div[data-testid="stColumn"] {{
         width: 24px !important;
         min-width: 24px !important;
         max-width: 24px !important;
@@ -383,8 +405,7 @@ st.markdown(
     }}
 
     /* Blendet die ungenutzte vierte Spalte aus der Definition aus */
-    div[data-testid="stChatMessage"] div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]) > div[data-testid="stColumn"]:last-child,
-    div[data-testid="stChatMessage"] div[data-testid="stHorizontalBlock"]:has(iframe) > div[data-testid="stColumn"]:last-child {{
+    div[data-testid="stChatMessage"] div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]) > div[data-testid="stColumn"]:last-child {{
         display: none !important;
     }}
 
@@ -449,7 +470,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.23 - Vollständig restaurierte Version mit allen Sicherheitsfaktoren und Examples)
+# 6. HEADER SYSTEM PROMPT (v1.23 - Vollständig restaurierte Version mit allen Sicherheitsfaktoren und Examples) [1]
 SYSTEM_PROMPT = """
 <system_config version="1.23" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
@@ -866,62 +887,60 @@ def render_chat_message(msg, idx):
 
         # Aktionsleiste NUR für Assistant-Nachrichten (Outputs): Kopierfunktion
         elif msg["role"] == "assistant":
-            ac_copy, _ = st.columns([0.05, 0.95])
-            with ac_copy:
-                # Maskieren von Sonderzeichen in Python, um Fehler im JS-String-Literal zu verhindern
-                safe_text = msg["content"].replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$').replace('\n', '\\n')
-                html_copy = f"""
-                <html>
-                <head>
-                <style>
-                    body {{
-                        margin: 0;
-                        padding: 0;
-                        background: transparent;
-                        overflow: hidden;
-                    }}
-                    button {{
-                        display: flex !important;
-                        align-items: center !important;
-                        justify-content: center !important;
-                        width: 24px !important;
-                        height: 24px !important;
-                        padding: 0 !important;
-                        margin: 0 !important;
-                        border-radius: 4px !important;
-                        background-color: #27272a !important;
-                        border: 1px solid #52525b !important;
-                        color: #ffffff !important;
-                        font-size: 0.75rem !important;
-                        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.6) !important;
-                        cursor: pointer !important;
-                    }}
-                    button:hover {{
-                        background-color: #3f3f46 !important;
-                        border-color: #a1a1aa !important;
-                        transform: scale(1.1);
-                    }}
-                </style>
-                </head>
-                <body>
-                    <button id="cpBtn" onclick="copyToClipboard()">📋</button>
-                    <script>
-                    function copyToClipboard() {{
-                        const text = `{safe_text}`;
-                        navigator.clipboard.writeText(text).then(() => {{
-                            const btn = document.getElementById('cpBtn');
-                            btn.innerText = '✓';
-                            setTimeout(() => {{ btn.innerText = '📋'; }}, 1000);
-                        }}).catch(err => {{
-                            console.error('Kopieren fehlgeschlagen: ', err);
-                        }});
-                    }}
-                    </script>
-                </body>
-                </html>
-                """
-                # Rendern des sandboxed HTML-Iframes (Ohne 'key' Parameter um TypeError zu vermeiden)
-                st.components.v1.html(html_copy, height=26, width=26)
+            # Maskieren von Sonderzeichen in Python, um Fehler im JS-String-Literal zu verhindern
+            safe_text = msg["content"].replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$').replace('\n', '\\n')
+            html_copy = f"""
+            <html>
+            <head>
+            <style>
+                body {{
+                    margin: 0;
+                    padding: 0;
+                    background: transparent;
+                    overflow: hidden;
+                }}
+                button {{
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    width: 24px !important;
+                    height: 24px !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    border-radius: 4px !important;
+                    background-color: #27272a !important;
+                    border: 1px solid #52525b !important;
+                    color: #ffffff !important;
+                    font-size: 0.75rem !important;
+                    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.6) !important;
+                    cursor: pointer !important;
+                }}
+                button:hover {{
+                    background-color: #3f3f46 !important;
+                    border-color: #a1a1aa !important;
+                    transform: scale(1.1);
+                }}
+            </style>
+            </head>
+            <body>
+                <button id="cpBtn" onclick="copyToClipboard()">📋</button>
+                <script>
+                function copyToClipboard() {{
+                    const text = `{safe_text}`;
+                    navigator.clipboard.writeText(text).then(() => {{
+                        const btn = document.getElementById('cpBtn');
+                        btn.innerText = '✓';
+                        setTimeout(() => {{ btn.innerText = '📋'; }}, 1000);
+                    }}).catch(err => {{
+                        console.error('Kopieren fehlgeschlagen: ', err);
+                    }});
+                }}
+                </script>
+            </body>
+            </html>
+            """
+            # Rendern des sandboxed HTML-Iframes (Direktes Rendering ohne Spalten platziert das Icon links)
+            st.components.v1.html(html_copy, height=26, width=26)
 
         if msg.get("duration"):
             st.markdown(
@@ -1068,3 +1087,58 @@ elif len(current_messages) > 0:
     with chat_box:
         for idx, msg in enumerate(current_messages):
             render_chat_message(msg, idx)
+
+# 13. Global Touch Event Dispatcher for Mobile Devices (Erkennt 500ms gedrückt halten)
+html_touch_script = """
+<html>
+<head>
+<style>body { margin: 0; padding: 0; overflow: hidden; background: transparent; }</style>
+</head>
+<body>
+<script>
+try {
+    const parentDoc = window.parent.document;
+    
+    function setupTouchListeners() {
+        const messages = parentDoc.querySelectorAll('div[data-testid="stChatMessage"]');
+        messages.forEach(msg => {
+            if (msg.dataset.touchBound) return;
+            msg.dataset.touchBound = "true";
+            
+            let touchTimeout;
+            
+            msg.addEventListener('touchstart', (e) => {
+                touchTimeout = setTimeout(() => {
+                    // Alle anderen aktiven Mobil-Auswahlen aufheben
+                    messages.forEach(m => m.classList.remove('mobile-active'));
+                    // Dieses Feld aktivieren
+                    msg.classList.add('mobile-active');
+                }, 500); // 500ms gedrückt halten
+            }, {passive: true});
+            
+            msg.addEventListener('touchend', () => {
+                clearTimeout(touchTimeout);
+            });
+            
+            msg.addEventListener('touchmove', () => {
+                clearTimeout(touchTimeout);
+            });
+            
+            // Schließen, wenn der Anwender außerhalb des Elements auf den Bildschirm tippt
+            parentDoc.addEventListener('touchstart', (e) => {
+                if (!msg.contains(e.target)) {
+                    msg.classList.remove('mobile-active');
+                }
+            }, {passive: true});
+        });
+    }
+    
+    setInterval(setupTouchListeners, 1000);
+} catch (e) {
+    console.warn("Touch-Events konnten aufgrund von Origin-Sicherheitsrichtlinien nicht gebunden werden.", e);
+}
+</script>
+</body>
+</html>
+"""
+components.html(html_touch_script, height=0, width=0)
