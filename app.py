@@ -3,7 +3,10 @@ import os
 import time
 import uuid
 from datetime import datetime
-from mistralai import Mistral
+try:
+    from mistralai.client import Mistral
+except ImportError:
+    from mistralai import Mistral
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -516,9 +519,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.55 - Mistral AI Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.56 - Mistral AI Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.55" deployment_mode="in_context">
+<system_config version="1.56" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
