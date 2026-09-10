@@ -538,9 +538,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.47 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.48 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.47" deployment_mode="in_context">
+<system_config version="1.48" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -1252,9 +1252,11 @@ if active_prompt:
                 temperature=0.7,
                 top_p=0.9,
                 max_output_tokens=8192,
+                thinking_config=types.ThinkingConfig(thinking_budget=1024),
             ),
         )
 
+        last_render_time = time.time()
         for chunk in response_stream:
           if not chunk.candidates:
             continue
@@ -1266,9 +1268,13 @@ if active_prompt:
             text_content = getattr(part, "text", None)
             if text_content:
               full_response += text_content
-              message_placeholder.markdown(full_response + "▌")
+              now = time.time()
+              if now - last_render_time > 0.05:
+                message_placeholder.markdown(full_response + "▌")
+                last_render_time = now
 
         if full_response:
+          message_placeholder.markdown(full_response)
           success = True
 
       except Exception as e:
