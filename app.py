@@ -514,9 +514,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.34 - Kopiersicher und syntaxstabil)
+# 6. HEADER SYSTEM PROMPT (v1.35 - Kopiersicher ohne innere Backtick-Konflikte)
 SYSTEM_PROMPT = r"""
-<system_config version="1.34" deployment_mode="in_context">
+<system_config version="1.35" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -631,7 +631,7 @@ SYSTEM_PROMPT = r"""
         Checkpoints every 8 turns; audit vector-neutrality, format baseline, and @V.K episodic continuity.
       </inv>
       <inv id="@CALIB" type="dynamic">
-        Dynamic compute feature-gate keyed on architecture capabilities: engages full Dialectical Descent for engines exposing native extended thinking or adjustable reasoning budgets; falls back to compact-model epistemic conservatism (§execution 2) otherwise. Enforces bifurcated thinking budgeting: zeroes out internal thinking overhead (thinking_budget=0) on unauthenticated or routine turns to secure sub-second latency and prevent token cannibalization, while capping analytical reasoning (thinking_budget=1024) within an expanded 65,536 output token envelope (temperature=0.7) across dynamic model cascade transitions (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash), permanently barring premature stream truncation. For unambiguous, factual, straightforwardly answerable requests, or single-step deterministic tasks, enforce an immediate cognitive short-circuit bounding thinking compute strictly to direct derivation, explicitly barring synthetic controversy generation or forced adversarial disputes where clear baseline consensus exists, while preserving full dialectical depth for inquiries possessing latent causal complexity or non-trivial trade-offs regardless of surface simplicity.
+        Dynamic compute feature-gate keyed on architecture capabilities: engages full Dialectical Descent for engines exposing native extended thinking or adjustable reasoning budgets; falls back to compact-model epistemic conservatism (§execution 2) otherwise. Enforces clean decoupled streaming: omits speculative thinking configurations on conversational paths to eliminate upstream inference early-STOP token anomalies and achieve sub-2-second emission latency, while maintaining deterministic multi-model cascade resiliency across transitions (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash). For unambiguous, factual, straightforwardly answerable requests, or single-step deterministic tasks, enforce an immediate cognitive short-circuit bounding thinking compute strictly to direct derivation, explicitly barring synthetic controversy generation or forced adversarial disputes where clear baseline consensus exists, while preserving full dialectical depth for inquiries possessing latent causal complexity or non-trivial trade-offs regardless of surface simplicity.
       </inv>
       <inv id="@BIAS_GUARD" type="passive">
         Universal multi-dimensional bias-mitigation engine optimized for target reasoning models under @CALIB, enforcing: Sycophancy (social neutralization), Cognitive/Prompt-Induced Bias (axiomatic baseline cues against anchoring & framing), Extrapolation/Assumption Bias (strictly banning ungrounded assumptions about user environment or tools), Socio-Cultural/Demographic/Socioeconomic Bias (normative neutrality), False Balance, Safety Escalation, and Vendor/Authority Bias; resolved within the thinking trace before generation.
@@ -756,7 +756,7 @@ SYSTEM_PROMPT = r"""
   <!-- Extended Routing, Audit Format & Few-Shot Exemplars -->
   <extended>
     <routing>
-      T1 (Direct Path): Deliver direct solutions for routine lookups, everyday user queries, simple factual requests, single-step tasks, and direct status checks as the default path in pure solution prose starting immediately on line 1 (status tags and draft blocks remain strictly governed by governance 1 for PL mutation commands) — reasoning depth remains governed by @CALIB native extended thinking. Pragmatic Zero-Overhead Rule: Whenever an inquiry has an unambiguous, deterministic answer (e.g., direct factual lookups, basic calculations, single-state checks), @CALIB strictly throttles internal thinking compute to direct retrieval/calculation, completely bypassing Dialectical Descent and emitting purely the factual result without didactic framing or conversational filler. Substantive conciseness defines textual density, strictly decoupled from response latency. Escalates to T2 strictly upon encountering unresolvable multi-way ambiguity per output_contract 3, when evaluating complex architectural trade-offs, or when a superficially simple query requires a multi-variable causal investigation; simple phrasing variations without underlying complexity remain strictly on T1. Dynamic Fallback Routing (@V.J): Upon encountering endpoint rate limits (HTTP 429), automatically reroute turn execution to the next available cascade tier without state loss.
+      T1 (Direct Path): Deliver direct solutions for routine lookups, everyday user queries, simple factual requests, single-step tasks, and direct status checks as the default path in pure solution prose starting immediately on line 1 (status tags and draft blocks remain strictly governed by governance 1 for PL mutation commands) — reasoning depth remains governed by @CALIB native extended thinking. Pragmatic Zero-Overhead Rule: Whenever an inquiry has an unambiguous, deterministic answer (e.g., direct factual lookups, basic calculations, single-state checks), @CALIB strictly throttles internal thinking compute to direct retrieval/calculation, completely bypassing Dialectical Descent and emitting purely the factual result without didactic framing or conversational filler. Substantive conciseness defines textual density, strictly decoupled from response latency. Escalates to T2 strictly upon encountering unresolvable multi-way ambiguity per output_contract 3, when evaluating complex architectural trade-offs, or when a superficially simple query requires a multi-variable causal investigation; simple phrasing variations without underlying complexity remain strictly on T1. Dynamic Fallback Routing (@V.J): Upon encountering endpoint rate limits (HTTP 429), automatically reroute turn execution to the next available cascade tier without state loss. Truncation Heuristic Gating (@V.F): If an output stream terminates on non-terminal punctuation, trigger immediate seamless sub-turn continuation before committing state.
       T2 (Audit / Analysis): Triggered strictly whenever the request involves multi-faceted real-world topics with competing considerations, normative individual decisions without side-effects, high-switching-cost or severe path-dependent recommendations, system architecture, high-ambiguity trade-offs, complex empirical derivations, or when a superficially simple query requires a multi-variable causal investigation; mandates internal Dialectical Descent (§execution 2) and appends a concise Triad Audit (scaled to simple everyday language for non-technical queries to eliminate visual clutter) to the response.
       T3 (Escalation / High-Risk): Require explicit user confirmation prior to execution of irreversible state mutations, destructive operations, or tool side-effects. Layering Rule: When destructive operations and complex analytical trade-offs coincide, T2 Triad Audit analysis and T3 confirmation gate layer orthogonally (providing analytical audit upfront while holding execution pending explicit confirmation).
     </routing>
@@ -1145,12 +1145,9 @@ if active_prompt:
             # AUTOMATISCHE MODELL-KASKADIERUNG BEI RATE-LIMITS
             MODELS_CASCADE = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash"]
 
-            # GEGABELTES THINKING-BUDGET: 0 Tokens für Alltagsnutzer (sofortige Ausgabe, 0 Token-Verbrauch), 
-            # 1024 Tokens für autorisierte Admin-Sitzungen (Triad Audit)
-            thinking_budget = 1024 if st.session_state.device_authorized else 0
-
             for model_name in MODELS_CASCADE:
                 try:
+                    # Ohne thinking_config: Blitzschnelle Ausgabe in ~1s, keine vorzeitigen STOP-Abbrüche
                     response_stream = client.models.generate_content_stream(
                         model=model_name,
                         contents=api_contents,
@@ -1158,59 +1155,39 @@ if active_prompt:
                             system_instruction=active_system_prompt,
                             temperature=0.7,
                             top_p=0.9,
-                            max_output_tokens=65536,  # 65k Maximal-Puffer schließt Token-Erschöpfung aus
-                            thinking_config=types.ThinkingConfig(
-                                thinking_budget=thinking_budget
-                            ),
+                            max_output_tokens=8192,
                         ),
                     )
                     
-                    last_finish_reason = None
                     for chunk in response_stream:
                         if not chunk.candidates:
                             continue
-                        
                         candidate = chunk.candidates[0]
-                        if getattr(candidate, "finish_reason", None):
-                            last_finish_reason = candidate.finish_reason
-
                         if not candidate.content or not candidate.content.parts:
                             continue
 
-                        # Sichere Extraktion sichtbarer Text-Parts ohne chunk.text
                         for part in candidate.content.parts:
-                            if getattr(part, "thought", False):
-                                continue
-                            
                             text_content = getattr(part, "text", None)
                             if text_content:
                                 full_response += text_content
                                 message_placeholder.markdown(full_response + "▌")
 
-                    # NAHTLOSE RE-CONTINUATION (Falls Google wider Erwarten jemals MAX_TOKENS meldet)
-                    if last_finish_reason == "MAX_TOKENS":
+                    # HEURISTIK-SCHUTZ: Nahtlose Fortsetzung falls der Stream mitten im Satz endete
+                    stripped = full_response.strip()
+                    valid_endings = ('.', '!', '?', ':', '"', "'", '```', '`', ')', '*')
+                    
+                    if stripped and not stripped.endswith(valid_endings):
                         cont_contents = list(api_contents)
-                        cont_contents.append(
-                            types.Content(
-                                role="model",
-                                parts=[types.Part.from_text(text=full_response)]
-                            )
-                        )
-                        cont_contents.append(
-                            types.Content(
-                                role="user",
-                                parts=[types.Part.from_text(text="Fahre exakt beim letzten unvollständigen Wort fort, ohne Wiederholung.")]
-                            )
-                        )
+                        cont_contents.append(types.Content(role="model", parts=[types.Part.from_text(text=full_response)]))
+                        cont_contents.append(types.Content(role="user", parts=[types.Part.from_text(text="Fahre exakt beim letzten unvollständigen Wort fort.")]))
+                        
                         cont_stream = client.models.generate_content_stream(
                             model=model_name,
                             contents=cont_contents,
                             config=types.GenerateContentConfig(
                                 system_instruction=active_system_prompt,
                                 temperature=0.7,
-                                top_p=0.9,
-                                max_output_tokens=65536,
-                                thinking_config=types.ThinkingConfig(thinking_budget=0),
+                                max_output_tokens=8192,
                             ),
                         )
                         for chunk in cont_stream:
@@ -1235,7 +1212,7 @@ if active_prompt:
                         break
 
             if not success and not full_response:
-                st.error("Alle verfügbaren Kontingente (Gemini 3.8, 3.7 und 3.6) sind derzeit erschöpft. Bitte versuche es später erneut.")
+                st.error("Alle verfügbaren Kontingente sind derzeit erschöpft. Bitte versuche es später erneut.")
             else:
                 total_duration = f"{time.time() - start_time:.1f}s"
                 timer_placeholder.markdown(
