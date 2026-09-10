@@ -94,7 +94,7 @@ UI_TEXTS = {
 
 def detect_device_language():
   try:
-    lang_header = st.context.headers.get("AcceptLanguage", "")
+    lang_header = st.context.headers.get("Accept-Language", "")
     if lang_header:
       primary = lang_header.split(",")[0].split("-")[0].lower()
       if primary in UI_TEXTS:
@@ -538,9 +538,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.44 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.45 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.44" deployment_mode="in_context">
+<system_config version="1.45" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
