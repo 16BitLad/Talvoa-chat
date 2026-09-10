@@ -855,7 +855,7 @@ SYSTEM_PROMPT = r"""
       </example>
       <example type="heading_scope_fidelity_and_substrate_grounding">
         <bad>When introducing "Cable Pinouts": The serial interface divides the connection into logical signal paths for data and control.</bad>
-        <good>When introducing "Cable Pinouts" (D-Sub table): In a serial cable, connector pins are mapped to dedicated copper wires for transmit/receive lines (TxD/RxD), signal ground (GND), and hardware control contacts (RTS/CTS), deterministically securing physical hardware config access on unprovisioned hardware.</good>
+        <good>When introducing "Cable Pinouts" (D-Sub table): In a serial cable, connector pins are mapped to dedicated copper wires for transmit/receive lines (TxD/RxD), signal ground (GND), und hardware control contacts (RTS/CTS), deterministically securing physical hardware config access on unprovisioned hardware.</good>
       </example>
       <example type="anti_metaphor_practical_scenario">
         <bad>A media converter is like a person who listens to a phone call and blinks it with a flashlight through the night.</bad>
@@ -1196,6 +1196,7 @@ if active_prompt:
     with st.chat_message("assistant"):
       start_time = time.time()
       timer_placeholder = st.empty()
+      status_info_placeholder = st.empty()
       message_placeholder = st.empty()
 
       js_timer_html = """
@@ -1233,53 +1234,90 @@ if active_prompt:
       full_response = ""
       success = False
 
-      # Direkte Ausführung mit zyklischer 3-Turn-Rotation (ohne Notfall-Kaskade)
+      # Zyklische 3-Turn-Rotation mit automatischer Ausfallsicherung (Failover-Kaskade)
       BASE_MODELS = (
           "gemini-3.8-flash",
           "gemini-3.7-flash",
           "gemini-3.6-flash",
       )
-      current_model = BASE_MODELS[
-          ((st.session_state.interaction_count - 1) // 3) % len(BASE_MODELS)
+      start_idx = (
+          (st.session_state.interaction_count - 1) // 3
+      ) % len(BASE_MODELS)
+      models_to_try = [
+          BASE_MODELS[(start_idx + i) % len(BASE_MODELS)]
+          for i in range(len(BASE_MODELS))
       ]
 
-      try:
-        response_stream = client.models.generate_content_stream(
-            model=current_model,
-            contents=api_contents,
-            config=types.GenerateContentConfig(
-                system_instruction=active_system_prompt,
-                temperature=0.7,
-                top_p=0.9,
-                max_output_tokens=8192,
-                thinking_config=types.ThinkingConfig(thinking_budget=1024),
-            ),
+      # Zeitgrenze (Sekunden) für das Thinking-Budget bis zum ersten Text-Chunk
+      MAX_THINKING_WAIT_TIME = 15.0
+
+      for attempt_idx, current_model in enumerate(models_to_try):
+        try:
+          full_response = ""
+          message_placeholder.empty()
+
+          if attempt_idx > 0:
+            status_info_placeholder.info(
+                "Server derzeit ausgelastet, Anfrage wird umgeleitet..."
+            )
+
+          response_stream = client.models.generate_content_stream(
+              model=current_model,
+              contents=api_contents,
+              config=types.GenerateContentConfig(
+                  system_instruction=active_system_prompt,
+                  temperature=0.7,
+                  top_p=0.9,
+                  max_output_tokens=8192,
+                  thinking_config=types.ThinkingConfig(thinking_budget=1024),
+              ),
+          )
+
+          last_render_time = time.time()
+          stream_start_time = time.time()
+          received_first_chunk = False
+
+          for chunk in response_stream:
+            if (
+                not received_first_chunk
+                and (time.time() - stream_start_time) > MAX_THINKING_WAIT_TIME
+            ):
+              raise TimeoutError("Thinking-Budget-Zeit überschritten.")
+
+            if not chunk.candidates:
+              continue
+            candidate = chunk.candidates[0]
+            if not candidate.content or not candidate.content.parts:
+              continue
+
+            for part in candidate.content.parts:
+              text_content = getattr(part, "text", None)
+              if text_content:
+                received_first_chunk = True
+                full_response += text_content
+                now = time.time()
+                if now - last_render_time > 0.05:
+                  message_placeholder.markdown(full_response + "▌")
+                  last_render_time = now
+
+          if full_response.strip():
+            message_placeholder.markdown(full_response)
+            status_info_placeholder.empty()
+            success = True
+            break
+
+        except Exception:
+          status_info_placeholder.info(
+              "Server derzeit ausgelastet, Anfrage wird umgeleitet..."
+          )
+          time.sleep(0.3)
+
+      if not success:
+        status_info_placeholder.empty()
+        st.error(
+            "Alle Server-Endpunkte sind derzeit überlastet. Bitte versuchen Sie"
+            " es in Kürze erneut."
         )
-
-        last_render_time = time.time()
-        for chunk in response_stream:
-          if not chunk.candidates:
-            continue
-          candidate = chunk.candidates[0]
-          if not candidate.content or not candidate.content.parts:
-            continue
-
-          for part in candidate.content.parts:
-            text_content = getattr(part, "text", None)
-            if text_content:
-              full_response += text_content
-              now = time.time()
-              if now - last_render_time > 0.05:
-                message_placeholder.markdown(full_response + "▌")
-                last_render_time = now
-
-        if full_response:
-          message_placeholder.markdown(full_response)
-          success = True
-
-      except Exception as e:
-        st.error(f"Fehler bei Endpunkt ({current_model}): {e}")
-        full_response = ""
 
       if success and full_response:
         total_duration = f"{time.time() - start_time:.1f}s"
@@ -1290,7 +1328,7 @@ if active_prompt:
         )
         message_placeholder.markdown(full_response)
 
-  if full_response:
+  if full_response and success:
     st.session_state.all_chats[st.session_state.current_chat_id][
         "messages"
     ].append({
