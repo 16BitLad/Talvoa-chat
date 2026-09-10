@@ -1,5 +1,4 @@
 import os
-import json
 import uuid
 import time
 from datetime import datetime
@@ -15,38 +14,19 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 2. JSON Storage Handlers & History Limit (Max 10)
-STORAGE_FILE = "chats_history.json"
+# 2. Per-Device Session Storage & History Limit (Max 10 per Device)
 MAX_HISTORY_COUNT = 10
 
 def trim_chats_history(data):
-    """Behält strikt nur die letzten 10 aktuellsten Chats bei."""
+    """Behält für das aktuelle Gerät strikt nur die letzten 10 Chats bei."""
     if len(data) > MAX_HISTORY_COUNT:
         keys_to_keep = list(data.keys())[-MAX_HISTORY_COUNT:]
         return {k: data[k] for k in keys_to_keep}
     return data
 
-def load_stored_chats():
-    if os.path.exists(STORAGE_FILE):
-        try:
-            with open(STORAGE_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                return trim_chats_history(data)
-        except Exception:
-            return {}
-    return {}
-
-def save_stored_chats(data):
-    try:
-        trimmed_data = trim_chats_history(data)
-        with open(STORAGE_FILE, "w", encoding="utf-8") as f:
-            json.dump(trimmed_data, f, ensure_ascii=False, indent=2)
-    except Exception:
-        pass
-
-# 3. State Initializations & Callback Handlers
+# 3. State Initializations (Rein lokal & isoliert pro Gerät/Browser-Tab)
 if "all_chats" not in st.session_state:
-    st.session_state.all_chats = load_stored_chats()
+    st.session_state.all_chats = {}
 
 if "current_chat_id" not in st.session_state:
     st.session_state.current_chat_id = None
@@ -74,7 +54,7 @@ else:
 # Dynamische Hoehenberechnung
 chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 210px)"
 
-# 4. Custom CSS: Kontrast & Dark-Theme Fixes (v1.14)
+# 4. Custom CSS: Kontrast, Mobile-Optimierung & Dark-Theme (v1.15)
 st.markdown(
     f"""
     <style>
@@ -94,9 +74,7 @@ st.markdown(
         text-align: center;
     }}
 
-    /* ==================================================================== */
-    /* GLOBAL BUTTON DEFAULT: VERHINDERT WEISSE BUTTONS IN DER HISTORIE     */
-    /* ==================================================================== */
+    /* GLOBAL BUTTON DEFAULT: DUNKLE HISTORIEN-BUTTONS */
     .stButton > button,
     button[data-testid="stBaseButton-secondary"] {{
         background-color: #202024 !important;
@@ -113,9 +91,7 @@ st.markdown(
         color: #ffffff !important;
     }}
 
-    /* ==================================================================== */
-    /* CHAT FORM: EINGABEZEILE + ARROW BUTTON                               */
-    /* ==================================================================== */
+    /* CHAT FORM: EINGABEZEILE + ARROW BUTTON */
     div[data-testid="stForm"] {{
         background-color: #27272a !important;
         border: 1px solid #3f3f46 !important;
@@ -187,9 +163,7 @@ st.markdown(
         border-color: #71717a !important;
     }}
 
-    /* ==================================================================== */
-    /* ACTION BUTTONS (NEU CHAT / HISTORY TOGGLE)                           */
-    /* ==================================================================== */
+    /* ACTION BUTTONS (NEU CHAT / HISTORY TOGGLE) */
     div[data-testid="stHorizontalBlock"]:not(div[data-testid="stForm"] *) {{
         display: flex !important;
         flex-direction: row !important;
@@ -228,9 +202,7 @@ st.markdown(
         color: #ffffff !important; 
     }}
 
-    /* ==================================================================== */
-    /* CHAT BUBBLES & TEXT KONTRAST FIX                                     */
-    /* ==================================================================== */
+    /* CHAT BUBBLES & TEXT KONTRAST FIX */
     div[data-testid="stChatMessage"] {{
         padding: 0.6rem 0.9rem !important;
         margin-bottom: 0.6rem !important;
@@ -241,8 +213,6 @@ st.markdown(
         height: auto !important;
         min-height: 0 !important;
     }}
-
-    /* ERZWINGT HELLE SCHRIFT IN ALLEN CHAT-NACHRICHTEN */
     div[data-testid="stChatMessage"] *,
     div[data-testid="stChatMessage"] p,
     div[data-testid="stChatMessage"] span,
@@ -348,15 +318,15 @@ with col_b2:
         on_click=toggle_history
     )
 
-# 8. Collapsible History Dropdown (Clean Containers, Max 10)
+# 8. Collapsible History Dropdown (Isoliert pro Gerät, Max 10)
 if st.session_state.show_history:
     with st.container():
         st.markdown(
-            '<p style="color: #a1a1aa; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.4rem; font-weight: 600; text-align: left;">Previous Conversations (Max. 10)</p>',
+            '<p style="color: #a1a1aa; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.4rem; font-weight: 600; text-align: left;">Previous Conversations (This Device)</p>',
             unsafe_allow_html=True,
         )
         if len(st.session_state.all_chats) == 0:
-            st.markdown("<p style='color: #71717a; font-size: 0.85rem; margin: 0; text-align: left;'>No previous conversations stored yet.</p>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #71717a; font-size: 0.85rem; margin: 0; text-align: left;'>No previous conversations on this device yet.</p>", unsafe_allow_html=True)
         else:
             for c_id, c_data in reversed(list(st.session_state.all_chats.items())):
                 btn_label = f"💬 {c_data['title']}   •   🕒 {c_data['timestamp']}"
@@ -368,9 +338,9 @@ if st.session_state.show_history:
                     args=(c_id,)
                 )
 
-# 9. Full WITTALVA System Prompt (Version 1.14)
+# 9. Full WITTALVA System Prompt (Version 1.15)
 SYSTEM_PROMPT = """
-<system_config version="1.14" deployment_mode="in_context">
+<system_config version="1.15" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -724,14 +694,13 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
         }
         st.session_state.current_chat_id = new_id
 
-    # Automatisch auf die 10 aktuellsten Chats beschraenken
+    # Automatisch auf die 10 aktuellsten Chats dieses Geräts beschraenken
     st.session_state.all_chats = trim_chats_history(st.session_state.all_chats)
 
-    # UI speichert und zeigt den Verlauf an
+    # UI speichert die Nachricht lokal in der Session
     st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
         {"role": "user", "content": clean_prompt}
     )
-    save_stored_chats(st.session_state.all_chats)
 
     active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
@@ -828,7 +797,6 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
         st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
             {"role": "assistant", "content": full_response, "duration": total_duration}
         )
-        save_stored_chats(st.session_state.all_chats)
         st.rerun()
 
 # 12. Render Persistent Output Window if not actively submitting
