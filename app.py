@@ -14,7 +14,63 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 2. Per-Device Session Storage & History Limit (Max 10 per Device)
+# 2. Multi-Language UI Dictionary & Automatic Device Detection (DE, EN, ES, FR)
+UI_TEXTS = {
+    "de": {
+        "subtitle": "Ihr Wegbegleiter und Berater für alltägliche Fragen",
+        "placeholder": "Wie kann ich helfen?",
+        "new_chat": "➕ Neuer Chat",
+        "history_show": "📜 Chat-Verlauf",
+        "history_hide": "▲ Verlauf ausblenden",
+        "prev_conv": "Bisherige Gespräche (Dieses Gerät)",
+        "no_conv": "Noch keine bisherigen Gespräche auf diesem Gerät.",
+    },
+    "en": {
+        "subtitle": "Your fellow guide and advisor through day-to-day matters",
+        "placeholder": "How can I help?",
+        "new_chat": "➕ Open new chat",
+        "history_show": "📜 Chat history",
+        "history_hide": "▲ Hide history",
+        "prev_conv": "Previous Conversations (This Device)",
+        "no_conv": "No previous conversations on this device yet.",
+    },
+    "es": {
+        "subtitle": "Tu guía y asesor para los asuntos cotidianos",
+        "placeholder": "¿En qué puedo ayudarte?",
+        "new_chat": "➕ Nuevo chat",
+        "history_show": "📜 Historial de chats",
+        "history_hide": "▲ Ocultar historial",
+        "prev_conv": "Conversaciones anteriores (Este dispositivo)",
+        "no_conv": "Aún no hay conversaciones previas en este dispositivo.",
+    },
+    "fr": {
+        "subtitle": "Votre guide et conseiller pour les affaires du quotidien",
+        "placeholder": "Comment puis-je vous aider ?",
+        "new_chat": "➕ Nouveau chat",
+        "history_show": "📜 Historique des discussions",
+        "history_hide": "▲ Masquer l'historique",
+        "prev_conv": "Conversations précédentes (Cet appareil)",
+        "no_conv": "Aucune conversation précédente sur cet appareil.",
+    }
+}
+
+def detect_device_language():
+    """Erkennt automatisch die Sprach-/Standort-ID des zugreifenden Geräts."""
+    try:
+        lang_header = st.context.headers.get("Accept-Language", "")
+        if lang_header:
+            primary = lang_header.split(",")[0].split("-")[0].lower()
+            if primary in UI_TEXTS:
+                return primary
+    except Exception:
+        pass
+    return "de"  # Standardsprache (Fallback)
+
+# Aktuelle Sprache für die Session festlegen
+user_lang = detect_device_language()
+txt = UI_TEXTS[user_lang]
+
+# 3. Per-Device Session Storage & History Limit (Max 10 per Device)
 MAX_HISTORY_COUNT = 10
 
 def trim_chats_history(data):
@@ -24,7 +80,7 @@ def trim_chats_history(data):
         return {k: data[k] for k in keys_to_keep}
     return data
 
-# 3. State Initializations (Rein lokal & isoliert pro Gerät/Browser-Tab)
+# State Initializations (Isoliert pro Gerät/Browser-Tab)
 if "all_chats" not in st.session_state:
     st.session_state.all_chats = {}
 
@@ -54,7 +110,7 @@ else:
 # Dynamische Hoehenberechnung
 chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 210px)"
 
-# 4. Custom CSS: Kontrast, Mobile-Optimierung & Dark-Theme (v1.15)
+# 4. Custom CSS: Kontrast, Mobile-Optimierung & Dark-Theme (v1.16)
 st.markdown(
     f"""
     <style>
@@ -276,41 +332,41 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 5. Header Section
+# 5. Header Section (Dynamisch lokalisiert)
 st.markdown(
-    """
+    f"""
     <div style="text-align: center; margin-bottom: 0.1rem;">
         <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.1rem; color: #ffffff;">WITTALVA</h1>
-        <p style="color: #a1a1aa; font-size: 0.95rem; margin-top: 0;">Your fellow guide and advisor through day-to-day matters</p>
+        <p style="color: #a1a1aa; font-size: 0.95rem; margin-top: 0;">{txt["subtitle"]}</p>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-# 6. Form Input Field
+# 6. Form Input Field (Dynamisch lokalisiert)
 with st.form(key="chat_input_form", clear_on_submit=True):
     col_input, col_submit = st.columns([9, 1])
     with col_input:
         user_prompt = st.text_input(
             "Input",
-            placeholder="How can I help?",
+            placeholder=txt["placeholder"],
             label_visibility="collapsed",
             key="user_text_input",
         )
     with col_submit:
         submitted = st.form_submit_button("↑")
 
-# 7. Action Buttons Row (Kompakt, zentriert & einheitlich)
+# 7. Action Buttons Row (Dynamisch lokalisiert)
 col_b1, col_b2 = st.columns(2)
 with col_b1:
     st.button(
-        "➕ Open new chat", 
+        txt["new_chat"], 
         use_container_width=True, 
         key="btn_global_new",
         on_click=start_new_chat
     )
 with col_b2:
-    hist_label = "▲ Hide history" if st.session_state.show_history else "📜 Chat history"
+    hist_label = txt["history_hide"] if st.session_state.show_history else txt["history_show"]
     st.button(
         hist_label, 
         use_container_width=True, 
@@ -318,15 +374,15 @@ with col_b2:
         on_click=toggle_history
     )
 
-# 8. Collapsible History Dropdown (Isoliert pro Gerät, Max 10)
+# 8. Collapsible History Dropdown (Dynamisch lokalisiert, Max 10)
 if st.session_state.show_history:
     with st.container():
         st.markdown(
-            '<p style="color: #a1a1aa; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.4rem; font-weight: 600; text-align: left;">Previous Conversations (This Device)</p>',
+            f'<p style="color: #a1a1aa; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.4rem; font-weight: 600; text-align: left;">{txt["prev_conv"]}</p>',
             unsafe_allow_html=True,
         )
         if len(st.session_state.all_chats) == 0:
-            st.markdown("<p style='color: #71717a; font-size: 0.85rem; margin: 0; text-align: left;'>No previous conversations on this device yet.</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='color: #71717a; font-size: 0.85rem; margin: 0; text-align: left;'>{txt['no_conv']}</p>", unsafe_allow_html=True)
         else:
             for c_id, c_data in reversed(list(st.session_state.all_chats.items())):
                 btn_label = f"💬 {c_data['title']}   •   🕒 {c_data['timestamp']}"
@@ -338,9 +394,9 @@ if st.session_state.show_history:
                     args=(c_id,)
                 )
 
-# 9. Full WITTALVA System Prompt (Version 1.15)
+# 9. Full WITTALVA System Prompt (Version 1.16)
 SYSTEM_PROMPT = """
-<system_config version="1.15" deployment_mode="in_context">
+<system_config version="1.16" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
