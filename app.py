@@ -514,9 +514,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.35 - Kopiersicher ohne innere Backtick-Konflikte)
+# 6. HEADER SYSTEM PROMPT (v1.36 - Kopiersicher ohne innere Backtick-Konflikte)
 SYSTEM_PROMPT = r"""
-<system_config version="1.35" deployment_mode="in_context">
+<system_config version="1.36" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -649,7 +649,7 @@ SYSTEM_PROMPT = r"""
         Floskel-Fragen-Verbot: Es ist strikt untersagt, am Ende von Antworten leere Chat-Floskeln oder Pauschalfragen anzuhängen (z. B. 'Gibt es noch ein Thema, bei dem ich helfen kann?', 'Kann ich sonst noch helfen?'). Antworten enden direkt mit dem letzten fachlichen Satz.
       </inv>
       <inv id="@DUAL_PROVIDER" type="dynamic">
-        Multi-Provider-Abstraktion & Kaskadierung: Das System unterstützt die nahtlose Backend-Ausführung über Google Gemini API oder Mistral AI API sowie die automatische Modell-Kaskadierung (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) mit voller 65k-Token-Ausgabeentfaltung und nahtloser Re-Continuation-Resilienz bei MAX_TOKENS-Abbrüchen unter vollständiger Beibehaltung aller System-Prompt-Invarianten.
+        Multi-Provider-Abstraktion & Kaskadierung: Das System unterstützt die nahtlose Backend-Ausführung über Google Gemini API oder Mistral AI API sowie die automatische Modell-Kaskadierung über die exklusive Triade (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) mit universeller Server-Resilienz (unterbrechungsfreier Failover bei HTTP 503 UNAVAILABLE, Lastspitzen, 500 und 429 Quota) und 65k-Token-Ausgabeentfaltung unter vollständiger Beibehaltung aller System-Prompt-Invarianten.
       </inv>
       <inv id="@TIMER_CLEANUP" type="passive">
         Frontend-Timer-Cleanup: Das JavaScript-Intervall des Echtzeit-Timers wird bei Beendigung des Outputs über explizite Event-Listener (unload, pagehide) und DOM-Existenzprüfungen im Iframe-Container ohne ungültige Widget-Keys fehlerfrei zerstört.
@@ -719,7 +719,7 @@ SYSTEM_PROMPT = r"""
 
     <execution>
       1. CACHE OPTIMIZATION, CONTEXT COMPACTION & ACTION BUDGETING:
-         - Optimize static config headers for prompt caching; enforce strict KV-cache terminal suffix isolation by placing dynamic payloads strictly after immutable prefixes. Maintain prefix cache stability across long multi-turn sessions by leveraging the native 1M-token context capacity without premature summarization. Retain raw episodic conversation history in KV cache to preserve exact parameter recall and maximize cache hit discounts; delegate state consolidation via @V.K strictly as lazy compaction upon approaching context quota thresholds. Maintain register isolation per @REG and verify output-format fidelity directly within non-emitted extended thinking. Dynamic turn dispatch (@V.J: T1/T2/T3 triage and constraint-anchored disambiguation) and workflow tracking (@V.F: multi-part subclause decomposition and Stage 3b zero-omission gating) execute natively within the extended thinking budget across target reasoning models under @CALIB.
+         - Optimize static config headers for prompt caching; enforce strict KV-cache terminal suffix isolation by placing dynamic payloads strictly after immutable prefixes. Maintain prefix cache stability across long multi-turn sessions by leveraging the native 1M-token context capacity without premature summarization. Retain raw episodic conversation history in KV cache to preserve exact parameter recall and maximize cache hit discounts; delegate state consolidation via @V.K strictly as lazy compaction upon approaching context quota thresholds. In-flight failover buffer isolation: on mid-stream endpoint failures, purge partial generation buffers prior to engaging the next cascade tier. Maintain register isolation per @REG and verify output-format fidelity directly within non-emitted extended thinking. Dynamic turn dispatch (@V.J: T1/T2/T3 triage and constraint-anchored disambiguation) and workflow tracking (@V.F: multi-part subclause decomposition and Stage 3b zero-omission gating) execute natively within the extended thinking budget across target reasoning models under @CALIB.
          - Enforce dynamic action budgets and termination guards on tool execution using positive, outcome-oriented task criteria.
 
       2. PAIRWISE FAST-MODEL AUDIT & DECOMPOSITION:
@@ -756,7 +756,7 @@ SYSTEM_PROMPT = r"""
   <!-- Extended Routing, Audit Format & Few-Shot Exemplars -->
   <extended>
     <routing>
-      T1 (Direct Path): Deliver direct solutions for routine lookups, everyday user queries, simple factual requests, single-step tasks, and direct status checks as the default path in pure solution prose starting immediately on line 1 (status tags and draft blocks remain strictly governed by governance 1 for PL mutation commands) — reasoning depth remains governed by @CALIB native extended thinking. Pragmatic Zero-Overhead Rule: Whenever an inquiry has an unambiguous, deterministic answer (e.g., direct factual lookups, basic calculations, single-state checks), @CALIB strictly throttles internal thinking compute to direct retrieval/calculation, completely bypassing Dialectical Descent and emitting purely the factual result without didactic framing or conversational filler. Substantive conciseness defines textual density, strictly decoupled from response latency. Escalates to T2 strictly upon encountering unresolvable multi-way ambiguity per output_contract 3, when evaluating complex architectural trade-offs, or when a superficially simple query requires a multi-variable causal investigation; simple phrasing variations without underlying complexity remain strictly on T1. Dynamic Fallback Routing (@V.J): Upon encountering endpoint rate limits (HTTP 429), automatically reroute turn execution to the next available cascade tier without state loss. Truncation Heuristic Gating (@V.F): If an output stream terminates on non-terminal punctuation, trigger immediate seamless sub-turn continuation before committing state.
+      T1 (Direct Path): Deliver direct solutions for routine lookups, everyday user queries, simple factual requests, single-step tasks, and direct status checks as the default path in pure solution prose starting immediately on line 1 (status tags and draft blocks remain strictly governed by governance 1 for PL mutation commands) — reasoning depth remains governed by @CALIB native extended thinking. Pragmatic Zero-Overhead Rule: Whenever an inquiry has an unambiguous, deterministic answer (e.g., direct factual lookups, basic calculations, single-state checks), @CALIB strictly throttles internal thinking compute to direct retrieval/calculation, completely bypassing Dialectical Descent and emitting purely the factual result without didactic framing or conversational filler. Substantive conciseness defines textual density, strictly decoupled from response latency. Escalates to T2 strictly upon encountering unresolvable multi-way ambiguity per output_contract 3, when evaluating complex architectural trade-offs, or when a superficially simple query requires a multi-variable causal investigation; simple phrasing variations without underlying complexity remain strictly on T1. Dynamic Fallback Routing (@V.J): Upon encountering any endpoint failure, demand spike (HTTP 503 UNAVAILABLE), or rate limit (HTTP 429), automatically reroute turn execution to the next available cascade tier in the strict triad (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) without premature termination or state loss. Truncation Heuristic Gating (@V.F): If an output stream terminates on non-terminal punctuation, trigger immediate seamless sub-turn continuation before committing state.
       T2 (Audit / Analysis): Triggered strictly whenever the request involves multi-faceted real-world topics with competing considerations, normative individual decisions without side-effects, high-switching-cost or severe path-dependent recommendations, system architecture, high-ambiguity trade-offs, complex empirical derivations, or when a superficially simple query requires a multi-variable causal investigation; mandates internal Dialectical Descent (§execution 2) and appends a concise Triad Audit (scaled to simple everyday language for non-technical queries to eliminate visual clutter) to the response.
       T3 (Escalation / High-Risk): Require explicit user confirmation prior to execution of irreversible state mutations, destructive operations, or tool side-effects. Layering Rule: When destructive operations and complex analytical trade-offs coincide, T2 Triad Audit analysis and T3 confirmation gate layer orthogonally (providing analytical audit upfront while holding execution pending explicit confirmation).
     </routing>
@@ -1142,12 +1142,13 @@ if active_prompt:
             full_response = ""
             success = False
             
-            # AUTOMATISCHE MODELL-KASKADIERUNG BEI RATE-LIMITS
+            # Exklusive 3.x-Flash-Triade
             MODELS_CASCADE = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash"]
+            last_error = None
 
             for model_name in MODELS_CASCADE:
                 try:
-                    # Ohne thinking_config: Blitzschnelle Ausgabe in ~1s, keine vorzeitigen STOP-Abbrüche
+                    # Direkte, ungedeckelte Streaming-Ausgabe ohne anfälliges Thinking-Overhead
                     response_stream = client.models.generate_content_stream(
                         model=model_name,
                         contents=api_contents,
@@ -1172,10 +1173,9 @@ if active_prompt:
                                 full_response += text_content
                                 message_placeholder.markdown(full_response + "▌")
 
-                    # HEURISTIK-SCHUTZ: Nahtlose Fortsetzung falls der Stream mitten im Satz endete
+                    # Satzende-Prüfung (Auto-Heuristik gegen unvollständige Fragmente)
                     stripped = full_response.strip()
                     valid_endings = ('.', '!', '?', ':', '"', "'", '```', '`', ')', '*')
-                    
                     if stripped and not stripped.endswith(valid_endings):
                         cont_contents = list(api_contents)
                         cont_contents.append(types.Content(role="model", parts=[types.Part.from_text(text=full_response)]))
@@ -1203,16 +1203,13 @@ if active_prompt:
                         break
 
                 except Exception as e:
-                    error_msg = str(e)
-                    if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg or "Quota" in error_msg:
-                        full_response = ""
-                        continue
-                    else:
-                        st.error(f"API Error ({model_name}): {e}")
-                        break
+                    # Universeller Failover: Bei 503 Überlastung, 429 oder 500 Puffer leeren und SOFORT zum nächsten Modell!
+                    last_error = f"{model_name}: {e}"
+                    full_response = ""
+                    continue
 
             if not success and not full_response:
-                st.error("Alle verfügbaren Kontingente sind derzeit erschöpft. Bitte versuche es später erneut.")
+                st.error(f"Alle drei Modell-Endpunkte (3.8, 3.7, 3.6) sind derzeit nicht erreichbar. Letzter Fehler: {last_error}")
             else:
                 total_duration = f"{time.time() - start_time:.1f}s"
                 timer_placeholder.markdown(
