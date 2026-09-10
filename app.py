@@ -502,9 +502,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.30 - Aktueller Stand)
+# 6. HEADER SYSTEM PROMPT (v1.31 - Aktueller Stand)
 SYSTEM_PROMPT = """
-<system_config version="1.30" deployment_mode="in_context">
+<system_config version="1.31" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -647,7 +647,7 @@ SYSTEM_PROMPT = """
         Multi-Provider-Abstraktion: Das System unterstützt die nahtlose Backend-Ausführung über Google Gemini API oder Mistral AI API unter vollständiger Beibehaltung aller System-Prompt-Invarianten und Formatierungsvorgaben.
       </inv>
       <inv id="@TIMER_CLEANUP" type="passive">
-        Frontend-Timer-Cleanup: Das JavaScript-Intervall des Echtzeit-Timers wird bei Beendigung des Outputs und Unmounten des Streamlit-Iframe-Containers über explizite Event-Listener (unload, pagehide) und eindeutige Komponenten-Keys (key=js_timer_TIMESTAMP) vollständig zerstört.
+        Frontend-Timer-Cleanup: Das JavaScript-Intervall des Echtzeit-Timers wird bei Beendigung des Outputs über explizite Event-Listener (unload, pagehide) und DOM-Existenzprüfungen im Iframe-Container ohne ungültige Widget-Keys fehlerfrei zerstört.
       </inv>
     </invariants>
   </registry>
@@ -1127,7 +1127,7 @@ if active_prompt:
             </html>
             """
             with timer_placeholder.container():
-                components.html(js_timer_html, height=20, key=f"js_timer_{int(start_time * 1000)}")
+                components.html(js_timer_html, height=20)
 
             full_response = ""
 
