@@ -68,7 +68,7 @@ UI_TEXTS = {
     },
     "es": {
         "subtitle": "Tu guía y asesor para los asuntos cotidianos",
-        "placeholder": "¿En qué puedo ayudarte?",
+        "placeholder": "¿En qué posso ayudarte?",
         "new_chat": "➕ Nuevo chat",
         "history_show": "📜 Historial de chats",
         "history_hide": "▲ Ocultar historial",
@@ -580,9 +580,8 @@ client = genai.Client(api_key=api_key)
 # Helper function to render chat message content
 def render_chat_message(msg, idx):
     with st.chat_message(msg["role"]):
-        # Aktionsleiste (wird durch CSS oben links überlappend positioniert)
-        if st.session_state.editing_idx != idx:
-            # Wir behalten die columns im Python-Teil bei, korrigieren aber deren Breite per CSS-Override oben!
+        # Aktionsleiste NUR für User-Nachrichten (Inputs) einblenden
+        if st.session_state.editing_idx != idx and msg["role"] == "user":
             ac1, ac2, ac3, _ = st.columns([0.05, 0.05, 0.05, 0.85])
             with ac1:
                 st.button("🔄", key=f"act_ref_{idx}", help="Aktualisieren", on_click=trigger_regenerate, args=(idx,))
@@ -736,4 +735,3 @@ elif len(current_messages) > 0:
     with chat_box:
         for idx, msg in enumerate(current_messages):
             render_chat_message(msg, idx)
-            
