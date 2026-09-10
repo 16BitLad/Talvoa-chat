@@ -110,10 +110,13 @@ else:
 # Dynamische Hoehenberechnung
 chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 210px)"
 
-# 4. Custom CSS: Kontrast, Mobile-Optimierung & Dark-Theme (v1.16)
+# 4. Custom CSS: Art-Déco Font-Import, Kontrast & Dark-Theme (v1.17)
 st.markdown(
     f"""
     <style>
+    /* Google Font Import: Six Caps (Ultra-Narrow Art Déco Display) */
+    @import url('https://fonts.googleapis.com/css2?family=Six+Caps&display=swap');
+
     /* Dark Theme Background */
     .stApp {{ 
         background-color: #18181b !important; 
@@ -124,10 +127,24 @@ st.markdown(
         display: none !important; 
     }}
     .block-container {{ 
-        padding-top: 1rem !important; 
+        padding-top: 0.8rem !important; 
         padding-bottom: 0 !important; 
         max-width: 750px !important; 
         text-align: center;
+    }}
+
+    /* STYLISIERTER ART-DÉCO TITEL (WITTALVA) */
+    .wittalva-title {{
+        font-family: 'Six Caps', 'Arial Narrow', sans-serif !important;
+        font-size: 4.8rem !important;
+        font-weight: 400 !important;
+        letter-spacing: 0.12em !important;
+        text-transform: uppercase !important;
+        line-height: 0.85 !important;
+        color: #ffffff !important;
+        margin-bottom: 0.1rem !important;
+        display: block !important;
+        text-shadow: 0 0 10px rgba(255,255,255,0.05);
     }}
 
     /* GLOBAL BUTTON DEFAULT: DUNKLE HISTORIEN-BUTTONS */
@@ -332,11 +349,11 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 5. Header Section (Dynamisch lokalisiert)
+# 5. Header Section (Art-Déco Titel & Dynamisch lokalisiert)
 st.markdown(
     f"""
     <div style="text-align: center; margin-bottom: 0.1rem;">
-        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.1rem; color: #ffffff;">WITTALVA</h1>
+        <span class="wittalva-title">WITTALVA</span>
         <p style="color: #a1a1aa; font-size: 0.95rem; margin-top: 0;">{txt["subtitle"]}</p>
     </div>
     """,
@@ -394,9 +411,9 @@ if st.session_state.show_history:
                     args=(c_id,)
                 )
 
-# 9. Full WITTALVA System Prompt (Version 1.16)
+# 9. Full WITTALVA System Prompt (Version 1.17)
 SYSTEM_PROMPT = """
-<system_config version="1.16" deployment_mode="in_context">
+<system_config version="1.17" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
