@@ -1,4 +1,5 @@
 import os
+import json
 import uuid
 import time
 from datetime import datetime
@@ -14,7 +15,38 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 2. Multi-Language UI Dictionary & Automatic Device Detection (DE, EN, ES, FR)
+# 2. JSON Storage Handlers & History Limit (Max 10) - WIEDERHERGESTELLT
+STORAGE_FILE = "chats_history.json"
+MAX_HISTORY_COUNT = 10
+
+def trim_chats_history(data):
+    """Behält strikt nur die letzten 10 Chats bei."""
+    if len(data) > MAX_HISTORY_COUNT:
+        keys_to_keep = list(data.keys())[-MAX_HISTORY_COUNT:]
+        return {k: data[k] for k in keys_to_keep}
+    return data
+
+def load_stored_chats():
+    """Lädt gespeicherte Chats aus der lokalen chats_history.json Datei."""
+    if os.path.exists(STORAGE_FILE):
+        try:
+            with open(STORAGE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return trim_chats_history(data)
+        except Exception:
+            return {}
+    return {}
+
+def save_stored_chats(data):
+    """Speichert die Chats dauerhaft in chats_history.json."""
+    try:
+        trimmed_data = trim_chats_history(data)
+        with open(STORAGE_FILE, "w", encoding="utf-8") as f:
+            json.dump(trimmed_data, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+# 3. Multi-Language UI Dictionary & Automatic Device Detection (DE, EN, ES, FR)
 UI_TEXTS = {
     "de": {
         "subtitle": "Ihr Wegbegleiter und Berater für alltägliche Fragen",
@@ -22,8 +54,8 @@ UI_TEXTS = {
         "new_chat": "➕ Neuer Chat",
         "history_show": "📜 Chat-Verlauf",
         "history_hide": "▲ Verlauf ausblenden",
-        "prev_conv": "Bisherige Gespräche (Dieses Gerät)",
-        "no_conv": "Noch keine bisherigen Gespräche auf diesem Gerät.",
+        "prev_conv": "Bisherige Gespräche",
+        "no_conv": "Noch keine bisherigen Gespräche gespeichert.",
     },
     "en": {
         "subtitle": "Your fellow guide and advisor through day-to-day matters",
@@ -31,8 +63,8 @@ UI_TEXTS = {
         "new_chat": "➕ Open new chat",
         "history_show": "📜 Chat history",
         "history_hide": "▲ Hide history",
-        "prev_conv": "Previous Conversations (This Device)",
-        "no_conv": "No previous conversations on this device yet.",
+        "prev_conv": "Previous Conversations",
+        "no_conv": "No previous conversations stored yet.",
     },
     "es": {
         "subtitle": "Tu guía y asesor para los asuntos cotidianos",
@@ -40,8 +72,8 @@ UI_TEXTS = {
         "new_chat": "➕ Nuevo chat",
         "history_show": "📜 Historial de chats",
         "history_hide": "▲ Ocultar historial",
-        "prev_conv": "Conversaciones anteriores (Este dispositivo)",
-        "no_conv": "Aún no hay conversaciones previas en este dispositivo.",
+        "prev_conv": "Conversaciones anteriores",
+        "no_conv": "Aún no hay conversaciones previas guardadas.",
     },
     "fr": {
         "subtitle": "Votre guide et conseiller pour les affaires du quotidien",
@@ -49,8 +81,8 @@ UI_TEXTS = {
         "new_chat": "➕ Nouveau chat",
         "history_show": "📜 Historique des discussions",
         "history_hide": "▲ Masquer l'historique",
-        "prev_conv": "Conversations précédentes (Cet appareil)",
-        "no_conv": "Aucune conversation précédente sur cet appareil.",
+        "prev_conv": "Conversations précédentes",
+        "no_conv": "Aucune conversation précédente enregistrée.",
     }
 }
 
@@ -66,23 +98,12 @@ def detect_device_language():
         pass
     return "de"  # Standardsprache (Fallback)
 
-# Aktuelle Sprache für die Session festlegen
 user_lang = detect_device_language()
 txt = UI_TEXTS[user_lang]
 
-# 3. Per-Device Session Storage & History Limit (Max 10 per Device)
-MAX_HISTORY_COUNT = 10
-
-def trim_chats_history(data):
-    """Behält für das aktuelle Gerät strikt nur die letzten 10 Chats bei."""
-    if len(data) > MAX_HISTORY_COUNT:
-        keys_to_keep = list(data.keys())[-MAX_HISTORY_COUNT:]
-        return {k: data[k] for k in keys_to_keep}
-    return data
-
-# State Initializations (Isoliert pro Gerät/Browser-Tab)
+# 4. State Initializations (Lädt wieder aus chats_history.json)
 if "all_chats" not in st.session_state:
-    st.session_state.all_chats = {}
+    st.session_state.all_chats = load_stored_chats()
 
 if "current_chat_id" not in st.session_state:
     st.session_state.current_chat_id = None
@@ -110,7 +131,7 @@ else:
 # Dynamische Hoehenberechnung
 chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 210px)"
 
-# 4. Custom CSS: Art-Déco & Runen Font-Import, Kontrast & Dark-Theme (v1.18)
+# 5. Custom CSS: Art-Déco & Runen Font-Import, Kontrast & Dark-Theme (v1.20)
 st.markdown(
     f"""
     <style>
@@ -371,7 +392,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 5. Header Section (Lateinisch + Runen & Dynamisch lokalisiert)
+# 6. Header Section (Lateinisch + Runen & Dynamisch lokalisiert)
 st.markdown(
     f"""
     <div style="text-align: center; margin-bottom: 0.1rem;">
@@ -386,7 +407,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. Form Input Field (Dynamisch lokalisiert)
+# 7. Form Input Field (Dynamisch lokalisiert)
 with st.form(key="chat_input_form", clear_on_submit=True):
     col_input, col_submit = st.columns([9, 1])
     with col_input:
@@ -399,7 +420,7 @@ with st.form(key="chat_input_form", clear_on_submit=True):
     with col_submit:
         submitted = st.form_submit_button("↑")
 
-# 7. Action Buttons Row (Dynamisch lokalisiert)
+# 8. Action Buttons Row (Dynamisch lokalisiert)
 col_b1, col_b2 = st.columns(2)
 with col_b1:
     st.button(
@@ -417,7 +438,7 @@ with col_b2:
         on_click=toggle_history
     )
 
-# 8. Collapsible History Dropdown (Dynamisch lokalisiert, Max 10)
+# 9. Collapsible History Dropdown (Dynamisch lokalisiert, Max 10)
 if st.session_state.show_history:
     with st.container():
         st.markdown(
@@ -437,9 +458,9 @@ if st.session_state.show_history:
                     args=(c_id,)
                 )
 
-# 9. Full WITTALVA System Prompt (Version 1.18)
+# 10. Full WITTALVA System Prompt (Version 1.20)
 SYSTEM_PROMPT = """
-<system_config version="1.18" deployment_mode="in_context">
+<system_config version="1.20" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -768,7 +789,7 @@ SYSTEM_PROMPT = """
 </system_config>
 """
 
-# 10. Load API Key securely
+# 11. Load API Key securely
 api_key = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 
 if not api_key:
@@ -777,7 +798,7 @@ if not api_key:
 
 client = genai.Client(api_key=api_key)
 
-# 11. Handle Form Submission
+# 12. Handle Form Submission
 if submitted and user_prompt and len(user_prompt.strip()) > 0:
     st.session_state.show_history = False
     now_str = datetime.now().strftime("%d.%m.%Y, %H:%M")
@@ -793,13 +814,14 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
         }
         st.session_state.current_chat_id = new_id
 
-    # Automatisch auf die 10 aktuellsten Chats dieses Geräts beschraenken
+    # Automatisch auf die 10 aktuellsten Chats beschraenken
     st.session_state.all_chats = trim_chats_history(st.session_state.all_chats)
 
-    # UI speichert die Nachricht lokal in der Session
+    # UI speichert die Nachricht in st.session_state und dauerhaft in chats_history.json
     st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
         {"role": "user", "content": clean_prompt}
     )
+    save_stored_chats(st.session_state.all_chats)
 
     active_history = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 
@@ -851,9 +873,9 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
             full_response = ""
 
             try:
-                # API-Aufruf mit validem Modell gemini-2.5-flash & Thinking Config
+                # API-Aufruf mit fest verankertem Modell gemini-3.6-flash & Thinking Config
                 response_stream = client.models.generate_content_stream(
-                    model="gemini-2.5-flash",
+                    model="gemini-3.6-flash",
                     contents=api_contents,
                     config=types.GenerateContentConfig(
                         system_instruction=SYSTEM_PROMPT,
@@ -896,9 +918,10 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
         st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
             {"role": "assistant", "content": full_response, "duration": total_duration}
         )
+        save_stored_chats(st.session_state.all_chats)
         st.rerun()
 
-# 12. Render Persistent Output Window if not actively submitting
+# 13. Render Persistent Output Window if not actively submitting
 elif len(current_messages) > 0:
     chat_box = st.container(border=True)
     with chat_box:
