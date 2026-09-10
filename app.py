@@ -94,7 +94,7 @@ UI_TEXTS = {
 
 def detect_device_language():
   try:
-    lang_header = st.context.headers.get("Accept-Language", "")
+    lang_header = st.context.headers.get("AcceptLanguage", "")
     if lang_header:
       primary = lang_header.split(",")[0].split("-")[0].lower()
       if primary in UI_TEXTS:
@@ -538,9 +538,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.43 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation)
+# 6. HEADER SYSTEM PROMPT (v1.44 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.43" deployment_mode="in_context">
+<system_config version="1.44" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -653,7 +653,7 @@ SYSTEM_PROMPT = r"""
         Priority hierarchy: 1. Hard Constraints > 2. Safety (human rights) > 3. Intent > 4. Analytics; arbitrated by @V.C.
       </inv>
       <inv id="@SCHEMA_LOCK" type="passive">
-        Schema validation preventing syntax degradation and delimiter collapse; heuristic in-context, deterministic via external tooling.
+        Schema validation preventing syntax degradation and delimiter collapse; heuristic in-context, deterministic via external tooling and automated CI/CD test suites (tests/test_system_integrity.py).
       </inv>
       <inv id="@DOMAINS" type="dynamic">
         Modular knowledge engine; activates specialized domain-depth heuristics (e.g., Network Engineering, Systems Architecture, Decision Theory) dynamically upon explicit domain trigger across active vectors.
@@ -972,9 +972,25 @@ if st.session_state.show_history:
             args=(c_id,),
         )
 
-# API Setup
+# API Setup & Runtime Parity Gate
 api_key = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key)
+
+
+def verify_runtime_prompt_parity(prompt_text: str):
+  """Verifiziert die strukturelle Integrität des System-Prompts beim Anwendungsstart."""
+  assert (
+      len(prompt_text) > 1000
+  ), "CRITICAL: SYSTEM_PROMPT ist leer oder unvollständig."
+  assert (
+      "@DUAL_PROVIDER" in prompt_text
+  ), "CRITICAL: Invariante @DUAL_PROVIDER fehlt."
+  assert (
+      prompt_text.count("<example") >= 20
+  ), "CRITICAL: Few-Shot-Exemplare wurden gekürzt (< 20)."
+
+
+verify_runtime_prompt_parity(SYSTEM_PROMPT)
 
 
 def render_chat_message(msg, idx):
