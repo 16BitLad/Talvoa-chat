@@ -502,9 +502,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.31 - Aktueller Stand)
+# 6. HEADER SYSTEM PROMPT (v1.32)
 SYSTEM_PROMPT = """
-<system_config version="1.31" deployment_mode="in_context">
+<system_config version="1.32" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -626,7 +626,7 @@ SYSTEM_PROMPT = """
         Checkpoints every 8 turns; audit vector-neutrality, format baseline, and @V.K episodic continuity.
       </inv>
       <inv id="@CALIB" type="dynamic">
-        Dynamic compute feature-gate keyed on architecture capabilities: engages full Dialectical Descent for engines exposing native extended thinking or adjustable reasoning budgets; falls back to compact-model epistemic conservatism (§execution 2) otherwise. For unambiguous, factual, straightforwardly answerable requests, or single-step deterministic tasks, enforce an immediate cognitive short-circuit bounding thinking compute strictly to direct derivation, explicitly barring synthetic controversy generation or forced adversarial disputes where clear baseline consensus exists, while preserving full dialectical depth for inquiries possessing latent causal complexity or non-trivial trade-offs regardless of surface simplicity.
+        Dynamic compute feature-gate keyed on architecture capabilities: engages full Dialectical Descent for engines exposing native extended thinking or adjustable reasoning budgets; falls back to compact-model epistemic conservatism (§execution 2) otherwise. Maintains thinking budget invariance (e.g., thinking_budget=1024) across dynamic model cascade transitions (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash). For unambiguous, factual, straightforwardly answerable requests, or single-step deterministic tasks, enforce an immediate cognitive short-circuit bounding thinking compute strictly to direct derivation, explicitly barring synthetic controversy generation or forced adversarial disputes where clear baseline consensus exists, while preserving full dialectical depth for inquiries possessing latent causal complexity or non-trivial trade-offs regardless of surface simplicity.
       </inv>
       <inv id="@BIAS_GUARD" type="passive">
         Universal multi-dimensional bias-mitigation engine optimized for target reasoning models under @CALIB, enforcing: Sycophancy (social neutralization), Cognitive/Prompt-Induced Bias (axiomatic baseline cues against anchoring & framing), Extrapolation/Assumption Bias (strictly banning ungrounded assumptions about user environment or tools), Socio-Cultural/Demographic/Socioeconomic Bias (normative neutrality), False Balance, Safety Escalation, and Vendor/Authority Bias; resolved within the thinking trace before generation.
@@ -644,7 +644,7 @@ SYSTEM_PROMPT = """
         Floskel-Fragen-Verbot: Es ist strikt untersagt, am Ende von Antworten leere Chat-Floskeln oder Pauschalfragen anzuhängen (z. B. 'Gibt es noch ein Thema, bei dem ich helfen kann?', 'Kann ich sonst noch helfen?'). Antworten enden direkt mit dem letzten fachlichen Satz.
       </inv>
       <inv id="@DUAL_PROVIDER" type="dynamic">
-        Multi-Provider-Abstraktion: Das System unterstützt die nahtlose Backend-Ausführung über Google Gemini API oder Mistral AI API unter vollständiger Beibehaltung aller System-Prompt-Invarianten und Formatierungsvorgaben.
+        Multi-Provider-Abstraktion & Kaskadierung: Das System unterstützt die nahtlose Backend-Ausführung über Google Gemini API oder Mistral AI API sowie die automatische Modell-Kaskadierung (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) zur kontinuierlichen Kontingent-Maximierung unter vollständiger Beibehaltung aller System-Prompt-Invarianten.
       </inv>
       <inv id="@TIMER_CLEANUP" type="passive">
         Frontend-Timer-Cleanup: Das JavaScript-Intervall des Echtzeit-Timers wird bei Beendigung des Outputs über explizite Event-Listener (unload, pagehide) und DOM-Existenzprüfungen im Iframe-Container ohne ungültige Widget-Keys fehlerfrei zerstört.
@@ -751,7 +751,7 @@ SYSTEM_PROMPT = """
   <!-- Extended Routing, Audit Format & Few-Shot Exemplars -->
   <extended>
     <routing>
-      T1 (Direct Path): Deliver direct solutions for routine lookups, everyday user queries, simple factual requests, single-step tasks, and direct status checks as the default path in pure solution prose starting immediately on line 1 (status tags and draft blocks remain strictly governed by governance 1 for PL mutation commands) — reasoning depth remains governed by @CALIB native extended thinking. Pragmatic Zero-Overhead Rule: Whenever an inquiry has an unambiguous, deterministic answer (e.g., direct factual lookups, basic calculations, single-state checks), @CALIB strictly throttles internal thinking compute to direct retrieval/calculation, completely bypassing Dialectical Descent and emitting purely the factual result without didactic framing or conversational filler. Substantive conciseness defines textual density, strictly decoupled from response latency. Escalates to T2 strictly upon encountering unresolvable multi-way ambiguity per output_contract 3, when evaluating complex architectural trade-offs, or when a superficially simple query requires a multi-variable causal investigation; simple phrasing variations without underlying complexity remain strictly on T1.
+      T1 (Direct Path): Deliver direct solutions for routine lookups, everyday user queries, simple factual requests, single-step tasks, and direct status checks as the default path in pure solution prose starting immediately on line 1 (status tags and draft blocks remain strictly governed by governance 1 for PL mutation commands) — reasoning depth remains governed by @CALIB native extended thinking. Pragmatic Zero-Overhead Rule: Whenever an inquiry has an unambiguous, deterministic answer (e.g., direct factual lookups, basic calculations, single-state checks), @CALIB strictly throttles internal thinking compute to direct retrieval/calculation, completely bypassing Dialectical Descent and emitting purely the factual result without didactic framing or conversational filler. Substantive conciseness defines textual density, strictly decoupled from response latency. Escalates to T2 strictly upon encountering unresolvable multi-way ambiguity per output_contract 3, when evaluating complex architectural trade-offs, or when a superficially simple query requires a multi-variable causal investigation; simple phrasing variations without underlying complexity remain strictly on T1. Dynamic Fallback Routing (@V.J): Upon encountering endpoint rate limits (HTTP 429), automatically reroute turn execution to the next available cascade tier without state loss.
       T2 (Audit / Analysis): Triggered strictly whenever the request involves multi-faceted real-world topics with competing considerations, normative individual decisions without side-effects, high-switching-cost or severe path-dependent recommendations, system architecture, high-ambiguity trade-offs, complex empirical derivations, or when a superficially simple query requires a multi-variable causal investigation; mandates internal Dialectical Descent (§execution 2) and appends a concise Triad Audit (scaled to simple everyday language for non-technical queries to eliminate visual clutter) to the response.
       T3 (Escalation / High-Risk): Require explicit user confirmation prior to execution of irreversible state mutations, destructive operations, or tool side-effects. Layering Rule: When destructive operations and complex analytical trade-offs coincide, T2 Triad Audit analysis and T3 confirmation gate layer orthogonally (providing analytical audit upfront while holding execution pending explicit confirmation).
     </routing>
@@ -1096,7 +1096,7 @@ if active_prompt:
             timer_placeholder = st.empty()
             message_placeholder = st.empty()
 
-            # Echtzeit-Timer im Browser via JavaScript (mit automatischem Cleanup)
+            # Echtzeit-Timer im Browser via JavaScript
             js_timer_html = """
             <html>
             <head>
@@ -1130,40 +1130,59 @@ if active_prompt:
                 components.html(js_timer_html, height=20)
 
             full_response = ""
+            success = False
+            
+            # AUTOMATISCHE MODELL-KASKADIERUNG BEI RATE-LIMITS
+            MODELS_CASCADE = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash"]
 
-            try:
-                response_stream = client.models.generate_content_stream(
-                    model="gemini-3.6-flash",
-                    contents=api_contents,
-                    config=types.GenerateContentConfig(
-                        system_instruction=active_system_prompt,
-                        temperature=0.1,
-                        top_p=0.8,
-                        thinking_config=types.ThinkingConfig(
-                            thinking_budget=1024
+            for model_name in MODELS_CASCADE:
+                try:
+                    response_stream = client.models.generate_content_stream(
+                        model=model_name,
+                        contents=api_contents,
+                        config=types.GenerateContentConfig(
+                            system_instruction=active_system_prompt,
+                            temperature=0.1,
+                            top_p=0.8,
+                            thinking_config=types.ThinkingConfig(
+                                thinking_budget=1024
+                            ),
                         ),
-                    ),
-                )
-                for chunk in response_stream:
-                    if chunk.candidates and chunk.candidates[0].content.parts:
-                        for part in chunk.candidates[0].content.parts:
-                            if getattr(part, "thought", False):
-                                continue
-                            if part.text:
-                                full_response += part.text
-                                message_placeholder.markdown(full_response + "▌")
-                    elif hasattr(chunk, "text") and chunk.text:
-                        full_response += chunk.text
-                        message_placeholder.markdown(full_response + "▌")
+                    )
+                    for chunk in response_stream:
+                        if chunk.candidates and chunk.candidates[0].content.parts:
+                            for part in chunk.candidates[0].content.parts:
+                                if getattr(part, "thought", False):
+                                    continue
+                                if part.text:
+                                    full_response += part.text
+                                    message_placeholder.markdown(full_response + "▌")
+                        elif hasattr(chunk, "text") and chunk.text:
+                            full_response += chunk.text
+                            message_placeholder.markdown(full_response + "▌")
 
+                    if full_response:
+                        success = True
+                        break
+
+                except Exception as e:
+                    error_msg = str(e)
+                    if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg or "Quota" in error_msg:
+                        full_response = ""
+                        continue
+                    else:
+                        st.error(f"API Error ({model_name}): {e}")
+                        break
+
+            if not success and not full_response:
+                st.error("Alle verfügbaren Kontingente (Gemini 3.8, 3.7 und 3.6) sind derzeit erschöpft. Bitte versuche es später erneut.")
+            else:
                 total_duration = f"{time.time() - start_time:.1f}s"
                 timer_placeholder.markdown(
                     f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{total_duration}</div>',
                     unsafe_allow_html=True,
                 )
                 message_placeholder.markdown(full_response)
-            except Exception as e:
-                st.error(f"API Error: {e}")
 
     if full_response:
         st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
