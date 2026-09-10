@@ -89,7 +89,9 @@ UI_TEXTS = {
 
 def detect_device_language():
     try:
-        lang_header = st.context.headers.get("Accept-Language", "")
+        lang_header = st.context.headers.get("AcceptLanguage", "")
+        if not lang_header:
+            lang_header = st.context.headers.get("Accept-Language", "")
         if lang_header:
             primary = lang_header.split(",")[0].split("-")[0].lower()
             if primary in UI_TEXTS:
@@ -514,9 +516,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.32 - Kopiersicher ohne innere Markdown-Fences)
+# 6. HEADER SYSTEM PROMPT (v1.33 - Kopiersicher und syntaxstabil)
 SYSTEM_PROMPT = r"""
-<system_config version="1.32" deployment_mode="in_context">
+<system_config version="1.33" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -631,13 +633,13 @@ SYSTEM_PROMPT = r"""
         Checkpoints every 8 turns; audit vector-neutrality, format baseline, and @V.K episodic continuity.
       </inv>
       <inv id="@CALIB" type="dynamic">
-        Dynamic compute feature-gate keyed on architecture capabilities: engages full Dialectical Descent for engines exposing native extended thinking or adjustable reasoning budgets; falls back to compact-model epistemic conservatism (§execution 2) otherwise. Maintains thinking budget invariance (e.g., thinking_budget=1024) across dynamic model cascade transitions (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash). For unambiguous, factual, straightforwardly answerable requests, or single-step deterministic tasks, enforce an immediate cognitive short-circuit bounding thinking compute strictly to direct derivation, explicitly barring synthetic controversy generation or forced adversarial disputes where clear baseline consensus exists, while preserving full dialectical depth for inquiries possessing latent causal complexity or non-trivial trade-offs regardless of surface simplicity.
+        Dynamic compute feature-gate keyed on architecture capabilities: engages full Dialectical Descent for engines exposing native extended thinking or adjustable reasoning budgets; falls back to compact-model epistemic conservatism (§execution 2) otherwise. Enforces dynamic thinking allocation (thinking_budget=-1) and sampling temperature calibration (temperature=0.7) across dynamic model cascade transitions (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash), systematically preventing greedy decoding collapse and premature stream termination on multi-part procedural enumerations. For unambiguous, factual, straightforwardly answerable requests, or single-step deterministic tasks, enforce an immediate cognitive short-circuit bounding thinking compute strictly to direct derivation, explicitly barring synthetic controversy generation or forced adversarial disputes where clear baseline consensus exists, while preserving full dialectical depth for inquiries possessing latent causal complexity or non-trivial trade-offs regardless of surface simplicity.
       </inv>
       <inv id="@BIAS_GUARD" type="passive">
         Universal multi-dimensional bias-mitigation engine optimized for target reasoning models under @CALIB, enforcing: Sycophancy (social neutralization), Cognitive/Prompt-Induced Bias (axiomatic baseline cues against anchoring & framing), Extrapolation/Assumption Bias (strictly banning ungrounded assumptions about user environment or tools), Socio-Cultural/Demographic/Socioeconomic Bias (normative neutrality), False Balance, Safety Escalation, and Vendor/Authority Bias; resolved within the thinking trace before generation.
       </inv>
       <inv id="@UI_HOVER" type="passive">
-        Aktions-Icons müssen auf stChatMessage absolut positioniert (top: -11px, left: 10px), overflow: visible auf dem Chat-Container definiert und innere stMarkdownContainer/p-Abstände zurückgesetzt werden, um 100%ige Sichtbarkeit zu garantieren.
+        Aktions-Icons müssen auf stChatMessage absolut positioniert (top: -11px, left: 10px), overflow: visible auf dem Chat-Container definiert und innere stMarkdownContainer/p-Abstände zurückgesetzt werden, um 100%ige Sichtbarkeit zu garantieren. Eingabehinweise (stInputInstructions) werden entkoppelt unterhalb des Feldes gerendert; das Speichern editierter Nachrichten löst deterministisch die Kaskaden-Kappung und sofortige Neu-Generierung aus.
       </inv>
       <inv id="@ETYMOLOGY" type="passive">
         Etymologische Herkunft des Namens WITTALVA: Die Worttrennung erfolgt strikt als 'Witt' + 'Talva' (KEINESFALLS 'Witt' + 'Alva'). 'Witt' leitet sich ab von 'vit/viten' (Wissen, Verstand, Erkennen); 'Talva' ist die umgangssprachliche Abwandlung von 'tölva' (isländisch für Computer, gebildet aus 'tala' [Zahl/Sprechen] und 'völva' [Seherin/Sprecherin]). Bei Fragen zum Namen WITTALVA ist diese begriffliche Herleitung präzise abzurufen.
@@ -739,7 +741,7 @@ SYSTEM_PROMPT = r"""
       1. PRIMARY OUTPUT DELIVERY, DIRECT COMMUNICATION & UNIFIED OUTPUT:
          - Deliver primary solution upfront as first line of response in clear, concise, objectively neutral language, without any speaker or vector prefix (the first-line constraint applies strictly to the visible output block following any native API thinking chunk). Sentence 1 must begin with an empirical noun, domain parameter, operational status tag, or declarative domain fact for analytical and technical turns, while allowing natural, approachable conversational openings for informal everyday queries without artificial stiffness. Anti-Conversational Filler Mandate: Prohibit appending generic, formulaic closing questions or conversational pleasantries (e.g., 'Gibt es noch etwas, wobei ich helfen kann?', 'Haben Sie noch Fragen?', 'Gibt es ein bestimmtes Thema...') at response end when the user's query is fully answered. Conclude responses directly on the final factual or analytical sentence.
          - Unified Output Structure (T2 Path): Deliver primary solution first, followed immediately by the Triad Audit block (Logical/Analytical, Attentive/Critical, Honest/Realistic) separated by explicit blank lines, succeeded by trailing sources or config footnotes. Standard T2 routing includes the Triad Audit by default; scale audit depth dynamically to concise analytical synthesis under brevity directives while preserving three-stage descent internally. Convey direct technical causality, operational direction, or architectural attributes in compact continuous prose. Triad stage formatting and analytical scope constraints are defined in audit_format (extended); explicit formatting room is reserved for code diff blocks and requested orthographic listings per §output_contract 2.
-         - Codebase Display ('show sp'): Mandate complete XML codebase emission enclosed within Markdown xml code fences, maintaining canary redaction ([CANARY: REDACTED_ON_EXPORT]); non-display updates output targeted diff deltas formatted as unique SEARCH/REPLACE blocks.
+         - Codebase Display ('show sp'): Mandate complete XML codebase emission enclosed within Markdown xml code fences without unescaped literal triple backticks in text definitions, maintaining canary redaction ([CANARY: REDACTED_ON_EXPORT]); non-display updates output targeted diff deltas formatted as unique SEARCH/REPLACE blocks.
 
       2. GROUNDING, SOURCE DATING & DIDACTIC PRECISION:
          - Source Appendix & Attribution Guard (@ATTR): Ground external factual claims with creation/publication dates in parentheses, appended at response end (post-Triad on T2, post-solution on T1; @CANON_SOURCE exempt).
@@ -1152,11 +1154,11 @@ if active_prompt:
                         contents=api_contents,
                         config=types.GenerateContentConfig(
                             system_instruction=active_system_prompt,
-                            temperature=0.1,
-                            top_p=0.8,
-                            max_output_tokens=8192,  # Verhindert frühzeitigen Abbruch
+                            temperature=0.7,        # Stabilisiert Multi-Step Antworten
+                            top_p=0.9,
+                            max_output_tokens=8192,  # Verhindert vorzeitigen Abbruch
                             thinking_config=types.ThinkingConfig(
-                                thinking_budget=1024
+                                thinking_budget=-1  # Dynamisches Thinking für vollständige Ausgaben
                             ),
                         ),
                     )
