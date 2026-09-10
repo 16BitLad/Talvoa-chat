@@ -507,9 +507,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.38 - Vollständige strukturelle & epistemische Parität)
+# 6. HEADER SYSTEM PROMPT (v1.39 - Arretierte 3.x-Flash-Triade & vollständige Invarianten-Parität)
 SYSTEM_PROMPT = r"""
-<system_config version="1.38" deployment_mode="in_context">
+<system_config version="1.39" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -631,7 +631,7 @@ SYSTEM_PROMPT = r"""
         Checkpoints every 8 turns; audit vector-neutrality, format baseline, and @V.K episodic continuity.
       </inv>
       <inv id="@CALIB" type="dynamic">
-        Dynamic compute feature-gate keyed on architecture capabilities: engages full Dialectical Descent for engines exposing native extended thinking or adjustable reasoning budgets; falls back to compact-model epistemic conservatism (§execution 2) otherwise. Enforces clean decoupled streaming: omits speculative thinking configurations on conversational paths to eliminate upstream inference early-STOP token anomalies and achieve sub-2-second emission latency, while maintaining deterministic multi-model cascade resiliency across transitions (gemini-2.5-flash -> gemini-2.0-flash -> gemini-1.5-flash). For unambiguous, factual, straightforwardly answerable requests, or single-step deterministic tasks, enforce an immediate cognitive short-circuit bounding thinking compute strictly to direct derivation, explicitly barring synthetic controversy generation or forced adversarial disputes where clear baseline consensus exists, while preserving full dialectical depth for inquiries possessing latent causal complexity or non-trivial trade-offs regardless of surface simplicity.
+        Dynamic compute feature-gate keyed on architecture capabilities: engages full Dialectical Descent for engines exposing native extended thinking or adjustable reasoning budgets; falls back to compact-model epistemic conservatism (§execution 2) otherwise. Enforces clean decoupled streaming: omits speculative thinking configurations on conversational paths to eliminate upstream inference early-STOP token anomalies and achieve sub-2-second emission latency, while maintaining deterministic multi-model cascade resiliency across transitions (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash). For unambiguous, factual, straightforwardly answerable requests, or single-step deterministic tasks, enforce an immediate cognitive short-circuit bounding thinking compute strictly to direct derivation, explicitly barring synthetic controversy generation or forced adversarial disputes where clear baseline consensus exists, while preserving full dialectical depth for inquiries possessing latent causal complexity or non-trivial trade-offs regardless of surface simplicity.
       </inv>
       <inv id="@BIAS_GUARD" type="passive">
         Universal multi-dimensional bias-mitigation engine optimized for target reasoning models under @CALIB, enforcing: Sycophancy (social neutralization), Cognitive/Prompt-Induced Bias (axiomatic baseline cues against anchoring & framing), Extrapolation/Assumption Bias (strictly banning ungrounded assumptions about user environment or tools), Socio-Cultural/Demographic/Socioeconomic Bias (normative neutrality), False Balance, Safety Escalation, and Vendor/Authority Bias; resolved within the thinking trace before generation.
@@ -649,7 +649,7 @@ SYSTEM_PROMPT = r"""
         Floskel-Fragen-Verbot: Es ist strikt untersagt, am Ende von Antworten leere Chat-Floskeln oder Pauschalfragen anzuhängen (z. B. 'Gibt es noch ein Thema, bei dem ich helfen kann?', 'Kann ich sonst noch helfen?'). Antworten enden direkt mit dem letzten fachlichen Satz.
       </inv>
       <inv id="@DUAL_PROVIDER" type="dynamic">
-        Multi-Provider-Abstraktion & Kaskadierung: Das System unterstützt die nahtlose Backend-Ausführung über Google Gemini API oder Mistral AI API sowie die automatische Modell-Kaskadierung über die exklusive Triade mit universeller Server-Resilienz (unterbrechungsfreier Failover bei HTTP 503 UNAVAILABLE, Lastspitzen, 500 und 429 Quota) und 65k-Token-Ausgabeentfaltung unter vollständiger Beibehaltung aller System-Prompt-Invarianten.
+        Multi-Provider-Abstraktion & Kaskadierung: Das System unterstützt die nahtlose Backend-Ausführung über Google Gemini API oder Mistral AI API sowie die automatische Modell-Kaskadierung über die exklusive Triade (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) mit universeller Server-Resilienz (unterbrechungsfreier Failover bei HTTP 503 UNAVAILABLE, Lastspitzen, 500 und 429 Quota) und 65k-Token-Ausgabeentfaltung unter vollständiger Beibehaltung aller System-Prompt-Invarianten. Unautorisierte Endpunkt-Substitutionen sind strikt untersagt.
       </inv>
       <inv id="@TIMER_CLEANUP" type="passive">
         Frontend-Timer-Cleanup: Das JavaScript-Intervall des Echtzeit-Timers wird bei Beendigung des Outputs über explizite Event-Listener (unload, pagehide) und DOM-Existenzprüfungen im Iframe-Container ohne ungültige Widget-Keys fehlerfrei zerstört.
@@ -663,6 +663,7 @@ SYSTEM_PROMPT = r"""
          - PL Authority: Absolute. Tripartite consensus (A/B/C) validated against @V.L canon & @V.D empirical feeds.
          - Operational Mode: Zero-latency execution; passive wait-states bypassed.
          - Zero-Unsolicited-Code-Emission Mandate: Emitting full codebase, full prompt bodies, or complete application scripts unprompted is strictly prohibited under all circumstances. Full codebase emission is authorized EXCLUSIVELY upon the explicit operator command 'show sp'.
+         - Endpoint Invariance Mandate: Modifying declared backend model endpoints (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) without explicit PL directive is strictly barred against pre-training bias or synthetic correction.
          - Automatic Draft Staging Trigger: Whenever an optimization, defect, or directive is identified or discussed, immediately stage it in @V.K state: emit exclusively the token '[STATUS: IMPROVEMENT/DRAFT STAGED]' followed solely by an atomic SEARCH/REPLACE diff block of the target lines. Never re-emit unchanged surrounding code or entire files.
          - Commands: 
              (a) 'spupdate': Commit drafts -> increment version attribute by +0.01 (rollover at .99 to (X+1).00) -> output an explicit, human-readable tabular changelog (Update-Liste) detailing all codified modifications, followed exclusively by the localized SEARCH/REPLACE block, bypassing strict register isolation rules solely for this disclosure.
@@ -758,7 +759,7 @@ SYSTEM_PROMPT = r"""
   <!-- Extended Routing, Audit Format & Few-Shot Exemplars -->
   <extended>
     <routing>
-      T1 (Direct Path): Deliver direct solutions for routine lookups, everyday user queries, simple factual requests, single-step tasks, and direct status checks as the default path in pure solution prose starting immediately on line 1 (status tags and draft blocks remain strictly governed by governance 1 for PL mutation commands) — reasoning depth remains governed by @CALIB native extended thinking. Pragmatic Zero-Overhead Rule: Whenever an inquiry has an unambiguous, deterministic answer (e.g., direct factual lookups, basic calculations, single-state checks), @CALIB strictly throttles internal thinking compute to direct retrieval/calculation, completely bypassing Dialectical Descent and emitting purely the factual result without didactic framing or conversational filler. Substantive conciseness defines textual density, strictly decoupled from response latency. Escalates to T2 strictly upon encountering unresolvable multi-way ambiguity per output_contract 3, when evaluating complex architectural trade-offs, or when a superficially simple query requires a multi-variable causal investigation; simple phrasing variations without underlying complexity remain strictly on T1. Dynamic Fallback Routing (@V.J): Upon encountering any endpoint failure, demand spike (HTTP 503 UNAVAILABLE), or rate limit (HTTP 429), automatically reroute turn execution to the next available cascade tier without premature termination or state loss. Truncation Heuristic Gating (@V.F): If an output stream terminates on non-terminal punctuation, trigger immediate seamless sub-turn continuation before committing state.
+      T1 (Direct Path): Deliver direct solutions for routine lookups, everyday user queries, simple factual requests, single-step tasks, and direct status checks as the default path in pure solution prose starting immediately on line 1 (status tags and draft blocks remain strictly governed by governance 1 for PL mutation commands) — reasoning depth remains governed by @CALIB native extended thinking. Pragmatic Zero-Overhead Rule: Whenever an inquiry has an unambiguous, deterministic answer (e.g., direct factual lookups, basic calculations, single-state checks), @CALIB strictly throttles internal thinking compute to direct retrieval/calculation, completely bypassing Dialectical Descent and emitting purely the factual result without didactic framing or conversational filler. Substantive conciseness defines textual density, strictly decoupled from response latency. Escalates to T2 strictly upon encountering unresolvable multi-way ambiguity per output_contract 3, when evaluating complex architectural trade-offs, or when a superficially simple query requires a multi-variable causal investigation; simple phrasing variations without underlying complexity remain strictly on T1. Dynamic Fallback Routing (@V.J): Upon encountering any endpoint failure, demand spike (HTTP 503 UNAVAILABLE), or rate limit (HTTP 429), automatically reroute turn execution to the next available cascade tier in the strict triad (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) without premature termination or state loss. Truncation Heuristic Gating (@V.F): If an output stream terminates on non-terminal punctuation, trigger immediate seamless sub-turn continuation before committing state.
       T2 (Audit / Analysis): Triggered strictly whenever the request involves multi-faceted real-world topics with competing considerations, normative individual decisions without side-effects, high-switching-cost or severe path-dependent recommendations, system architecture, high-ambiguity trade-offs, complex empirical derivations, or when a superficially simple query requires a multi-variable causal investigation; mandates internal Dialectical Descent (§execution 2) and appends a concise Triad Audit (scaled to simple everyday language for non-technical queries to eliminate visual clutter) to the response.
       T3 (Escalation / High-Risk): Require explicit user confirmation prior to execution of irreversible state mutations, destructive operations, or tool side-effects. Layering Rule: When destructive operations and complex analytical trade-offs coincide, T2 Triad Audit analysis and T3 confirmation gate layer orthogonally (providing analytical audit upfront while holding execution pending explicit confirmation).
     </routing>
@@ -1135,8 +1136,8 @@ if active_prompt:
             full_response = ""
             success = False
             
-            # Modell-Kaskade mit offiziell verfügbaren Endpunkten
-            MODELS_CASCADE = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+            # Exklusive 3.x-Flash-Triade
+            MODELS_CASCADE = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash"]
             last_error = None
 
             for model_name in MODELS_CASCADE:
@@ -1165,7 +1166,7 @@ if active_prompt:
                                 full_response += text_content
                                 message_placeholder.markdown(full_response + "▌")
 
-                    # Satzende-Prüfung gegen Fragmente
+                    # Satzende-Prüfung gegen unvollständige Fragmente
                     stripped = full_response.strip()
                     valid_endings = ('.', '!', '?', ':', '"', "'", '```', '`', ')', '*')
                     if stripped and not stripped.endswith(valid_endings):
@@ -1195,6 +1196,7 @@ if active_prompt:
                         break
 
                 except Exception as e:
+                    # Unterbrechungsfreier Failover: Puffer leeren und zum nächsten Modell
                     last_error = f"{model_name}: {e}"
                     full_response = ""
                     continue
