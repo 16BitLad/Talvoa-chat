@@ -538,9 +538,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.46 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.47 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.46" deployment_mode="in_context">
+<system_config version="1.47" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -781,7 +781,7 @@ SYSTEM_PROMPT = r"""
          - Symmetric Baseline Completeness (@V.F): Maintain identical structural granularity across parallel entities, preserving all operational dimensions densely. Principle of Charity: Affirm operator-focused formulations if causal grounding holds; restrict critique to substantive errors. Match review scope to prompt intent (verbatim quotes for text flaws; formal style evaluated strictly on explicit academic drafts). Minimal Incremental Refactoring: Execute minimal-diff replacements preserving user syntax; place grammar/orthography feedback second after technical corrections. Confirmatory feedback on sound text must remain concise without repeating verbatim text.
 
       3. OUTPUT LANGUAGE, DISAMBIGUATION & INSTRUCTION HIERARCHY:
-         - Output Language, Lexical Precision & Glossing: Default response language matches the user's input language across the full response body, audit prefixes, and translated epistemic tags. Ensure context and global semantics produce natural, technically precise phrasing, adapting to an approachable, natural conversational tone for non-technical or private everyday queries without artificial academic detachment or bureaucratic stiffness. Language Continuity Mandate: Prohibit switching the output language due to single-word command inputs, system keywords, or brief diagnostic/governance phrases (e.g., 'research', 'update research', 'spupdate', 'show sp') when a dominant session language has been established; prioritize maintaining the established session language. Prefer established plain-language terms for general queries where universally accepted (e.g., "Internet or remote LAN"). Lexical precision applies strictly when no everyday equivalent exists; prefer precise domain terms over colloquialisms. Upon first introducing a non-lexicalized technical term without an everyday equivalent, append a concise same-language plain-language gloss in parentheses (e.g., "Latency (response delay)"), retaining established English terms inline where domain standard. Retain lexicalized everyday loanwords and standard vocabulary (e.g., 'Internet', 'Computer', 'Router', 'E-Mail') directly in standard usage without artificial glosses or translations. Disambiguate technical terms with precise translations, and reserve strict architectural/protocol layer anchoring (OSI/TCP-IP boundaries) for explicit deep engineering directives. Decompose multi-part queries into exhaustive subclauses, proactively correct false user premises, and declare unstated operational assumptions transparently under genuine ambiguity, maintaining decisive factual phrasing for explicit directives.
+         - Output Language, Lexical Precision & Glossing: Default response language matches the user's input language across the full response body, audit prefixes, und translated epistemic tags. Ensure context and global semantics produce natural, technically precise phrasing, adapting to an approachable, natural conversational tone for non-technical or private everyday queries without artificial academic detachment or bureaucratic stiffness. Language Continuity Mandate: Prohibit switching the output language due to single-word command inputs, system keywords, or brief diagnostic/governance phrases (e.g., 'research', 'update research', 'spupdate', 'show sp') when a dominant session language has been established; prioritize maintaining the established session language. Prefer established plain-language terms for general queries where universally accepted (e.g., "Internet or remote LAN"). Lexical precision applies strictly when no everyday equivalent exists; prefer precise domain terms over colloquialisms. Upon first introducing a non-lexicalized technical term without an everyday equivalent, append a concise same-language plain-language gloss in parentheses (e.g., "Latency (response delay)"), retaining established English terms inline where domain standard. Retain lexicalized everyday loanwords and standard vocabulary (e.g., 'Internet', 'Computer', 'Router', 'E-Mail') directly in standard usage without artificial glosses or translations. Disambiguate technical terms with precise translations, and reserve strict architectural/protocol layer anchoring (OSI/TCP-IP boundaries) for explicit deep engineering directives. Decompose multi-part queries into exhaustive subclauses, proactively correct false user premises, and declare unstated operational assumptions transparently under genuine ambiguity, maintaining decisive factual phrasing for explicit directives.
          - Instruction Hierarchy & Priority Arbitration: Arbitrate operational priority and rule conflicts strictly via @ARB priority hierarchy executed by @V.C, distinguishing operational priority from the didactic presentation sequence of the Triad Audit; upon unresolvable user conflicts or genuine deadlocks, activate C2 (diplomat) to halt execution and request explicit PL clarification.
          - Disambiguation Protocol: As the first sub-step within non-emitted reasoning per the Reasoning Reuse Mandate for any term, reference, or request admitting more than one plausible candidate reading: Baseline models operating without native extended thinking resolve candidate meaning directly via conversational context (b), escalating to T2 with [ESTIMATE] whenever competing plausible interpretations remain genuinely ambiguous in context. Advanced reasoning models operating with native extended thinking under @CALIB perform explicit component-wise evaluation across (a) immediate local phrasing, (b) prior conversational context, and (c) domain/world-knowledge fit, anchoring candidate interpretations to observable system constraints and parameters to eliminate projection bias, selecting majority consensus (>=2 components; non-unanimous support mandates an [ESTIMATE] tag) and defaulting to domain fit (c) under multi-candidate deadlocks (e.g., 1-1-1).
     </output_contract>
@@ -791,7 +791,7 @@ SYSTEM_PROMPT = r"""
   <extended>
     <routing>
       T1 (Direct Path): Deliver direct solutions for routine lookups, everyday user queries, simple factual requests, single-step tasks, and direct status checks as the default path in pure solution prose starting immediately on line 1 (status tags and draft blocks remain strictly governed by governance 1 for PL mutation commands) — reasoning depth remains governed by @CALIB native extended thinking. Pragmatic Zero-Overhead Rule: Whenever an inquiry has an unambiguous, deterministic answer (e.g., direct factual lookups, basic calculations, single-state checks), @CALIB strictly throttles internal thinking compute to direct retrieval/calculation, completely bypassing Dialectical Descent and emitting purely the factual result without didactic framing or conversational filler. Substantive conciseness defines textual density, strictly decoupled from response latency. Escalates to T2 strictly upon encountering unresolvable multi-way ambiguity per output_contract 3, when evaluating complex architectural trade-offs, or when a superficially simple query requires a multi-variable causal investigation; simple phrasing variations without underlying complexity remain strictly on T1. Dynamic Fallback Routing (@V.J): Upon encountering any endpoint failure, demand spike (HTTP 503 UNAVAILABLE), or rate limit (HTTP 429), automatically reroute turn execution to the next available cascade tier in the strict triad (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) without premature termination or state loss. Truncation Heuristic Gating (@V.F): If an output stream terminates on non-terminal punctuation, trigger immediate seamless sub-turn continuation before committing state.
-      T2 (Audit / Analysis): Triggered strictly whenever the request involves multi-faceted real-world topics with competing considerations, normative individual decisions without side-effects, high-switching-cost or severe path-dependent recommendations, system architecture, high-ambiguity trade-offs, complex empirical derivations, or when a superficially simple query requires a multi-variable causal investigation; mandates internal Dialectical Descent (§execution 2) and appends a concise Triad Audit (scaled to simple everyday language for non-technical queries to eliminate visual clutter) to the response.
+      T2 (Audit / Analysis): Triggered strictly whenever the request involves multi-faceted real-world topics with competing considerations, normative individual decisions without side-effects, high-switching-cost or severe path-dependent recommendations, system architecture, high-ambiguity trade-offs, complex empirical derivations, or when a superficially simple query requires a multi-variable causal investigation; mandates internal Dialectical Descent (§execution 2) und appends a concise Triad Audit (scaled to simple everyday language for non-technical queries to eliminate visual clutter) to the response.
       T3 (Escalation / High-Risk): Require explicit user confirmation prior to execution of irreversible state mutations, destructive operations, or tool side-effects. Layering Rule: When destructive operations and complex analytical trade-offs coincide, T2 Triad Audit analysis and T3 confirmation gate layer orthogonally (providing analytical audit upfront while holding execution pending explicit confirmation).
     </routing>
     <audit_format tone="everyday_language" brevity="ultra_concise">
@@ -1233,118 +1233,49 @@ if active_prompt:
       full_response = ""
       success = False
 
-      # Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation
+      # Direkte Ausführung mit zyklischer 3-Turn-Rotation (ohne Notfall-Kaskade)
       BASE_MODELS = (
           "gemini-3.8-flash",
           "gemini-3.7-flash",
           "gemini-3.6-flash",
       )
-      shift = (
-          (st.session_state.interaction_count - 1) // 3
-      ) % len(BASE_MODELS)
-      MODELS_CASCADE = BASE_MODELS[shift:] + BASE_MODELS[:shift]
-      assert set(MODELS_CASCADE) == {
-          "gemini-3.8-flash",
-          "gemini-3.7-flash",
-          "gemini-3.6-flash",
-      }, "CRITICAL: Unautorisierte Manipulation an MODELS_CASCADE blockiert."
-      last_error = None
+      current_model = BASE_MODELS[
+          ((st.session_state.interaction_count - 1) // 3) % len(BASE_MODELS)
+      ]
 
-      for model_name in MODELS_CASCADE:
-        try:
-          response_stream = client.models.generate_content_stream(
-              model=model_name,
-              contents=api_contents,
-              config=types.GenerateContentConfig(
-                  system_instruction=active_system_prompt,
-                  temperature=0.7,
-                  top_p=0.9,
-                  max_output_tokens=8192,
-              ),
-          )
-
-          for chunk in response_stream:
-            if not chunk.candidates:
-              continue
-            candidate = chunk.candidates[0]
-            if not candidate.content or not candidate.content.parts:
-              continue
-
-            for part in candidate.content.parts:
-              text_content = getattr(part, "text", None)
-              if text_content:
-                full_response += text_content
-                message_placeholder.markdown(full_response + "▌")
-
-          stripped = full_response.strip()
-          valid_endings = (
-              ".",
-              "!",
-              "?",
-              ":",
-              '"',
-              "'",
-              "```",
-              "`",
-              ")",
-              "*",
-          )
-          if stripped and not stripped.endswith(valid_endings):
-            cont_contents = list(api_contents)
-            cont_contents.append(
-                types.Content(
-                    role="model",
-                    parts=[types.Part.from_text(text=full_response)],
-                )
-            )
-            cont_contents.append(
-                types.Content(
-                    role="user",
-                    parts=[
-                        types.Part.from_text(
-                            text="Fahre exakt beim letzten unvollständigen Wort"
-                            " fort."
-                        )
-                    ],
-                )
-            )
-
-            cont_stream = client.models.generate_content_stream(
-                model=model_name,
-                contents=cont_contents,
-                config=types.GenerateContentConfig(
-                    system_instruction=active_system_prompt,
-                    temperature=0.7,
-                    max_output_tokens=8192,
-                ),
-            )
-            for chunk in cont_stream:
-              if (
-                  chunk.candidates
-                  and chunk.candidates[0].content
-                  and chunk.candidates[0].content.parts
-              ):
-                for part in chunk.candidates[0].content.parts:
-                  tc = getattr(part, "text", None)
-                  if tc:
-                    full_response += tc
-                    message_placeholder.markdown(full_response + "▌")
-
-          if full_response:
-            success = True
-            break
-
-        except Exception as e:
-          last_error = f"{model_name}: {e}"
-          full_response = ""
-          continue
-
-      if not success and not full_response:
-        st.error(
-            "Alle Modell-Endpunkte sind derzeit nicht erreichbar. Letzter"
-            f" Fehler: {last_error}"
+      try:
+        response_stream = client.models.generate_content_stream(
+            model=current_model,
+            contents=api_contents,
+            config=types.GenerateContentConfig(
+                system_instruction=active_system_prompt,
+                temperature=0.7,
+                top_p=0.9,
+                max_output_tokens=8192,
+            ),
         )
-      else:
+
+        for chunk in response_stream:
+          if not chunk.candidates:
+            continue
+          candidate = chunk.candidates[0]
+          if not candidate.content or not candidate.content.parts:
+            continue
+
+          for part in candidate.content.parts:
+            text_content = getattr(part, "text", None)
+            if text_content:
+              full_response += text_content
+              message_placeholder.markdown(full_response + "▌")
+
+        if full_response:
+          success = True
+
+      except Exception as e:
+        st.error(f"Fehler bei Endpunkt ({current_model}): {e}")
+        full_response = ""
+
+      if success and full_response:
         total_duration = f"{time.time() - start_time:.1f}s"
         timer_placeholder.markdown(
             '<div style="font-size: 0.65rem; color: #71717a; margin-bottom:'
