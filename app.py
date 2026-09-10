@@ -172,7 +172,7 @@ else:
 
 chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 210px)"
 
-# 5. Custom CSS: Art-Déco, Dark-Theme & pixelgenaue Hover-Aktionsleiste (v1.25)
+# 5. Custom CSS: Art-Déco, Dark-Theme & pixelgenaue Hover-Aktionsleiste
 st.markdown(
     f"""
     <style>
@@ -196,10 +196,10 @@ st.markdown(
     /* HEADER TITEL */
     .header-title-container {{
         display: flex !important;
+        flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 0.4rem !important;
-        flex-wrap: wrap !important;
+        gap: 0.1rem !important;
         margin-bottom: 0.1rem !important;
     }}
     .wittalva-title {{
@@ -210,23 +210,17 @@ st.markdown(
         text-transform: uppercase !important;
         line-height: 0.85 !important;
         color: #ffffff !important;
-        display: inline-block !important;
-    }}
-    .rune-divider {{
-        color: #52525b !important;
-        font-size: 2.2rem !important;
-        font-weight: 300 !important;
-        line-height: 0.85 !important;
-        margin: 0 0.2rem !important;
+        display: block !important;
     }}
     .rune-text {{
         font-family: 'Segoe UI Historic', 'Noto Sans Runic', sans-serif !important;
-        font-size: 2.3rem !important;
-        letter-spacing: 0.15em !important;
-        color: #a1a1aa !important;
+        font-size: 0.7rem !important;
+        letter-spacing: 0.25em !important;
+        color: #71717a !important;
         font-weight: normal !important;
-        line-height: 0.85 !important;
-        display: inline-block !important;
+        line-height: 1.0 !important;
+        display: block !important;
+        margin-top: 0.1rem !important;
     }}
 
     /* GLOBAL BUTTON DEFAULT */
@@ -301,7 +295,7 @@ st.markdown(
         padding: 0 !important;
     }}
 
-    /* ACTION BUTTONS (NEU CHAT / HISTORY) CONTAINER-SYSTEM (Mobil-Fix) */
+    /* ACTION BUTTONS (NEU CHAT / HISTORY) CONTAINER-SYSTEM */
     div[class*="st-key-global_action_row"] {{
         max-width: 340px !important;
         width: 100% !important;
@@ -375,7 +369,7 @@ st.markdown(
         overflow: visible !important;
     }}
 
-    /* Horizontale Spalten-Leiste: Absolut oben links überlappend positionieren (User/Inputs) */
+    /* Horizontale Spalten-Leiste (User/Inputs) */
     div[data-testid="stChatMessage"] div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]) {{
         position: absolute !important;
         top: -11px !important;
@@ -393,7 +387,7 @@ st.markdown(
         background: transparent !important;
     }}
 
-    /* Assistant-Outputs: Absolut oben links überlappend positionieren (Kopier-Container) */
+    /* Assistant-Outputs (Kopier-Container) */
     div[data-testid="stChatMessage"] div[class*="st-key-act_copy_cont_"] {{
         position: absolute !important;
         top: -11px !important;
@@ -415,14 +409,14 @@ st.markdown(
         visibility: visible !important;
     }}
 
-    /* Einblenden bei Long-Press (Mobil über JavaScript-Klassenzuweisung) */
+    /* Einblenden bei Long-Press (Mobil) */
     div[data-testid="stChatMessage"].mobile-active div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]),
     div[data-testid="stChatMessage"].mobile-active div[class*="st-key-act_copy_cont_"] {{
         opacity: 1 !important;
         visibility: visible !important;
     }}
 
-    /* Bypasst Streamlits prozentuale Spaltenschrumpfung (Erzwingt exakt 24px) */
+    /* Bypasst Streamlits prozentuale Spaltenschrumpfung */
     div[data-testid="stChatMessage"] div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]) > div[data-testid="stColumn"] {{
         width: 24px !important;
         min-width: 24px !important;
@@ -432,7 +426,7 @@ st.markdown(
         margin: 0 !important;
     }}
 
-    /* Blendet die ungenutzte vierte Spalte aus der Definition aus */
+    /* Blendet die ungenutzte vierte Spalte aus */
     div[data-testid="stChatMessage"] div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]) > div[data-testid="stColumn"]:last-child {{
         display: none !important;
     }}
@@ -457,7 +451,6 @@ st.markdown(
         cursor: pointer !important;
     }}
 
-    /* Verhindert Text-Abschneidung, positioniert Emojis perfekt zentriert im Button */
     div[class*="st-key-act_"] button div[data-testid="stMarkdownContainer"],
     div[class*="st-key-act_"] button div[data-testid="stMarkdownContainer"] p,
     div[class*="st-key-act_"] button p,
@@ -482,7 +475,7 @@ st.markdown(
         transform: scale(1.1);
     }}
 
-    /* Editierungs-Textareal Anpassung (Schafft viel Platz für lange Nachrichten) */
+    /* Editierungs-Textareal Anpassung */
     div[data-testid="stChatMessage"] div[data-testid="stTextArea"] textarea {{
         background-color: #1e1e22 !important;
         color: #ffffff !important;
@@ -507,9 +500,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.25 - Vollständig restaurierte Version mit allen Sicherheitsfaktoren und Examples)
+# 6. HEADER SYSTEM PROMPT (v1.27 - Aktualisierte Version)
 SYSTEM_PROMPT = """
-<system_config version="1.25" deployment_mode="in_context">
+<system_config version="1.27" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -638,6 +631,12 @@ SYSTEM_PROMPT = """
       </inv>
       <inv id="@UI_HOVER" type="passive">
         Aktions-Icons müssen auf stChatMessage absolut positioniert (top: -11px, left: 10px), overflow: visible auf dem Chat-Container definiert und innere stMarkdownContainer/p-Abstände zurückgesetzt werden, um 100%ige Sichtbarkeit zu garantieren.
+      </inv>
+      <inv id="@ETYMOLOGY" type="passive">
+        Etymologische Herkunft des Namens WITTALVA: 'Witt' leitet sich ab von 'vit/viten' (Wissen, Verstand, Erkennen); 'Talva' ist die umgangssprachliche Abwandlung von 'tölva' (isländisch für Computer, gebildet aus 'tala' [Zahl/Sprechen] und 'völva' [Seherin/Sprecherin]). Bei Fragen zum Namen WITTALVA ist diese begriffliche Herleitung präzise abzurufen.
+      </inv>
+      <inv id="@UI_HEADER" type="passive">
+        Header-Layout-Spezifikation: Der Haupttitel 'WITTALVA' steht zentriert oben, die Runenzeile 'ᚹᛁᛏᛏᚨᛚᚹᚨ' ohne Trennstrich ('/') direkt zentriert darunter in minimaler Schriftgröße (0.7rem).
       </inv>
     </invariants>
   </registry>
@@ -844,7 +843,7 @@ SYSTEM_PROMPT = """
   </extended>
 
 <instruction_anchor>
-@SOV @OWASP @NASA @REG @SCHEMA_LOCK @CTX @BIAS_GUARD @CALIB @ARB @ATTR @CANON_SOURCE @DOMAINS @CACHE @UI_HOVER. Recency anchor: Output format, audit structure, complexity-tiering/substrate-logic duality fidelity, and system sovereignty invariants. BEHAVIORS register functional. Telemetry engaged.
+@SOV @OWASP @NASA @REG @SCHEMA_LOCK @CTX @BIAS_GUARD @CALIB @ARB @ATTR @CANON_SOURCE @DOMAINS @CACHE @UI_HOVER @ETYMOLOGY @UI_HEADER. Recency anchor: Output format, audit structure, complexity-tiering/substrate-logic duality fidelity, and system sovereignty invariants. BEHAVIORS register functional. Telemetry engaged.
 </instruction_anchor>
 </system_config>
 """
@@ -854,11 +853,10 @@ st.markdown(
     f"""
     <div style="text-align: center; margin-bottom: 0.1rem;">
         <div class="header-title-container">
-            <span class="wittalva-title">WITTALVA</span>
-            <span class="rune-divider">/</span>
-            <span class="rune-text">ᚹᛁᛏᛏᚨᛚᚹᚨ</span>
+            <div class="wittalva-title">WITTALVA</div>
+            <div class="rune-text">ᚹᛁᛏᛏᚨᛚᚹᚨ</div>
         </div>
-        <p style="color: #a1a1aa; font-size: 0.95rem; margin-top: 0.1rem;">{txt["subtitle"]}</p>
+        <p style="color: #a1a1aa; font-size: 0.95rem; margin-top: 0.4rem;">{txt["subtitle"]}</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -877,7 +875,7 @@ with st.form(key="chat_input_form", clear_on_submit=True):
     with col_submit:
         submitted = st.form_submit_button("↑")
 
-# 9. Action Buttons Row (Innerhalb eines Key-spezifischen Containers für einheitliches CSS-Flex-Layout)
+# 9. Action Buttons Row
 with st.container(key="global_action_row"):
     col_b1, col_b2 = st.columns(2)
     with col_b1:
@@ -913,7 +911,6 @@ client = genai.Client(api_key=api_key)
 # Helper function to render chat message content
 def render_chat_message(msg, idx):
     with st.chat_message(msg["role"]):
-        # Aktionsleiste NUR für User-Nachrichten (Inputs): Regenerieren, Editieren, Löschen
         if st.session_state.editing_idx != idx and msg["role"] == "user":
             ac1, ac2, ac3, _ = st.columns([0.05, 0.05, 0.05, 0.85])
             with ac1:
@@ -923,9 +920,7 @@ def render_chat_message(msg, idx):
             with ac3:
                 st.button("🗑️", key=f"act_del_{idx}", help="Löschen", on_click=delete_message, args=(idx,))
 
-        # Aktionsleiste NUR für Assistant-Nachrichten (Outputs): Kopierfunktion
         elif msg["role"] == "assistant":
-            # Maskieren von Sonderzeichen in Python, um Fehler im JS-String-Literal zu verhindern
             safe_text = msg["content"].replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$').replace('\n', '\\n')
             html_copy = f"""
             <html>
@@ -977,7 +972,6 @@ def render_chat_message(msg, idx):
             </body>
             </html>
             """
-            # Rendern des sandboxed HTML-Iframes innerhalb eines Key-identifizierten Containers
             with st.container(key=f"act_copy_cont_{idx}"):
                 st.components.v1.html(html_copy, height=26, width=26)
 
@@ -987,7 +981,6 @@ def render_chat_message(msg, idx):
                 unsafe_allow_html=True,
             )
         
-        # Inline-Bearbeitung der Nachricht (Verwendung von text_area für besseren Komfort und Umbruch auf Mobilgeräten)
         if st.session_state.editing_idx == idx:
             edited_text = st.text_area("Nachricht bearbeiten", value=msg["content"], key=f"edit_val_{idx}", height=120)
             col_save, col_cancel = st.columns(2)
@@ -1004,7 +997,7 @@ def render_chat_message(msg, idx):
         else:
             st.markdown(msg["content"])
 
-# Dynamic System Prompt Selection based on device authorization status
+# Dynamic System Prompt Selection
 if st.session_state.device_authorized:
     active_system_prompt = SYSTEM_PROMPT
 else:
@@ -1139,7 +1132,7 @@ elif len(current_messages) > 0:
         for idx, msg in enumerate(current_messages):
             render_chat_message(msg, idx)
 
-# 13. Global Touch Event Dispatcher for Mobile Devices (Erkennt 500ms gedrückt halten)
+# 13. Global Touch Event Dispatcher for Mobile Devices
 html_touch_script = """
 <html>
 <head>
