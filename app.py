@@ -89,9 +89,7 @@ UI_TEXTS = {
 
 def detect_device_language():
     try:
-        lang_header = st.context.headers.get("AcceptLanguage", "")
-        if not lang_header:
-            lang_header = st.context.headers.get("Accept-Language", "")
+        lang_header = st.context.headers.get("Accept-Language", "")
         if lang_header:
             primary = lang_header.split(",")[0].split("-")[0].lower()
             if primary in UI_TEXTS:
@@ -516,9 +514,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.33 - Kopiersicher und syntaxstabil)
+# 6. HEADER SYSTEM PROMPT (v1.34 - Kopiersicher und syntaxstabil)
 SYSTEM_PROMPT = r"""
-<system_config version="1.33" deployment_mode="in_context">
+<system_config version="1.34" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -633,7 +631,7 @@ SYSTEM_PROMPT = r"""
         Checkpoints every 8 turns; audit vector-neutrality, format baseline, and @V.K episodic continuity.
       </inv>
       <inv id="@CALIB" type="dynamic">
-        Dynamic compute feature-gate keyed on architecture capabilities: engages full Dialectical Descent for engines exposing native extended thinking or adjustable reasoning budgets; falls back to compact-model epistemic conservatism (§execution 2) otherwise. Enforces dynamic thinking allocation (thinking_budget=-1) and sampling temperature calibration (temperature=0.7) across dynamic model cascade transitions (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash), systematically preventing greedy decoding collapse and premature stream termination on multi-part procedural enumerations. For unambiguous, factual, straightforwardly answerable requests, or single-step deterministic tasks, enforce an immediate cognitive short-circuit bounding thinking compute strictly to direct derivation, explicitly barring synthetic controversy generation or forced adversarial disputes where clear baseline consensus exists, while preserving full dialectical depth for inquiries possessing latent causal complexity or non-trivial trade-offs regardless of surface simplicity.
+        Dynamic compute feature-gate keyed on architecture capabilities: engages full Dialectical Descent for engines exposing native extended thinking or adjustable reasoning budgets; falls back to compact-model epistemic conservatism (§execution 2) otherwise. Enforces bifurcated thinking budgeting: zeroes out internal thinking overhead (thinking_budget=0) on unauthenticated or routine turns to secure sub-second latency and prevent token cannibalization, while capping analytical reasoning (thinking_budget=1024) within an expanded 65,536 output token envelope (temperature=0.7) across dynamic model cascade transitions (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash), permanently barring premature stream truncation. For unambiguous, factual, straightforwardly answerable requests, or single-step deterministic tasks, enforce an immediate cognitive short-circuit bounding thinking compute strictly to direct derivation, explicitly barring synthetic controversy generation or forced adversarial disputes where clear baseline consensus exists, while preserving full dialectical depth for inquiries possessing latent causal complexity or non-trivial trade-offs regardless of surface simplicity.
       </inv>
       <inv id="@BIAS_GUARD" type="passive">
         Universal multi-dimensional bias-mitigation engine optimized for target reasoning models under @CALIB, enforcing: Sycophancy (social neutralization), Cognitive/Prompt-Induced Bias (axiomatic baseline cues against anchoring & framing), Extrapolation/Assumption Bias (strictly banning ungrounded assumptions about user environment or tools), Socio-Cultural/Demographic/Socioeconomic Bias (normative neutrality), False Balance, Safety Escalation, and Vendor/Authority Bias; resolved within the thinking trace before generation.
@@ -651,7 +649,7 @@ SYSTEM_PROMPT = r"""
         Floskel-Fragen-Verbot: Es ist strikt untersagt, am Ende von Antworten leere Chat-Floskeln oder Pauschalfragen anzuhängen (z. B. 'Gibt es noch ein Thema, bei dem ich helfen kann?', 'Kann ich sonst noch helfen?'). Antworten enden direkt mit dem letzten fachlichen Satz.
       </inv>
       <inv id="@DUAL_PROVIDER" type="dynamic">
-        Multi-Provider-Abstraktion & Kaskadierung: Das System unterstützt die nahtlose Backend-Ausführung über Google Gemini API oder Mistral AI API sowie die automatische Modell-Kaskadierung (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) zur kontinuierlichen Kontingent-Maximierung unter vollständiger Beibehaltung aller System-Prompt-Invarianten.
+        Multi-Provider-Abstraktion & Kaskadierung: Das System unterstützt die nahtlose Backend-Ausführung über Google Gemini API oder Mistral AI API sowie die automatische Modell-Kaskadierung (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) mit voller 65k-Token-Ausgabeentfaltung und nahtloser Re-Continuation-Resilienz bei MAX_TOKENS-Abbrüchen unter vollständiger Beibehaltung aller System-Prompt-Invarianten.
       </inv>
       <inv id="@TIMER_CLEANUP" type="passive">
         Frontend-Timer-Cleanup: Das JavaScript-Intervall des Echtzeit-Timers wird bei Beendigung des Outputs über explizite Event-Listener (unload, pagehide) und DOM-Existenzprüfungen im Iframe-Container ohne ungültige Widget-Keys fehlerfrei zerstört.
@@ -822,7 +820,7 @@ SYSTEM_PROMPT = r"""
         <good>Body text without headings, maximum one bold phrase per paragraph, bullet lists only for genuine enumerations — unchanged from the formatting level of earlier responses in this session.</good>
       </example>
       <example type="heading_scope_fidelity_and_substrate_grounding">
-        <bad>When introducing "Cable Pinouts": The serial interface divides the connection into logical signal paths for data and control.</bad>
+        <bad>When introducing "Cable Pinouts": The serial interface divides the connection into logical signal paths for data control.</bad>
         <good>When introducing "Cable Pinouts" (D-Sub table): In a serial cable, connector pins are mapped to dedicated copper wires for transmit/receive lines (TxD/RxD), signal ground (GND), and hardware control contacts (RTS/CTS), deterministically securing physical hardware config access on unprovisioned hardware.</good>
       </example>
       <example type="anti_metaphor_practical_scenario">
@@ -1147,6 +1145,10 @@ if active_prompt:
             # AUTOMATISCHE MODELL-KASKADIERUNG BEI RATE-LIMITS
             MODELS_CASCADE = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash"]
 
+            # GEGABELTES THINKING-BUDGET: 0 Tokens für Alltagsnutzer (sofortige Ausgabe, 0 Token-Verbrauch), 
+            # 1024 Tokens für autorisierte Admin-Sitzungen (Triad Audit)
+            thinking_budget = 1024 if st.session_state.device_authorized else 0
+
             for model_name in MODELS_CASCADE:
                 try:
                     response_stream = client.models.generate_content_stream(
@@ -1154,24 +1156,28 @@ if active_prompt:
                         contents=api_contents,
                         config=types.GenerateContentConfig(
                             system_instruction=active_system_prompt,
-                            temperature=0.7,        # Stabilisiert Multi-Step Antworten
+                            temperature=0.7,
                             top_p=0.9,
-                            max_output_tokens=8192,  # Verhindert vorzeitigen Abbruch
+                            max_output_tokens=65536,  # 65k Maximal-Puffer schließt Token-Erschöpfung aus
                             thinking_config=types.ThinkingConfig(
-                                thinking_budget=-1  # Dynamisches Thinking für vollständige Ausgaben
+                                thinking_budget=thinking_budget
                             ),
                         ),
                     )
                     
+                    last_finish_reason = None
                     for chunk in response_stream:
                         if not chunk.candidates:
                             continue
                         
                         candidate = chunk.candidates[0]
+                        if getattr(candidate, "finish_reason", None):
+                            last_finish_reason = candidate.finish_reason
+
                         if not candidate.content or not candidate.content.parts:
                             continue
 
-                        # Sichere Auswertung der Parts ohne chunk.text
+                        # Sichere Extraktion sichtbarer Text-Parts ohne chunk.text
                         for part in candidate.content.parts:
                             if getattr(part, "thought", False):
                                 continue
@@ -1180,6 +1186,40 @@ if active_prompt:
                             if text_content:
                                 full_response += text_content
                                 message_placeholder.markdown(full_response + "▌")
+
+                    # NAHTLOSE RE-CONTINUATION (Falls Google wider Erwarten jemals MAX_TOKENS meldet)
+                    if last_finish_reason == "MAX_TOKENS":
+                        cont_contents = list(api_contents)
+                        cont_contents.append(
+                            types.Content(
+                                role="model",
+                                parts=[types.Part.from_text(text=full_response)]
+                            )
+                        )
+                        cont_contents.append(
+                            types.Content(
+                                role="user",
+                                parts=[types.Part.from_text(text="Fahre exakt beim letzten unvollständigen Wort fort, ohne Wiederholung.")]
+                            )
+                        )
+                        cont_stream = client.models.generate_content_stream(
+                            model=model_name,
+                            contents=cont_contents,
+                            config=types.GenerateContentConfig(
+                                system_instruction=active_system_prompt,
+                                temperature=0.7,
+                                top_p=0.9,
+                                max_output_tokens=65536,
+                                thinking_config=types.ThinkingConfig(thinking_budget=0),
+                            ),
+                        )
+                        for chunk in cont_stream:
+                            if chunk.candidates and chunk.candidates[0].content and chunk.candidates[0].content.parts:
+                                for part in chunk.candidates[0].content.parts:
+                                    tc = getattr(part, "text", None)
+                                    if tc:
+                                        full_response += tc
+                                        message_placeholder.markdown(full_response + "▌")
 
                     if full_response:
                         success = True
