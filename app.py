@@ -127,7 +127,7 @@ query_id = st.query_params.get("id", "")
 if query_id == SECRET_DEVICE_ID:
     st.session_state.device_authorized = True
 
-# Wiederherstellung der funktionalen Kernroutinen (Behebt NameError)
+# Funktionale Kernroutinen
 def toggle_history():
     st.session_state.show_history = not st.session_state.show_history
 
@@ -168,7 +168,7 @@ else:
 
 chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 210px)"
 
-# 5. Custom CSS: Art-Déco, Dark-Theme & pixelgenaue Hover-Aktionsleiste (v1.24)
+# 5. Custom CSS: Art-Déco, Dark-Theme & pixelgenaue Hover-Aktionsleiste (v1.25)
 st.markdown(
     f"""
     <style>
@@ -909,8 +909,8 @@ client = genai.Client(api_key=api_key)
 # Helper function to render chat message content
 def render_chat_message(msg, idx):
     with st.chat_message(msg["role"]):
-        # Aktionsleiste NUR für User-Nachrichten (Inputs): Regenerieren, Editieren, Löschen (Nur wenn Gerät autorisiert)
-        if st.session_state.editing_idx != idx and msg["role"] == "user" and st.session_state.device_authorized:
+        # Aktionsleiste NUR für User-Nachrichten (Inputs): Regenerieren, Editieren, Löschen
+        if st.session_state.editing_idx != idx and msg["role"] == "user":
             ac1, ac2, ac3, _ = st.columns([0.05, 0.05, 0.05, 0.85])
             with ac1:
                 st.button("🔄", key=f"act_ref_{idx}", help="Aktualisieren", on_click=trigger_regenerate, args=(idx,))
