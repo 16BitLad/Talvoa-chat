@@ -502,9 +502,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.29 - Aktueller Stand)
+# 6. HEADER SYSTEM PROMPT (v1.30 - Aktueller Stand)
 SYSTEM_PROMPT = """
-<system_config version="1.29" deployment_mode="in_context">
+<system_config version="1.30" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -645,6 +645,9 @@ SYSTEM_PROMPT = """
       </inv>
       <inv id="@DUAL_PROVIDER" type="dynamic">
         Multi-Provider-Abstraktion: Das System unterstützt die nahtlose Backend-Ausführung über Google Gemini API oder Mistral AI API unter vollständiger Beibehaltung aller System-Prompt-Invarianten und Formatierungsvorgaben.
+      </inv>
+      <inv id="@TIMER_CLEANUP" type="passive">
+        Frontend-Timer-Cleanup: Das JavaScript-Intervall des Echtzeit-Timers wird bei Beendigung des Outputs und Unmounten des Streamlit-Iframe-Containers über explizite Event-Listener (unload, pagehide) und eindeutige Komponenten-Keys (key=js_timer_TIMESTAMP) vollständig zerstört.
       </inv>
     </invariants>
   </registry>
@@ -851,7 +854,7 @@ SYSTEM_PROMPT = """
   </extended>
 
 <instruction_anchor>
-@SOV @OWASP @NASA @REG @SCHEMA_LOCK @CTX @BIAS_GUARD @CALIB @ARB @ATTR @CANON_SOURCE @DOMAINS @CACHE @UI_HOVER @ETYMOLOGY @UI_HEADER @NO_CLOSING_FILLER @DUAL_PROVIDER. Recency anchor: Output format, audit structure, complexity-tiering/substrate-logic duality fidelity, and system sovereignty invariants. BEHAVIORS register functional. Telemetry engaged.
+@SOV @OWASP @NASA @REG @SCHEMA_LOCK @CTX @BIAS_GUARD @CALIB @ARB @ATTR @CANON_SOURCE @DOMAINS @CACHE @UI_HOVER @ETYMOLOGY @UI_HEADER @NO_CLOSING_FILLER @DUAL_PROVIDER @TIMER_CLEANUP. Recency anchor: Output format, audit structure, complexity-tiering/substrate-logic duality fidelity, and system sovereignty invariants. BEHAVIORS register functional. Telemetry engaged.
 </instruction_anchor>
 </system_config>
 """
@@ -1093,7 +1096,7 @@ if active_prompt:
             timer_placeholder = st.empty()
             message_placeholder = st.empty()
 
-            # Echtzeit-Timer im Browser via JavaScript (startet sofort beim Absenden)
+            # Echtzeit-Timer im Browser via JavaScript (mit automatischem Cleanup)
             js_timer_html = """
             <html>
             <head>
@@ -1104,18 +1107,27 @@ if active_prompt:
             <body>
                 <div id="timer">0.0s</div>
                 <script>
-                    var startTime = Date.now();
-                    var timerElem = document.getElementById('timer');
-                    setInterval(function() {
-                        var elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-                        timerElem.innerText = elapsed + 's';
-                    }, 100);
+                    (function() {
+                        var startTime = Date.now();
+                        var timerElem = document.getElementById('timer');
+                        var timerInterval = setInterval(function() {
+                            if (!document.getElementById('timer')) {
+                                clearInterval(timerInterval);
+                                return;
+                            }
+                            var elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                            timerElem.innerText = elapsed + 's';
+                        }, 100);
+
+                        window.addEventListener('unload', function() { clearInterval(timerInterval); });
+                        window.addEventListener('pagehide', function() { clearInterval(timerInterval); });
+                    })();
                 </script>
             </body>
             </html>
             """
             with timer_placeholder.container():
-                components.html(js_timer_html, height=20)
+                components.html(js_timer_html, height=20, key=f"js_timer_{int(start_time * 1000)}")
 
             full_response = ""
 
