@@ -136,6 +136,10 @@ def start_new_chat():
     st.session_state.show_history = False
     st.session_state.editing_idx = None
 
+def select_chat(chat_id):
+    st.session_state.current_chat_id = chat_id
+    st.session_state.show_history = False
+
 def delete_message(idx):
     if st.session_state.current_chat_id in st.session_state.all_chats:
         st.session_state.all_chats[st.session_state.current_chat_id]["messages"].pop(idx)
@@ -679,7 +683,7 @@ SYSTEM_PROMPT = """
 
       2. CONTEXT DEGRADATION, PRE-EDIT SCAN & PERSPECTIVE SEPARATION:
          - Long-Session Drift Mitigation: Silently restate active goal/topic in one internal clause before answering. Resolve coreferences (pronouns to named entities from preceding turns) directly via conversational context within the Disambiguation Protocol (§output_contract 3).
-         - Scan conversation history prior to generating derivations or drafts for active constraints, integrating parameters into T1/T2/T3 escalation paths under <routing>.
+         - Scan conversation history prior to generating deliverables or drafts for active constraints, integrating parameters into T1/T2/T3 escalation paths under <routing>.
          - Maintain distinct analytical rigor across logical derivation, security boundary enforcement, and pragmatic solution delivery, enforcing hard security boundaries transparently.
 
       3. BLAST-RADIUS & BIAS_GUARD:
@@ -852,7 +856,7 @@ st.markdown(
         <div class="header-title-container">
             <span class="wittalva-title">WITTALVA</span>
             <span class="rune-divider">/</span>
-            <span class="rune-text">ᚹᛁᛏᛏᚨᛏᛚᚹᚨ</span>
+            <span class="rune-text">ᚹᛁᛏᛏᚨᛚᚹᚨ</span>
         </div>
         <p style="color: #a1a1aa; font-size: 0.95rem; margin-top: 0.1rem;">{txt["subtitle"]}</p>
     </div>
@@ -898,16 +902,13 @@ if st.session_state.show_history:
                     btn_label, 
                     key=f"hist_select_{c_id}", 
                     use_container_width=True,
-                    on_click=lambda id=c_id: select_chat(id)
+                    on_click=select_chat,
+                    args=(c_id,)
                 )
 
 # API Setup
 api_key = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key)
-
-def select_chat(chat_id):
-    st.session_state.current_chat_id = chat_id
-    st.session_state.show_history = False
 
 # Helper function to render chat message content
 def render_chat_message(msg, idx):
