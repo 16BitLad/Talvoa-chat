@@ -4,6 +4,7 @@ import uuid
 import time
 from datetime import datetime
 import streamlit as st
+import streamlit.components.v1 as components
 from google import genai
 from google.genai import types
 
@@ -406,7 +407,8 @@ st.markdown(
     /* Verhindert Text-Abschneidung, positioniert Emojis perfekt zentriert im Button */
     div[class*="st-key-act_"] button div[data-testid="stMarkdownContainer"],
     div[class*="st-key-act_"] button div[data-testid="stMarkdownContainer"] p,
-    div[class*="st-key-act_"] button p {{
+    div[class*="st-key-act_"] button p,
+    div[class*="st-key-act_"] iframe {{
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -418,6 +420,7 @@ st.markdown(
         text-align: center !important;
         width: 100% !important;
         height: 100% !important;
+        border: none !important;
     }}
 
     div[class*="st-key-act_"] button:hover {{
@@ -580,7 +583,7 @@ client = genai.Client(api_key=api_key)
 # Helper function to render chat message content
 def render_chat_message(msg, idx):
     with st.chat_message(msg["role"]):
-        # Aktionsleiste NUR für User-Nachrichten (Inputs) einblenden
+        # Aktionsleiste NUR für User-Nachrichten (Inputs): Regenerieren, Editieren, Löschen
         if st.session_state.editing_idx != idx and msg["role"] == "user":
             ac1, ac2, ac3, _ = st.columns([0.05, 0.05, 0.05, 0.85])
             with ac1:
@@ -589,6 +592,65 @@ def render_chat_message(msg, idx):
                 st.button("✏️", key=f"act_edit_{idx}", help="Bearbeiten", on_click=set_editing_message, args=(idx,))
             with ac3:
                 st.button("🗑️", key=f"act_del_{idx}", help="Löschen", on_click=delete_message, args=(idx,))
+
+        # Aktionsleiste NUR für Assistant-Nachrichten (Outputs): Kopierfunktion
+        elif msg["role"] == "assistant":
+            ac_copy, _ = st.columns([0.05, 0.95])
+            with ac_copy:
+                # Maskieren von Sonderzeichen in Python, um Fehler im JS-String-Literal zu verhindern
+                safe_text = msg["content"].replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$').replace('\n', '\\n')
+                html_copy = f"""
+                <html>
+                <head>
+                <style>
+                    body {{
+                        margin: 0;
+                        padding: 0;
+                        background: transparent;
+                        overflow: hidden;
+                    }}
+                    button {{
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        width: 24px !important;
+                        height: 24px !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        border-radius: 4px !important;
+                        background-color: #27272a !important;
+                        border: 1px solid #52525b !important;
+                        color: #ffffff !important;
+                        font-size: 0.75rem !important;
+                        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.6) !important;
+                        cursor: pointer !important;
+                    }}
+                    button:hover {{
+                        background-color: #3f3f46 !important;
+                        border-color: #a1a1aa !important;
+                        transform: scale(1.1);
+                    }}
+                </style>
+                </head>
+                <body>
+                    <button id="cpBtn" onclick="copyToClipboard()">📋</button>
+                    <script>
+                    function copyToClipboard() {{
+                        const text = `{safe_text}`;
+                        navigator.clipboard.writeText(text).then(() => {{
+                            const btn = document.getElementById('cpBtn');
+                            btn.innerText = '✓';
+                            setTimeout(() => {{ btn.innerText = '📋'; }}, 1000);
+                        }}).catch(err => {{
+                            console.error('Kopieren fehlgeschlagen: ', err);
+                        }});
+                    }}
+                    </script>
+                </body>
+                </html>
+                """
+                # Rendern des sandboxed HTML-Iframes, der per CSS exakt oben links positioniert wird
+                st.components.v1.html(html_copy, height=26, width=26, key=f"act_copy_{idx}")
 
         if msg.get("duration"):
             st.markdown(
