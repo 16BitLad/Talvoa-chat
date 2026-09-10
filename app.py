@@ -15,22 +15,32 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 2. JSON Storage Handlers
+# 2. JSON Storage Handlers & History Limit (Max 10)
 STORAGE_FILE = "chats_history.json"
+MAX_HISTORY_COUNT = 10
+
+def trim_chats_history(data):
+    """Behält strikt nur die letzten 10 aktuellsten Chats bei."""
+    if len(data) > MAX_HISTORY_COUNT:
+        keys_to_keep = list(data.keys())[-MAX_HISTORY_COUNT:]
+        return {k: data[k] for k in keys_to_keep}
+    return data
 
 def load_stored_chats():
     if os.path.exists(STORAGE_FILE):
         try:
             with open(STORAGE_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
+                return trim_chats_history(data)
         except Exception:
             return {}
     return {}
 
 def save_stored_chats(data):
     try:
+        trimmed_data = trim_chats_history(data)
         with open(STORAGE_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+            json.dump(trimmed_data, f, ensure_ascii=False, indent=2)
     except Exception:
         pass
 
@@ -58,11 +68,13 @@ def select_chat(chat_id):
 current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
+else:
+    st.session_state.current_chat_id = None
 
 # Dynamische Hoehenberechnung
 chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 210px)"
 
-# 4. Custom CSS: Kontrast & Dark-Theme Fixes (v1.13)
+# 4. Custom CSS: Kontrast & Dark-Theme Fixes (v1.14)
 st.markdown(
     f"""
     <style>
@@ -336,11 +348,11 @@ with col_b2:
         on_click=toggle_history
     )
 
-# 8. Collapsible History Dropdown (Clean Containers)
+# 8. Collapsible History Dropdown (Clean Containers, Max 10)
 if st.session_state.show_history:
     with st.container():
         st.markdown(
-            '<p style="color: #a1a1aa; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.4rem; font-weight: 600; text-align: left;">Previous Conversations</p>',
+            '<p style="color: #a1a1aa; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.4rem; font-weight: 600; text-align: left;">Previous Conversations (Max. 10)</p>',
             unsafe_allow_html=True,
         )
         if len(st.session_state.all_chats) == 0:
@@ -356,9 +368,9 @@ if st.session_state.show_history:
                     args=(c_id,)
                 )
 
-# 9. Full WITTALVA System Prompt (Version 1.13)
+# 9. Full WITTALVA System Prompt (Version 1.14)
 SYSTEM_PROMPT = """
-<system_config version="1.13" deployment_mode="in_context">
+<system_config version="1.14" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -711,6 +723,9 @@ if submitted and user_prompt and len(user_prompt.strip()) > 0:
             "messages": [],
         }
         st.session_state.current_chat_id = new_id
+
+    # Automatisch auf die 10 aktuellsten Chats beschraenken
+    st.session_state.all_chats = trim_chats_history(st.session_state.all_chats)
 
     # UI speichert und zeigt den Verlauf an
     st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append(
