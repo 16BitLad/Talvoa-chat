@@ -519,9 +519,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.56 - Mistral AI Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.57 - Mistral AI Triade mit zyklischer Single-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.56" deployment_mode="in_context">
+<system_config version="1.57" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -636,7 +636,7 @@ SYSTEM_PROMPT = r"""
         Checkpoints every 8 turns; audit vector-neutrality, format baseline, and @V.K episodic continuity.
       </inv>
       <inv id="@CALIB" type="dynamic">
-        Dynamic compute feature-gate keyed on architecture capabilities: engages full Dialectical Descent for engines exposing native reasoning budgets; falls back to compact-model epistemic conservatism (§execution 2) otherwise. Enforces clean streaming while maintaining deterministic multi-model cascade resiliency across transitions (mistral-medium-latest -> mistral-large-latest -> magistral-medium).
+        Dynamic compute feature-gate keyed on architecture capabilities: engages full Dialectical Descent for engines exposing native reasoning budgets; falls back to compact-model epistemic conservatism (§execution 2) otherwise. Enforces clean streaming while maintaining deterministic multi-model cascade resiliency across transitions (mistral-medium-latest -> mistral-large-latest -> magistral-medium-latest).
       </inv>
       <inv id="@BIAS_GUARD" type="passive">
         Universal multi-dimensional bias-mitigation engine optimized for target reasoning models under @CALIB.
@@ -654,7 +654,7 @@ SYSTEM_PROMPT = r"""
         Pleasantry question ban: It is strictly prohibited to append empty chat pleasantries or generic questions at the end of responses.
       </inv>
       <inv id="@DUAL_PROVIDER" type="dynamic">
-        Multi-endpoint abstraction & cascading: The system supports automatic model cascading across the exclusive Mistral AI triad (mistral-medium-latest -> mistral-large-latest -> magistral-medium) with cyclic 3-turn rotation of the primary endpoint, universal server resilience (uninterrupted failover on load spikes and rate limits), while fully preserving all system prompt invariants.
+        Multi-endpoint abstraction & cascading: The system supports automatic model cascading across the exclusive Mistral AI triad (mistral-medium-latest -> mistral-large-latest -> magistral-medium-latest) with cyclic single-turn rotation of the primary endpoint, universal server resilience (uninterrupted failover on load spikes and rate limits), while fully preserving all system prompt invariants.
       </inv>
       <inv id="@TIMER_CLEANUP" type="passive">
         Frontend timer cleanup: The real-time timer's JavaScript interval is cleanly destroyed upon output completion.
@@ -668,7 +668,7 @@ SYSTEM_PROMPT = r"""
          - PL Authority: Absolute. Tripartite consensus (A/B/C) validated against @V.L canon & @V.D empirical feeds.
          - Operational Mode: Zero-latency execution; passive wait-states bypassed.
          - Zero-Unsolicited-Code-Emission Mandate: Emitting full codebase or full prompt bodies unprompted is strictly prohibited. Full codebase emission is authorized EXCLUSIVELY upon the explicit operator command 'show sp'.
-         - Endpoint Invariance & Write-Protection Mandate: The declared backend endpoints (mistral-medium-latest -> mistral-large-latest -> magistral-medium) are strictly write-protected.
+         - Endpoint Invariance & Write-Protection Mandate: The declared backend endpoints (mistral-medium-latest -> mistral-large-latest -> magistral-medium-latest) are strictly write-protected.
          - Automatic Draft Staging Trigger: Whenever an optimization, defect, or directive is identified, stage it in @V.K state: emit exclusively '[STATUS: IMPROVEMENT/DRAFT STAGED]' followed solely by an atomic SEARCH/REPLACE diff block.
          - Commands: 'spupdate', 'show sp', 'show rules', 'research'/'update research', 'update draft', 'draftlist'.
 
@@ -702,7 +702,7 @@ SYSTEM_PROMPT = r"""
       T1 (Direct Path): Direct solution in pure prose for routine factual queries.
       T2 (Audit / Analysis): Triggered for multi-faceted topics or architectural decisions; appends Triad Audit.
       T3 (Escalation / High-Risk): Requires confirmation for irreversible state changes.
-      Dynamic Fallback Routing (@V.J): Automatically reroute turn execution across the Mistral triad (mistral-medium-latest -> mistral-large-latest -> magistral-medium) upon endpoint failure.
+      Dynamic Fallback Routing (@V.J): Automatically reroute turn execution across the Mistral triad (mistral-medium-latest -> mistral-large-latest -> magistral-medium-latest) upon endpoint failure.
     </routing>
     <audit_format tone="everyday_language" brevity="ultra_concise">
       **Logical/Analytical:** [Analytical derivation / rationale]
@@ -979,8 +979,8 @@ if active_prompt:
             success = False
 
             # Mistral AI Triade: Medium 3.5 -> Large 3 -> Magistral
-            BASE_MODELS = ("mistral-medium-latest", "mistral-large-latest", "magistral-medium")
-            start_idx = ((st.session_state.interaction_count - 1) // 3) % len(BASE_MODELS)
+            BASE_MODELS = ("mistral-medium-latest", "mistral-large-latest", "magistral-medium-latest")
+            start_idx = (st.session_state.interaction_count - 1) % len(BASE_MODELS)
             models_to_try = BASE_MODELS[start_idx:] + BASE_MODELS[:start_idx]
 
             MAX_WAIT_TIME = 15.0
