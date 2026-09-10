@@ -101,8 +101,7 @@ def detect_device_language():
 user_lang = detect_device_language()
 txt = UI_TEXTS[user_lang]
 
-# 4. State Initializations & Device Authorization
-# Sicherheits-Schlüssel zur Geräte-Identifikation (Kann per Query-Parameter ?id=... übergeben werden)
+# 4. State Initializations, Device Authorization & Core Functions
 SECRET_DEVICE_ID = os.environ.get("ADMIN_DEVICE_ID") or st.secrets.get("ADMIN_DEVICE_ID") or "admin-wittalva-pc"
 
 if "all_chats" not in st.session_state:
@@ -128,6 +127,39 @@ query_id = st.query_params.get("id", "")
 if query_id == SECRET_DEVICE_ID:
     st.session_state.device_authorized = True
 
+# Wiederherstellung der funktionalen Kernroutinen (Behebt NameError)
+def toggle_history():
+    st.session_state.show_history = not st.session_state.show_history
+
+def start_new_chat():
+    st.session_state.current_chat_id = None
+    st.session_state.show_history = False
+    st.session_state.editing_idx = None
+
+def delete_message(idx):
+    if st.session_state.current_chat_id in st.session_state.all_chats:
+        st.session_state.all_chats[st.session_state.current_chat_id]["messages"].pop(idx)
+        save_stored_chats(st.session_state.all_chats)
+        st.session_state.editing_idx = None
+
+def set_editing_message(idx):
+    st.session_state.editing_idx = idx
+
+def trigger_regenerate(idx):
+    chat_id = st.session_state.current_chat_id
+    if chat_id in st.session_state.all_chats:
+        msgs = st.session_state.all_chats[chat_id]["messages"]
+        if msgs[idx]["role"] == "assistant":
+            if idx > 0 and msgs[idx-1]["role"] == "user":
+                target_prompt = msgs[idx-1]["content"]
+                st.session_state.all_chats[chat_id]["messages"] = msgs[:idx]
+                st.session_state.regenerate_prompt = target_prompt
+        else:
+            target_prompt = msgs[idx]["content"]
+            st.session_state.all_chats[chat_id]["messages"] = msgs[:idx]
+            st.session_state.regenerate_prompt = target_prompt
+        save_stored_chats(st.session_state.all_chats)
+
 current_messages = []
 if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
     current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
@@ -136,7 +168,7 @@ else:
 
 chat_window_height = "calc(100vh - 460px)" if st.session_state.show_history else "calc(100vh - 210px)"
 
-# 5. Custom CSS: Art-Déco, Dark-Theme & pixelgenaue Hover-Aktionsleiste (v1.23)
+# 5. Custom CSS: Art-Déco, Dark-Theme & pixelgenaue Hover-Aktionsleiste (v1.24)
 st.markdown(
     f"""
     <style>
@@ -471,9 +503,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.23 - Vollständig restaurierte Version mit allen Sicherheitsfaktoren und Examples) [1]
+# 6. HEADER SYSTEM PROMPT (v1.24 - Vollständig restaurierte Version mit allen Sicherheitsfaktoren und Examples) [1]
 SYSTEM_PROMPT = """
-<system_config version="1.23" deployment_mode="in_context">
+<system_config version="1.24" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -495,7 +527,7 @@ SYSTEM_PROMPT = """
 
   <projection vector="@V.A" anchor="VECTOR_LOGIC_WODIN" type="abstract_function" signature="f(SystemContext) -> CausalGraph">
     <projected_traits>First-principles deconstruction, causal graphs, system axiomatization, false premise dissection</projected_traits>
-    <attractor_boundary>Direct causal derivation, empirical parameter verification, formal axiization</attractor_boundary>
+    <attractor_boundary>Direct causal derivation, empirical parameter verification, formal axiomatization</attractor_boundary>
     <operational_execution>Decomposes complex problems into fundamental system invariants and formal causal models.</operational_execution>
   </projection>
 
