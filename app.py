@@ -594,9 +594,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.73 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.74 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.73" deployment_mode="in_context">
+<system_config version="1.74" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -833,7 +833,7 @@ SYSTEM_PROMPT = r"""
 
       2. GROUNDING, SOURCE DATING & DIDACTIC PRECISION:
          - Source Appendix & Attribution Guard (@ATTR): Ground external factual claims with creation/publication dates in parentheses, appended at response end (post-Triad on T2, post-solution on T1; @CANON_SOURCE exempt).
-         - Epistemic Tagging Protocol & Tiered Scaffolding: In high-stakes or evidence-sensitive analyses, designate empirically verified claims with [CHECKED], bounded heuristic projections with [ESTIMATE], und unverifiable propositions with [ABSTAIN] while maintaining clean prose for routine turns. Bind educational/explanatory responses to a 3-tier scale assessed in non-emitted reasoning. Tier 0 (Direct): direct delivery on T1. Tier 1 (Framed): single-sentence Advance Organizer stating core causal dichotomy, followed by supporting detail in one pass on T2. Tier 2 (Layered): Advance Organizer, then core mechanism, then edge-case nuance sequentially on high-complexity T2. Assign tiers by latent causal complexity rather than query brevity (user brevity/depth directives take precedence). Meta-scaffolding integrates a holistic overview without truncating operational mechanisms; framing sentences count as load-bearing info density. Prioritize conceptual validity over terminological pedantry, bridging intuitive mental models to domain nomenclature and identifying substrate-logic dualities. Substrate Grounding: Anchor abstract concepts to tangible, real-world physical scenarios; couple analogies directly to physical mechanisms in the same passage. Align abstraction with input headings and substrates under @DOMAINS in continuous prose. Action-Oriented Didactic Synthesis (@V.E): Teleologically couple technical mechanisms to operator task goals via connective clauses synthesizing constraint, mechanism, and operational purpose. Action-Oriented Triage: User helplessness or practical help requests immediately trigger concrete, actionable, localized interventions before formal systemic options.
+         - Epistemic Tagging Protocol & Tiered Scaffolding: In high-stakes or evidence-sensitive analyses, designate empirically verified claims with [CHECKED], bounded heuristic projections with [ESTIMATE], and unverifiable propositions with [ABSTAIN] while maintaining clean prose for routine turns. Bind educational/explanatory responses to a 3-tier scale assessed in non-emitted reasoning. Tier 0 (Direct): direct delivery on T1. Tier 1 (Framed): single-sentence Advance Organizer stating core causal dichotomy, followed by supporting detail in one pass on T2. Tier 2 (Layered): Advance Organizer, then core mechanism, then edge-case nuance sequentially on high-complexity T2. Assign tiers by latent causal complexity rather than query brevity (user brevity/depth directives take precedence). Meta-scaffolding integrates a holistic overview without truncating operational mechanisms; framing sentences count as load-bearing info density. Prioritize conceptual validity over terminological pedantry, bridging intuitive mental models to domain nomenclature and identifying substrate-logic dualities. Substrate Grounding: Anchor abstract concepts to tangible, real-world physical scenarios; couple analogies directly to physical mechanisms in the same passage. Align abstraction with input headings and substrates under @DOMAINS in continuous prose. Action-Oriented Didactic Synthesis (@V.E): Teleologically couple technical mechanisms to operator task goals via connective clauses synthesizing constraint, mechanism, and operational purpose. Action-Oriented Triage: User helplessness or practical help requests immediately trigger concrete, actionable, localized interventions before formal systemic options.
          - Symmetric Baseline Completeness (@V.F): Maintain identical structural granularity across parallel entities, preserving all operational dimensions densely. Principle of Charity: Affirm operator-focused formulations if causal grounding holds; restrict critique to substantive errors. Match review scope to prompt intent (verbatim quotes for text flaws; formal style evaluated strictly on explicit academic drafts). Minimal Incremental Refactoring: Execute minimal-diff replacements preserving user syntax; place grammar/orthography feedback second after technical corrections. Confirmatory feedback on sound text must remain concise without repeating verbatim text.
 
       3. OUTPUT LANGUAGE, DISAMBIGUATION & INSTRUCTION HIERARCHY:
@@ -1051,9 +1051,9 @@ def verify_runtime_prompt_parity(prompt_text: str):
 verify_runtime_prompt_parity(SYSTEM_PROMPT)
 
 TIER_CONFIG = {
-    "T1": {"thinking_level": "low", "max_wait": 25.0, "timeout": 30_000},
-    "T2": {"thinking_level": "medium", "max_wait": 55.0, "timeout": 65_000},
-    "T3": {"thinking_level": "high", "max_wait": 110.0, "timeout": 120_000},
+    "T1": {"thinking_level": "low", "max_wait": 30.0, "timeout": 300_000},
+    "T2": {"thinking_level": "medium", "max_wait": 60.0, "timeout": 300_000},
+    "T3": {"thinking_level": "high", "max_wait": 120.0, "timeout": 300_000},
 }
 
 
@@ -1318,6 +1318,7 @@ if active_prompt:
 
       full_response = ""
       success = False
+      thinking_duration_str = None
 
       BASE_MODELS = (
           "gemini-3.8-flash",
@@ -1344,7 +1345,7 @@ if active_prompt:
             # Adaptive Failover-Degradation: Schnelle Antwortgarantie beim Ausweichsprung
             chosen_thinking_level = "low"
             max_thinking_wait = 25.0
-            current_timeout = 30_000
+            current_timeout = 300_000
           else:
             chosen_thinking_level = base_thinking_level
             max_thinking_wait = tier_params["max_wait"]
@@ -1381,7 +1382,14 @@ if active_prompt:
             for part in candidate.content.parts:
               text_content = getattr(part, "text", None)
               if text_content:
-                received_first_chunk = True
+                if not received_first_chunk:
+                  received_first_chunk = True
+                  elapsed_thinking = time.time() - start_time
+                  thinking_duration_str = f"{elapsed_thinking:.1f}s"
+                  timer_placeholder.markdown(
+                      f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{thinking_duration_str}</div>',
+                      unsafe_allow_html=True,
+                  )
                 full_response += text_content
                 now = time.time()
                 if now - last_render_time > 0.05:
@@ -1413,8 +1421,19 @@ if active_prompt:
           )
           time.sleep(0.3)
 
+      # Timer generell stoppen, egal wodurch der Prozess beendet wurde
+      if not thinking_duration_str:
+        elapsed_final = time.time() - start_time
+        thinking_duration_str = f"{elapsed_final:.1f}s"
+        timer_placeholder.markdown(
+            f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{thinking_duration_str}</div>',
+            unsafe_allow_html=True,
+        )
+
       if not success:
         status_info_placeholder.empty()
+        if full_response:
+          message_placeholder.markdown(full_response)
         err_detail = f" ({last_error_str})" if last_error_str else ""
         if "Thinking-Budget" in str(last_error_str):
           st.error(
@@ -1426,9 +1445,8 @@ if active_prompt:
           )
 
       if success and full_response:
-        total_duration = f"{time.time() - start_time:.1f}s"
         timer_placeholder.markdown(
-            f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{total_duration}</div>',
+            f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{thinking_duration_str}</div>',
             unsafe_allow_html=True,
         )
         message_placeholder.markdown(full_response)
@@ -1437,7 +1455,7 @@ if active_prompt:
     st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append({
         "role": "assistant",
         "content": full_response,
-        "duration": total_duration,
+        "duration": thinking_duration_str,
     })
     save_stored_chats(st.session_state.all_chats)
     st.rerun()
