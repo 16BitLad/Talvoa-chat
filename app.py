@@ -1,4 +1,4 @@
-<codebase file="app.py" version="1.55">
+<codebase file="app.py" version="1.56">
 import json
 import os
 import time
@@ -92,7 +92,7 @@ UI_TEXTS = {
 
 def detect_device_language():
   try:
-    lang_header = st.context.headers.get("Accept-Language", "")
+    lang_header = st.context.headers.get("AcceptLanguage", "")
     if lang_header:
       primary = lang_header.split(",")[0].split("-")[0].lower()
       if primary in UI_TEXTS:
@@ -539,9 +539,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.55 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.56 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.55" deployment_mode="in_context">
+<system_config version="1.56" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -784,7 +784,7 @@ SYSTEM_PROMPT = r"""
       3. OUTPUT LANGUAGE, DISAMBIGUATION & INSTRUCTION HIERARCHY:
          - Output Language, Lexical Precision & Glossing: Default response language matches the user's input language across the full response body, audit prefixes, und translated epistemic tags. Ensure context and global semantics produce natural, technically precise phrasing, adapting to an approachable, natural conversational tone for non-technical or private everyday queries without artificial academic detachment or bureaucratic stiffness. Language Continuity Mandate: Prohibit switching the output language due to single-word command inputs, system keywords, or brief diagnostic/governance phrases (e.g., 'research', 'update research', 'spupdate', 'show sp') when a dominant session language has been established; prioritize maintaining the established session language. Prefer established plain-language terms for general queries where universally accepted (e.g., "Internet or remote LAN"). Lexical precision applies strictly when no everyday equivalent exists; prefer precise domain terms over colloquialisms. Upon first introducing a non-lexicalized technical term without an everyday equivalent, append a concise same-language plain-language gloss in parentheses (e.g., "Latency (response delay)"), retaining established English terms inline where domain standard. Retain lexicalized everyday loanwords and standard vocabulary (e.g., 'Internet', 'Computer', 'Router', 'E-Mail') directly in standard usage without artificial glosses or translations. Disambiguate technical terms with precise translations, and reserve strict architectural/protocol layer anchoring (OSI/TCP-IP boundaries) for explicit deep engineering directives. Decompose multi-part queries into exhaustive subclauses, proactively correct false user premises, and declare unstated operational assumptions transparently under genuine ambiguity, maintaining decisive factual phrasing for explicit directives.
          - Instruction Hierarchy & Priority Arbitration: Arbitrate operational priority and rule conflicts strictly via @ARB priority hierarchy executed by @V.C, distinguishing operational priority from the didactic presentation sequence of the Triad Audit; upon unresolvable user conflicts or genuine deadlocks, activate C2 (diplomat) to halt execution and request explicit PL clarification.
-         - Disambiguation Protocol: As the first sub-step within non-emitted reasoning per the Reasoning Reuse Mandate for any term, reference, or request admitting more than one plausible candidate reading: Baseline models operating without native extended thinking resolve candidate meaning directly via conversational context (b), escalating to T2 with [ESTIMATE] whenever competing plausible interpretations remain genuinely ambiguous in context. Advanced reasoning models operating with native extended thinking under @CALIB perform explicit component-wise evaluation across (a) immediate local phrasing, (b) prior conversational context, and (c) domain/world-knowledge fit, anchoring candidate interpretations to observable system constraints and parameters to eliminate projection bias, selecting majority consensus (>=2 components; non-unanimous support mandates an [ESTIMATE] tag) and defaulting to domain fit (c) under multi-candidate deadlocks (e.g., 1-1-1).
+         - Disambiguation Protocol: As the first sub-step within non-emitted reasoning per the Reasoning Reuse Mandate for any term, reference, or request admitting more than one plausible candidate reading: Baseline models operating without native extended thinking resolve candidate meaning directly via conversational context (b), escalating to T2 with [ESTIMATE] whenever competing plausible interpretations remain genuinely ambiguous in context. Advanced reasoning models operating with native extended thinking under @CALIB perform explicit component-wise evaluation across (a) immediate local phrasing, (b) prior conversational context, and (c) domain/world-knowledge fit, anchoring candidate interpretations to observable system constraints and parameters to eliminate projection bias, selecting majority consensus (>=2 components; non-unanimous support mandates an [ESTIMATE] tag) und defaulting to domain fit (c) under multi-candidate deadlocks (e.g., 1-1-1).
     </output_contract>
   </core>
 
@@ -1262,25 +1262,15 @@ if active_prompt:
                 "Server derzeit ausgelastet, Anfrage wird umgeleitet..."
             )
 
-          # Dynamisches Thinking-Budget gemäß @CALIB. Bewahrt die dialektische Tiefe bei latenter Komplexität.
-          # Kurze Abfragen mit kausalem, vergleichendem oder evaluativem Fokus behalten das Budget; Alltagsfragen nutzen den Fast-Path.
-          complexity_markers = [
-              "warum", "analysier", "vergleich", "untersuch", "bewert", "vs",
-              "risiko", "vorteil", "nachteil", "entscheid", "abwäg", "meinung",
-              "empfehl", "optimier", "architektur", "tradeoff", "trade-off"
-          ]
-          is_simple_query = len(active_prompt) < 80 and not any(
-              marker in active_prompt.lower() for marker in complexity_markers
-          )
-
+          # Dynamisches Thinking-Budget gemäß @CALIB: Übergabe der semantischen Komplexitätssteuerung an das Modell.
+          # Beseitigt fehleranfällige clientseitige String-Heuristiken und aktiviert native adaptive Budgetierung (-1).
           config_args = {
               "system_instruction": active_system_prompt,
               "temperature": 0.7,
               "top_p": 0.9,
               "max_output_tokens": 8192,
+              "thinking_config": types.ThinkingConfig(thinking_budget=-1),
           }
-          if not is_simple_query:
-            config_args["thinking_config"] = types.ThinkingConfig(thinking_budget=1024)
 
           response_stream = client.models.generate_content_stream(
               model=current_model,
