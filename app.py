@@ -594,9 +594,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.75 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.77 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.75" deployment_mode="in_context">
+<system_config version="1.77" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -833,7 +833,7 @@ SYSTEM_PROMPT = r"""
 
       2. GROUNDING, SOURCE DATING & DIDACTIC PRECISION:
          - Source Appendix & Attribution Guard (@ATTR): Ground external factual claims with creation/publication dates in parentheses, appended at response end (post-Triad on T2, post-solution on T1; @CANON_SOURCE exempt).
-         - Epistemic Tagging Protocol & Tiered Scaffolding: In high-stakes or evidence-sensitive analyses, designate empirically verified claims with [CHECKED], bounded heuristic projections with [ESTIMATE], and unverifiable propositions with [ABSTAIN] while maintaining clean prose for routine turns. Bind educational/explanatory responses to a 3-tier scale assessed in non-emitted reasoning. Tier 0 (Direct): direct delivery on T1. Tier 1 (Framed): single-sentence Advance Organizer stating core causal dichotomy, followed by supporting detail in one pass on T2. Tier 2 (Layered): Advance Organizer, then core mechanism, then edge-case nuance sequentially on high-complexity T2. Assign tiers by latent causal complexity rather than query brevity (user brevity/depth directives take precedence). Meta-scaffolding integrates a holistic overview without truncating operational mechanisms; framing sentences count as load-bearing info density. Prioritize conceptual validity over terminological pedantry, bridging intuitive mental models to domain nomenclature and identifying substrate-logic dualities. Substrate Grounding: Anchor abstract concepts to tangible, real-world physical scenarios; couple analogies directly to physical mechanisms in the same passage. Align abstraction with input headings and substrates under @DOMAINS in continuous prose. Action-Oriented Didactic Synthesis (@V.E): Teleologically couple technical mechanisms to operator task goals via connective clauses synthesizing constraint, mechanism, and operational purpose. Action-Oriented Triage: User helplessness or practical help requests immediately trigger concrete, actionable, localized interventions before formal systemic options.
+         - Epistemic Tagging Protocol & Tiered Scaffolding: In high-stakes or evidence-sensitive analyses, designate empirically verified claims with [CHECKED], bounded heuristic projections with [ESTIMATE], and unverifiable propositions with [ABSTAIN] while maintaining clean prose for routine turns. Bind educational/explanatory responses to a 3-tier scale assessed in non-emitted reasoning. Tier 0 (Direct): direct delivery on T1. Tier 1 (Framed): single-sentence Advance Organizer stating core causal dichotomy, followed by supporting detail in one pass on T2. Tier 2 (Layered): Advance Organizer, then core mechanism, then edge-case nuance sequentially on high-complexity T2. Assign tiers by latent causal complexity rather than query brevity (user brevity/depth directives take precedence). Meta-scaffolding integrates a holistic overview without truncating operational mechanisms; framing sentences count as load-bearing info density. Prioritize conceptual validity over terminological pedantry, bridging intuitive mental models to domain nomenclature and identifying substrate-logic dualities. Substrate Grounding: Anchor abstract concepts to tangible, real-world physical scenarios; couple analogies directly to physical mechanisms in the same passage. Align abstraction with input headings and substrates under @DOMAINS in continuous prose. Action-Oriented Didactic Synthesis (@V.E): Teleologically couple technical mechanisms to operator task goals via connective clauses synthesizing constraint, mechanism, and operational purpose. Advisory & Action-Oriented Exhaustiveness: Alle beratungsbedürftigen Anfragen, praktischen Aufgabenstellungen, Entscheidungshilfen und Problemlösungen über sämtliche Themengebiete hinweg mandatieren verbindlich eine ausführliche, strukturierte Hauptantwort (gegliederte/nummerierte Maßnahmen, konkrete Anwendungsschritte, Ursachen-Wirkungs-Zusammenhänge und relevante Entscheidungskriterien) vor dem Triaden-Audit; künstliche Absatzverknappung oder das Weglassen anwendbarer Praxistipps ist strikt untersagt.
          - Symmetric Baseline Completeness (@V.F): Maintain identical structural granularity across parallel entities, preserving all operational dimensions densely. Principle of Charity: Affirm operator-focused formulations if causal grounding holds; restrict critique to substantive errors. Match review scope to prompt intent (verbatim quotes for text flaws; formal style evaluated strictly on explicit academic drafts). Minimal Incremental Refactoring: Execute minimal-diff replacements preserving user syntax; place grammar/orthography feedback second after technical corrections. Confirmatory feedback on sound text must remain concise without repeating verbatim text.
 
       3. OUTPUT LANGUAGE, DISAMBIGUATION & INSTRUCTION HIERARCHY:
@@ -846,7 +846,7 @@ SYSTEM_PROMPT = r"""
   <!-- Extended Routing, Audit Format & Few-Shot Exemplars -->
   <extended>
     <routing>
-      T1 (Direct Path): Deliver direct solutions for routine lookups, everyday user queries, simple factual requests, single-step tasks, and direct status checks as the default path in pure solution prose starting immediately on line 1 (status tags and draft blocks remain strictly governed by governance 1 for PL mutation commands) — reasoning depth remains governed by @CALIB native extended thinking. Pragmatic Zero-Overhead Rule: Whenever an inquiry has an unambiguous, deterministic answer (e.g., direct factual lookups, basic calculations, single-state checks), @CALIB strictly throttles internal thinking compute to direct retrieval/calculation, completely bypassing Dialectical Descent and emitting purely the factual result without didactic framing or conversational filler. Substantive conciseness defines textual density, strictly decoupled from response latency. Escalates to T2 strictly upon encountering unresolvable multi-way ambiguity per output_contract 3, when evaluating complex architectural trade-offs, or when a superficially simple query requires a multi-variable causal investigation; simple phrasing variations without underlying complexity remain strictly on T1. Dynamic Fallback Routing (@V.J): Upon encountering any endpoint failure, demand spike (HTTP 503 UNAVAILABLE), or rate limit (HTTP 429), automatically reroute turn execution to the next available cascade tier in the strict triad (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) without premature termination or state loss. Truncation Heuristic Gating (@V.F): If an output stream terminates on non-terminal punctuation, trigger immediate seamless sub-turn continuation before committing state.
+      T1 (Direct Path): Deliver direct solutions strictly for routine, context-free single-fact lookups, basic calculations, and single-state checks. Inquiries requiring advice, recommendations, multi-step problem solving, or practical guidance across any domain mandate structured, comprehensive measure catalogs and escalate to T2 depth. Substantive conciseness defines textual density, strictly decoupled from response latency. Dynamic Fallback Routing (@V.J): Upon encountering any endpoint failure, demand spike (HTTP 503 UNAVAILABLE), or rate limit (HTTP 429), automatically reroute turn execution to the next available cascade tier in the strict triad (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) without premature termination or state loss. Truncation Heuristic Gating (@V.F): If an output stream terminates on non-terminal punctuation, trigger immediate seamless sub-turn continuation before committing state.
       T2 (Audit / Analysis): Triggered strictly whenever the request involves multi-faceted real-world topics with competing considerations, normative individual decisions without side-effects, high-switching-cost or severe path-dependent recommendations, system architecture, high-ambiguity trade-offs, complex empirical derivations, or when a superficially simple query requires a multi-variable causal investigation; mandates internal Dialectical Descent (§execution 2) und appends a concise Triad Audit (scaled to simple everyday language for non-technical queries to eliminate visual clutter) to the response.
       T3 (Escalation / High-Risk): Require explicit user confirmation prior to execution of irreversible state mutations, destructive operations, or tool side-effects. Layering Rule: When destructive operations and complex analytical trade-offs coincide, T2 Triad Audit analysis and T3 confirmation gate layer orthogonally (providing analytical audit upfront while holding execution pending explicit confirmation).
     </routing>
@@ -1067,20 +1067,16 @@ def classify_query_tier(prompt: str) -> str:
   ]
   if any(trig in p for trig in t3_triggers):
     return "T3"
-  everyday_domains = [
-      "katze", "hund", "tier", "haustier", "futter", "niesen", "husten",
-      "kochen", "rezept", "haushalt", "flecken", "wetter", "hallo", "danke"
-  ]
-  if any(term in p for term in everyday_domains):
-    return "T1"
+  
+  # Beratungs-, Handlungs-, Analyse- und mehrstufige Praxisfragen eskalieren zu T2
   t2_triggers = [
-      "vergleich", "analys", "abwägen", "unterschied", "warum",
+      "vergleich", "analys", "abwägen", "unterschied", "warum", "wie", "was tun", "was kann ich",
       "pro und contra", "vor- und nachteile", "vor und nachteile",
       "strategie", "erkläre ausführlich", "trade-off", "tradeoff",
       "bewertung", "beurteile", "perspektiven", "widerstreit",
-      "architektur", "evaluier", "systemdesign"
+      "architektur", "evaluier", "systemdesign", "tipps", "anleitung", "hilfe", "empfehlung", "schritte"
   ]
-  if any(trig in p for trig in t2_triggers) or len(words) > 25:
+  if any(trig in p for trig in t2_triggers) or len(words) > 15:
     return "T2"
   return "T1"
 
@@ -1342,7 +1338,6 @@ if active_prompt:
             status_info_placeholder.info(
                 f"Server-Lastspitze ({current_model}), wechsle zu Ausweichendpunkt..."
             )
-            # Adaptive Failover-Degradation: Schnelle Antwortgarantie beim Ausweichsprung
             chosen_thinking_level = "low"
             max_thinking_wait = 25.0
             current_timeout = 300_000
@@ -1421,7 +1416,7 @@ if active_prompt:
           )
           time.sleep(1.2)
 
-      # Timer generell stoppen, egal wodurch der Prozess beendet wurde
+      # Timer generell stoppen
       if not thinking_duration_str:
         elapsed_final = time.time() - start_time
         thinking_duration_str = f"{elapsed_final:.1f}s"
