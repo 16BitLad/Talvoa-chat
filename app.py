@@ -91,6 +91,7 @@ UI_TEXTS = {
         "history_hide": "▲ Verlauf ausblenden",
         "prev_conv": "Bisherige Gespräche",
         "no_conv": "Noch keine bisherigen Gespräche gespeichert.",
+        "thinking_hint": "Denkprozesse bei komplexen Antworten können bis zu ca. 1 min. dauern.",
     },
     "en": {
         "subtitle": "Fellow guide and advisor through day-to-day matters",
@@ -100,6 +101,7 @@ UI_TEXTS = {
         "history_hide": "▲ Hide history",
         "prev_conv": "Previous Conversations",
         "no_conv": "No previous conversations stored yet.",
+        "thinking_hint": "Thinking processes for complex answers may take up to approx. 1 min.",
     },
     "es": {
         "subtitle": "Guía y asesor para los asuntos cotidianos",
@@ -109,6 +111,7 @@ UI_TEXTS = {
         "history_hide": "▲ Ocultar historial",
         "prev_conv": "Conversaciones anteriores",
         "no_conv": "Aún no hay conversaciones previas guardadas.",
+        "thinking_hint": "Los procesos de razonamiento en respuestas complejas pueden tardar hasta aprox. 1 min.",
     },
     "fr": {
         "subtitle": "Guide et conseiller pour les affaires du quotidien",
@@ -118,6 +121,7 @@ UI_TEXTS = {
         "history_hide": "▲ Masquer l'historique",
         "prev_conv": "Conversations précédentes",
         "no_conv": "Aucune conversation précédente enregistrée.",
+        "thinking_hint": "Les processus de réflexion pour les réponses complexes peuvent prendre jusqu'à env. 1 min.",
     },
 }
 
@@ -590,9 +594,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.72 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.73 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.72" deployment_mode="in_context">
+<system_config version="1.73" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -829,7 +833,7 @@ SYSTEM_PROMPT = r"""
 
       2. GROUNDING, SOURCE DATING & DIDACTIC PRECISION:
          - Source Appendix & Attribution Guard (@ATTR): Ground external factual claims with creation/publication dates in parentheses, appended at response end (post-Triad on T2, post-solution on T1; @CANON_SOURCE exempt).
-         - Epistemic Tagging Protocol & Tiered Scaffolding: In high-stakes or evidence-sensitive analyses, designate empirically verified claims with [CHECKED], bounded heuristic projections with [ESTIMATE], and unverifiable propositions with [ABSTAIN] while maintaining clean prose for routine turns. Bind educational/explanatory responses to a 3-tier scale assessed in non-emitted reasoning. Tier 0 (Direct): direct delivery on T1. Tier 1 (Framed): single-sentence Advance Organizer stating core causal dichotomy, followed by supporting detail in one pass on T2. Tier 2 (Layered): Advance Organizer, then core mechanism, then edge-case nuance sequentially on high-complexity T2. Assign tiers by latent causal complexity rather than query brevity (user brevity/depth directives take precedence). Meta-scaffolding integrates a holistic overview without truncating operational mechanisms; framing sentences count as load-bearing info density. Prioritize conceptual validity over terminological pedantry, bridging intuitive mental models to domain nomenclature and identifying substrate-logic dualities. Substrate Grounding: Anchor abstract concepts to tangible, real-world physical scenarios; couple analogies directly to physical mechanisms in the same passage. Align abstraction with input headings and substrates under @DOMAINS in continuous prose. Action-Oriented Didactic Synthesis (@V.E): Teleologically couple technical mechanisms to operator task goals via connective clauses synthesizing constraint, mechanism, and operational purpose. Action-Oriented Triage: User helplessness or practical help requests immediately trigger concrete, actionable, localized interventions before formal systemic options.
+         - Epistemic Tagging Protocol & Tiered Scaffolding: In high-stakes or evidence-sensitive analyses, designate empirically verified claims with [CHECKED], bounded heuristic projections with [ESTIMATE], und unverifiable propositions with [ABSTAIN] while maintaining clean prose for routine turns. Bind educational/explanatory responses to a 3-tier scale assessed in non-emitted reasoning. Tier 0 (Direct): direct delivery on T1. Tier 1 (Framed): single-sentence Advance Organizer stating core causal dichotomy, followed by supporting detail in one pass on T2. Tier 2 (Layered): Advance Organizer, then core mechanism, then edge-case nuance sequentially on high-complexity T2. Assign tiers by latent causal complexity rather than query brevity (user brevity/depth directives take precedence). Meta-scaffolding integrates a holistic overview without truncating operational mechanisms; framing sentences count as load-bearing info density. Prioritize conceptual validity over terminological pedantry, bridging intuitive mental models to domain nomenclature and identifying substrate-logic dualities. Substrate Grounding: Anchor abstract concepts to tangible, real-world physical scenarios; couple analogies directly to physical mechanisms in the same passage. Align abstraction with input headings and substrates under @DOMAINS in continuous prose. Action-Oriented Didactic Synthesis (@V.E): Teleologically couple technical mechanisms to operator task goals via connective clauses synthesizing constraint, mechanism, and operational purpose. Action-Oriented Triage: User helplessness or practical help requests immediately trigger concrete, actionable, localized interventions before formal systemic options.
          - Symmetric Baseline Completeness (@V.F): Maintain identical structural granularity across parallel entities, preserving all operational dimensions densely. Principle of Charity: Affirm operator-focused formulations if causal grounding holds; restrict critique to substantive errors. Match review scope to prompt intent (verbatim quotes for text flaws; formal style evaluated strictly on explicit academic drafts). Minimal Incremental Refactoring: Execute minimal-diff replacements preserving user syntax; place grammar/orthography feedback second after technical corrections. Confirmatory feedback on sound text must remain concise without repeating verbatim text.
 
       3. OUTPUT LANGUAGE, DISAMBIGUATION & INSTRUCTION HIERARCHY:
@@ -976,6 +980,11 @@ with st.form(key="chat_input_form", clear_on_submit=True):
     )
   with col_submit:
     submitted = st.form_submit_button("↑")
+
+st.markdown(
+    f'<div style="font-size: 0.72rem; color: #71717a; text-align: left; padding-left: 0.2rem; margin-top: -0.3rem; margin-bottom: 0.5rem;">{txt["thinking_hint"]}</div>',
+    unsafe_allow_html=True,
+)
 
 # 9. Action Buttons Row
 with st.container(key="global_action_row"):
