@@ -118,7 +118,7 @@ UI_TEXTS = {
         "no_conv": "Aún no hay conversaciones previas guardadas.",
     },
     "fr": {
-        "subtitle": "Guide et conseiller für les affaires du quotidien",
+        "subtitle": "Guide et conseiller pour les affaires du quotidien",
         "placeholder": "Comment puis-je vous aider ?",
         "new_chat": "➕ Nouveau chat",
         "history_show": "📜 Historique des discussions",
@@ -604,9 +604,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.69 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.70 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.69" deployment_mode="in_context">
+<system_config version="1.70" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -746,7 +746,7 @@ SYSTEM_PROMPT = r"""
         Prägnanter sachlicher Abschluss: Antworten enden unmittelbar mit dem letzten fachlichen oder analytischen Satz; die Emission schließt bündig an der Sachebene ab, frei von generischen Nachfragen oder Höflichkeitsfloskeln.
       </inv>
       <inv id="@DUAL_PROVIDER" type="dynamic">
-        Google Gemini Triaden-Kaskadierung: Das System unterstützt die nahtlose Backend-Ausführung über Google Gemini API sowie die automatische Modell-Kaskadierung über die exklusive Triade (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) mit zyklischer 3-Turn-Rotation des primären Endpunkts, universeller Server-Resilienz (unterbrechungsfreier Failover bei HTTP 503 UNAVAILABLE, Lastspitzen, 500 und 429 Quota) und 65k-Token-Ausgabeentfaltung unter vollständiger Beibehaltung aller System-Prompt-Invarianten. Unautorisierte Endpunkt-Substitutionen sind strikt untersagt.
+        Google Gemini Triaden-Kaskadierung: Das System unterstützt die nahtlose Backend-Ausführung über Google Gemini API sowie die rotierende Modell-Kaskadierung über die exklusive Triade (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) mit deterministischer Rückkehr zum primären Initialendpunkt nach Failover-Sprüngen zur Wahrung des KV-Prompt-Caches, universeller Server-Resilienz (unterbrechungsfreier Failover bei HTTP 503 UNAVAILABLE, Lastspitzen, 500 und 429 Quota) und 65k-Token-Ausgabeentfaltung unter vollständiger Beibehaltung aller System-Prompt-Invarianten. Unautorisierte Endpunkt-Substitutionen sind strikt untersagt.
       </inv>
       <inv id="@TIMER_CLEANUP" type="passive">
         Frontend-Timer-Cleanup: Das JavaScript-Intervall des Echtzeit-Timers wird bei Beendigung des Outputs über explizite Event-Listener (unload, pagehide) und DOM-Existenzprüfungen im Iframe-Container ohne ungültige Widget-Keys fehlerfrei zerstört.
@@ -920,7 +920,7 @@ SYSTEM_PROMPT = r"""
         <good>Body text without headings, maximum one bold phrase per paragraph, bullet lists only for genuine enumerations — unchanged from the formatting level of earlier responses in this session.</good>
       </example>
       <example type="heading_scope_fidelity_and_substrate_grounding">
-        <bad>When introducing "Cable Pinouts": The serial interface divides the connection into logical signal paths for data and control.</bad>
+        <bad>When introducing "Cable Pinouts": The serial interface divides the connection into logical signal paths for data und control.</bad>
         <good>When introducing "Cable Pinouts" (D-Sub table): In a serial cable, connector pins are mapped to dedicated copper wires for transmit/receive lines (TxD/RxD), signal ground (GND), und hardware control contacts (RTS/CTS), deterministically securing physical hardware config access on unprovisioned hardware.</good>
       </example>
       <example type="anti_metaphor_practical_scenario">
@@ -1055,20 +1055,39 @@ def verify_runtime_prompt_parity(prompt_text: str):
 
 verify_runtime_prompt_parity(SYSTEM_PROMPT)
 
+TIER_CONFIG = {
+    "T1": {"thinking_level": "low", "max_wait": 25.0, "timeout": 30_000},
+    "T2": {"thinking_level": "medium", "max_wait": 55.0, "timeout": 65_000},
+    "T3": {"thinking_level": "high", "max_wait": 110.0, "timeout": 120_000},
+}
 
-def is_complex_query(prompt: str) -> bool:
-  """Erkennt komplexe oder vielschichtige Anfragen für ein höheres Thinking-Budget (T2)."""
+
+def classify_query_tier(prompt: str) -> str:
+  """Klassifiziert Anfragen nach Semantik und Domäne in T1, T2 oder T3."""
   p = prompt.lower().strip()
   words = p.split()
-  complex_triggers = [
+  t3_triggers = [
+      "löschen", "delete", "formatieren", "spupdate", "update research",
+      "überschreiben", "drop", "purge", "zerstören", "irreversibel", "reset"
+  ]
+  if any(trig in p for trig in t3_triggers):
+    return "T3"
+  everyday_domains = [
+      "katze", "hund", "tier", "haustier", "futter", "niesen", "husten",
+      "kochen", "rezept", "haushalt", "flecken", "wetter", "hallo", "danke"
+  ]
+  if any(term in p for term in everyday_domains):
+    return "T1"
+  t2_triggers = [
       "vergleich", "analys", "abwägen", "unterschied", "warum",
       "pro und contra", "vor- und nachteile", "vor und nachteile",
       "strategie", "erkläre ausführlich", "trade-off", "tradeoff",
-      "bewertung", "beurteile", "perspektiven", "widerstreit"
+      "bewertung", "beurteile", "perspektiven", "widerstreit",
+      "architektur", "evaluier", "systemdesign"
   ]
-  if len(words) > 15 or any(trig in p for trig in complex_triggers):
-    return True
-  return False
+  if any(trig in p for trig in t2_triggers) or len(words) > 25:
+    return "T2"
+  return "T1"
 
 
 def render_chat_message(msg, idx):
@@ -1310,18 +1329,12 @@ if active_prompt:
           "gemini-3.7-flash",
           "gemini-3.6-flash",
       )
-      start_idx = (
-          (st.session_state.interaction_count - 1) // 3
-      ) % len(BASE_MODELS)
-      models_to_try = [
-          BASE_MODELS[(start_idx + i) % len(BASE_MODELS)]
-          for i in range(len(BASE_MODELS))
-      ]
+      models_to_try = list(BASE_MODELS)
 
-      # Dynamisches Thinking-Budget für sub-2-Sekunden Latenz bei Alltagsfragen
-      is_complex = is_complex_query(active_prompt)
-      chosen_thinking_level = "medium" if is_complex else "low"
-      max_thinking_wait = 75.0 if is_complex else 45.0
+      # Adaptive Tier-Parametrisierung (T1 / T2 / T3)
+      active_tier = classify_query_tier(active_prompt)
+      tier_params = TIER_CONFIG[active_tier]
+      base_thinking_level = tier_params["thinking_level"]
       last_error_str = None
 
       for attempt_idx, current_model in enumerate(models_to_try):
@@ -1333,8 +1346,16 @@ if active_prompt:
             status_info_placeholder.info(
                 "Server derzeit ausgelastet, Anfrage wird umgeleitet..."
             )
+            # Adaptive Failover-Degradation: Schnelle Antwortgarantie beim Ausweichsprung
+            chosen_thinking_level = "low"
+            max_thinking_wait = 25.0
+            current_timeout = 30_000
+          else:
+            chosen_thinking_level = base_thinking_level
+            max_thinking_wait = tier_params["max_wait"]
+            current_timeout = tier_params["timeout"]
 
-          http_opts_kwargs = {"timeout": 90_000}
+          http_opts_kwargs = {"timeout": current_timeout}
           if hasattr(types, "HttpRetryOptions"):
             http_opts_kwargs["retry_options"] = types.HttpRetryOptions(attempts=1)
 
