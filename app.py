@@ -604,9 +604,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.64 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.65 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.64" deployment_mode="in_context">
+<system_config version="1.65" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -1322,6 +1322,7 @@ if active_prompt:
       is_complex = is_complex_query(active_prompt)
       chosen_thinking_level = "medium" if is_complex else "low"
       max_thinking_wait = 15.0 if is_complex else 6.0
+      last_error_str = None
 
       for attempt_idx, current_model in enumerate(models_to_try):
         try:
@@ -1335,10 +1336,9 @@ if active_prompt:
 
           config_args = {
               "system_instruction": active_system_prompt,
-              "temperature": 0.7,
-              "top_p": 0.9,
               "max_output_tokens": 8192,
               "thinking_config": types.ThinkingConfig(thinking_level=chosen_thinking_level),
+              "http_options": types.HttpOptions(timeout=15.0),
           }
 
           response_stream = client.models.generate_content_stream(
@@ -1381,10 +1381,12 @@ if active_prompt:
             break
 
         except Exception as e:
-          err_text = str(e).lower()
+          raw_err = str(e).strip()
+          last_error_str = raw_err.split("\n")[0][:120]
+          err_text = raw_err.lower()
           if any(auth_kw in err_text for auth_kw in ["api_key", "unauthenticated", "permission", "invalid_argument"]):
             status_info_placeholder.empty()
-            st.error(f"API-Konfigurationsfehler: {e}")
+            st.error(f"API-Konfigurationsfehler: {raw_err}")
             break
           status_info_placeholder.info(
               "Server derzeit ausgelastet, Anfrage wird umgeleitet..."
@@ -1393,8 +1395,9 @@ if active_prompt:
 
       if not success:
         status_info_placeholder.empty()
+        err_detail = f" ({last_error_str})" if last_error_str else ""
         st.error(
-            "Alle Server-Endpunkte sind derzeit überlastet. Bitte versuchen Sie es in Kürze erneut."
+            f"Alle Server-Endpunkte sind derzeit überlastet. Bitte versuchen Sie es in Kürze erneut.{err_detail}"
         )
 
       if success and full_response:
