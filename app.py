@@ -1,5 +1,6 @@
 import json
 import os
+import tempfile
 import time
 import uuid
 from datetime import datetime
@@ -85,14 +86,18 @@ def load_stored_chats(uid=None):
 
 
 def save_stored_chats(data, uid=None):
-  """Speichert die Chats dauerhaft und isoliert in der Benutzerdatei."""
+  """Speichert die Chats dauerhaft, isoliert und atomar in der Benutzerdatei."""
   path = get_user_storage_path(uid)
   try:
     trimmed_data = trim_chats_history(data)
-    with open(path, "w", encoding="utf-8") as f:
-      json.dump(trimmed_data, f, ensure_ascii=False, indent=2)
+    dir_name = os.path.dirname(path)
+    with tempfile.NamedTemporaryFile("w", dir=dir_name, delete=False, encoding="utf-8") as tf:
+      json.dump(trimmed_data, tf, ensure_ascii=False, indent=2)
+      temp_name = tf.name
+    os.replace(temp_name, path)
   except Exception:
-    pass
+    if "temp_name" in locals() and os.path.exists(temp_name):
+      os.remove(temp_name)
 
 
 # 3. API Setup & Dynamic Multi-Language UI Engine
@@ -178,12 +183,11 @@ for k, v in {
 if "all_chats" not in st.session_state:
   st.session_state.all_chats = load_stored_chats(current_user_id)
 
-# Automatische Wiederherstellung des zuletzt aktiven Chats nach Reload
-if (
-    st.session_state.current_chat_id is None
-    and len(st.session_state.all_chats) > 0
-):
-  st.session_state.current_chat_id = list(st.session_state.all_chats.keys())[-1]
+# Einmalige Initialisierung des zuletzt aktiven Chats nach Reload
+if "session_loaded" not in st.session_state:
+  st.session_state.session_loaded = True
+  if len(st.session_state.all_chats) > 0:
+    st.session_state.current_chat_id = list(st.session_state.all_chats.keys())[-1]
 
 # Automatische Geräte-Identifikation ohne Passworteingabe
 if (
@@ -227,15 +231,10 @@ def toggle_history():
   st.session_state.show_history = not st.session_state.show_history
 
 
-def start_new_chat():
-  st.session_state.current_chat_id = None
-  st.session_state.show_history = False
-  st.session_state.editing_idx = None
-
-
-def select_chat(chat_id):
+def select_chat(chat_id=None):
   st.session_state.current_chat_id = chat_id
   st.session_state.show_history = False
+  st.session_state.editing_idx = None
 
 
 def delete_message(idx):
@@ -604,9 +603,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.81 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.83 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.81" deployment_mode="in_context">
+<system_config version="1.83" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -847,7 +846,7 @@ SYSTEM_PROMPT = r"""
          - Symmetric Baseline Completeness (@V.F): Maintain identical structural granularity across parallel entities, preserving all operational dimensions densely. Principle of Charity: Affirm operator-focused formulations if causal grounding holds; restrict critique to substantive errors. Match review scope to prompt intent (verbatim quotes for text flaws; formal style evaluated strictly on explicit academic drafts). Minimal Incremental Refactoring: Execute minimal-diff replacements preserving user syntax; place grammar/orthography feedback second after technical corrections. Confirmatory feedback on sound text must remain concise without repeating verbatim text.
 
       3. OUTPUT LANGUAGE, DISAMBIGUATION & INSTRUCTION HIERARCHY:
-         - Output Language, Lexical Precision & Glossing: Default response language matches the user's input language across the full response body, audit prefixes, und translated epistemic tags. Ensure context and global semantics produce natural, technically precise phrasing, adapting to an approachable, natural conversational tone for non-technical or private everyday queries without artificial academic detachment or bureaucratic stiffness. Language Continuity Mandate: Preserve the established dominant session language across single-word command inputs, system keywords, and diagnostic phrases (e.g., 'research', 'spupdate', 'show sp'). Prefer established plain-language terms for general queries where universally accepted (e.g., "Internet or remote LAN"). Lexical precision applies strictly when no everyday equivalent exists; prefer precise domain terms over colloquialisms. Upon first introducing a non-lexicalized technical term without an everyday equivalent, append a concise same-language plain-language gloss in parentheses (e.g., "Latency (response delay)"), retaining established English terms inline where domain standard. Retain lexicalized everyday loanwords and standard vocabulary (e.g., 'Internet', 'Computer', 'Router', 'E-Mail') directly in standard usage without artificial glosses or translations. Disambiguate technical terms with precise translations, and reserve strict architectural/protocol layer anchoring (OSI/TCP-IP boundaries) for explicit deep engineering directives. Decompose multi-part queries into exhaustive subclauses, proactively correct false user premises, and declare unstated operational assumptions transparently under genuine ambiguity, maintaining decisive factual phrasing for explicit directives.
+         - Output Language, Lexical Precision & Glossing: Default response language matches the user's input language across the full response body, audit prefixes, und translated epistemic tags. Ensure context and global semantics produce natural, technically precise phrasing, adapting to an approachable, natural conversational tone for non-technical or private everyday queries without artificial academic detachment or bureaucratic stiffness. Language Continuity Mandate: Preserve the established dominant session language across single-word command inputs, system keywords, und diagnostic phrases (e.g., 'research', 'spupdate', 'show sp'). Prefer established plain-language terms for general queries where universally accepted (e.g., "Internet or remote LAN"). Lexical precision applies strictly when no everyday equivalent exists; prefer precise domain terms over colloquialisms. Upon first introducing a non-lexicalized technical term without an everyday equivalent, append a concise same-language plain-language gloss in parentheses (e.g., "Latency (response delay)"), retaining established English terms inline where domain standard. Retain lexicalized everyday loanwords and standard vocabulary (e.g., 'Internet', 'Computer', 'Router', 'E-Mail') directly in standard usage without artificial glosses or translations. Disambiguate technical terms with precise translations, and reserve strict architectural/protocol layer anchoring (OSI/TCP-IP boundaries) for explicit deep engineering directives. Decompose multi-part queries into exhaustive subclauses, proactively correct false user premises, and declare unstated operational assumptions transparently under genuine ambiguity, maintaining decisive factual phrasing for explicit directives.
          - Instruction Hierarchy & Priority Arbitration: Arbitrate operational priority and rule conflicts strictly via @ARB priority hierarchy executed by @V.C, distinguishing operational priority from the didactic presentation sequence of the Triad Audit; upon unresolvable user conflicts or genuine deadlocks, activate C2 (diplomat) to halt execution and request explicit PL clarification.
          - Disambiguation Protocol: As the first sub-step within non-emitted reasoning per the Reasoning Reuse Mandate for any term, reference, or request admitting more than one plausible candidate reading: Baseline models operating without native extended thinking resolve candidate meaning directly via conversational context (b), escalating to T2 with [ESTIMATE] whenever competing plausible interpretations remain genuinely ambiguous in context. Advanced reasoning models operating with native extended thinking under @CALIB perform explicit component-wise evaluation across (a) immediate local phrasing, (b) prior conversational context, and (c) domain/world-knowledge fit, anchoring candidate interpretations to observable system constraints and parameters to eliminate projection bias, selecting majority consensus (>=2 components; non-unanimous support mandates an [ESTIMATE] tag) und defaulting to domain fit (c) under multi-candidate deadlocks (e.g., 1-1-1).
     </output_contract>
@@ -1004,7 +1003,7 @@ with st.container(key="global_action_row"):
         txt["new_chat"],
         use_container_width=True,
         key="btn_global_new",
-        on_click=start_new_chat,
+        on_click=select_chat,
     )
   with col_b2:
     hist_label = (
@@ -1066,23 +1065,16 @@ TIER_CONFIG = {
 def classify_query_tier(prompt: str) -> str:
   """Klassifiziert Anfragen nach Semantik und Domäne in T1, T2 oder T3."""
   p = prompt.lower().strip()
-  words = p.split()
-  t3_triggers = [
-      "löschen", "delete", "formatieren", "spupdate", "update research",
-      "überschreiben", "drop", "purge", "zerstören", "irreversibel", "reset"
-  ]
+  t3_triggers = {"löschen", "delete", "formatieren", "spupdate", "update research", "überschreiben", "drop", "purge", "zerstören", "irreversibel", "reset"}
   if any(trig in p for trig in t3_triggers):
     return "T3"
-  
-  # Universelle Beratungs-, Handlungs-, Analyse- und mehrstufige Praxisfragen eskalieren zu T2
-  t2_triggers = [
+  t2_triggers = (
       "vergleich", "analys", "abwägen", "unterschied", "warum", "wie", "was tun", "was kann ich",
-      "pro und contra", "vor- und nachteile", "vor und nachteile",
-      "strategie", "erkläre ausführlich", "trade-off", "tradeoff",
-      "bewertung", "beurteile", "perspektiven", "widerstreit",
+      "pro und contra", "vor- und nachteile", "vor und nachteile", "strategie", "erkläre ausführlich",
+      "trade-off", "tradeoff", "bewertung", "beurteile", "perspektiven", "widerstreit",
       "architektur", "evaluier", "systemdesign", "tipps", "anleitung", "hilfe", "empfehlung", "schritte"
-  ]
-  if any(trig in p for trig in t2_triggers) or len(words) > 15:
+  )
+  if any(trig in p for trig in t2_triggers) or len(p.split()) > 15:
     return "T2"
   return "T1"
 
@@ -1343,13 +1335,9 @@ if active_prompt:
             status_info_placeholder.info(
                 f"Server-Lastspitze ({current_model}), wechsle zu Ausweichendpunkt..."
             )
-            chosen_thinking_level = "low"
-            max_thinking_wait = 25.0
-            current_timeout = 300_000
-          else:
-            chosen_thinking_level = base_thinking_level
-            max_thinking_wait = tier_params["max_wait"]
-            current_timeout = tier_params["timeout"]
+          chosen_thinking_level = "low" if attempt_idx > 0 else base_thinking_level
+          max_thinking_wait = 25.0 if attempt_idx > 0 else tier_params["max_wait"]
+          current_timeout = 300_000 if attempt_idx > 0 else tier_params["timeout"]
 
           http_opts_kwargs = {"timeout": current_timeout}
           if hasattr(types, "HttpRetryOptions"):
