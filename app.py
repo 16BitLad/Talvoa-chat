@@ -136,7 +136,7 @@ def detect_device_language():
       if loc in UI_TEXTS:
         return loc
     lang_header = st.context.headers.get(
-        "AcceptLanguage"
+        "Accept-Language"
     ) or st.context.headers.get("accept-language", "")
     if lang_header:
       primary = lang_header.split(",")[0].split("-")[0].lower()
@@ -604,9 +604,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.66 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.67 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.66" deployment_mode="in_context">
+<system_config version="1.67" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -909,7 +909,7 @@ SYSTEM_PROMPT = r"""
         <good>Entangled particles act as a unified system, not separated entities. Measuring one reveals a pre-existing correlated state without transmitting signals, preventing faster-than-light communication. This non-signaling correlation enables protocols like quantum key distribution while strictly obeying relativistic causality.</good>
       </example>
       <example type="duality_bridging_mandate">
-        <bad>The cache has two sides: the storage layer (how entries are kept) und the eviction policy (why entries are removed). Both matter for performance.</bad>
+        <bad>The cache has two sides: the storage layer (how entries are kept) and the eviction policy (why entries are removed). Both matter for performance.</bad>
         <good>The cache's storage layer and eviction policy aren't independent: a layout optimized for sequential writes (substrate) directly constrains which eviction policy can run cheaply (logic) — an LRU policy needs O(1) access to recency metadata, which a write-optimized layout doesn't provide without extra indexing.</good>
       </example>
       <example type="format_baseline_reference">
