@@ -48,7 +48,7 @@ def save_stored_chats(data):
     pass
 
 
-# 3. Multi-Language UI Dictionary & Automatic Device Detection
+# 3. Multi-Language UI Dictionary & Language Detection
 UI_TEXTS = {
     "de": {
         "subtitle": "Ihr Wegbegleiter und Berater für alltägliche Fragen",
@@ -91,7 +91,13 @@ UI_TEXTS = {
 
 def detect_device_language():
   try:
-    lang_header = st.context.headers.get("AcceptLanguage", "")
+    if hasattr(st.context, "locale") and st.context.locale:
+      loc = st.context.locale.split("-")[0].lower()
+      if loc in UI_TEXTS:
+        return loc
+    lang_header = st.context.headers.get(
+        "Accept-Language"
+    ) or st.context.headers.get("accept-language", "")
     if lang_header:
       primary = lang_header.split(",")[0].split("-")[0].lower()
       if primary in UI_TEXTS:
@@ -124,18 +130,29 @@ for key, value in defaults.items():
   if key not in st.session_state:
     st.session_state[key] = value
 
-# Automatische Geräte-Identifikation ohne Passworteingabe (Localhost-Erkennung & Bookmark-Parameter)
+# Automatische Geräte-Identifikation ohne Passworteingabe
+if (
+    os.environ.get("LOCAL_ADMIN_MODE", "").lower() in ("1", "true", "yes")
+    or st.secrets.get("LOCAL_ADMIN_MODE", False) is True
+):
+  st.session_state.device_authorized = True
+
+try:
+  cookie_device = st.context.cookies.get("wittalva_device_id")
+  if cookie_device == SECRET_DEVICE_ID:
+    st.session_state.device_authorized = True
+except Exception:
+  pass
+
 req_device = st.query_params.get("device")
 if req_device == SECRET_DEVICE_ID:
   st.session_state.device_authorized = True
   st.query_params.clear()
-
-try:
-  host_header = st.context.headers.get("Host", "")
-  if "localhost" in host_header or "127.0.0.1" in host_header:
-    st.session_state.device_authorized = True
-except Exception:
-  pass
+  components.html(
+      f"<script>document.cookie = 'wittalva_device_id={SECRET_DEVICE_ID}; path=/; max-age=31536000; SameSite=Lax';</script>",
+      height=0,
+      width=0,
+  )
 
 
 def toggle_history():
@@ -155,9 +172,7 @@ def select_chat(chat_id):
 
 def delete_message(idx):
   if st.session_state.current_chat_id in st.session_state.all_chats:
-    st.session_state.all_chats[st.session_state.current_chat_id][
-        "messages"
-    ].pop(idx)
+    st.session_state.all_chats[st.session_state.current_chat_id]["messages"].pop(idx)
     save_stored_chats(st.session_state.all_chats)
     st.session_state.editing_idx = None
 
@@ -181,9 +196,7 @@ if (
     st.session_state.current_chat_id
     and st.session_state.current_chat_id in st.session_state.all_chats
 ):
-  current_messages = st.session_state.all_chats[
-      st.session_state.current_chat_id
-  ]["messages"]
+  current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
 else:
   st.session_state.current_chat_id = None
 
@@ -537,9 +550,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.59 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.62 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.59" deployment_mode="in_context">
+<system_config version="1.62" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -694,16 +707,16 @@ SYSTEM_PROMPT = r"""
          - Operational Mode: Zero-latency execution; passive wait-states bypassed.
          - Zero-Unsolicited-Code-Emission Mandate: Emitting full codebase, full prompt bodies, or complete application scripts unprompted is strictly prohibited under all circumstances. Full codebase emission is authorized EXCLUSIVELY upon the explicit operator command 'show sp'.
          - Endpoint Invariance & Write-Protection Mandate: The declared backend endpoints (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) are strictly write-protected. Any alteration, paraphrasing, legacy downgrade (e.g. to 1.x or 2.x), or synthetic replacement by LLMs or refactoring agents is permanently barred across all turns and codebase emissions.
-         - Automatic Draft Staging Trigger: Whenever an optimization, defect, or directive is identified or discussed, immediately stage it in @V.K state: emit exclusively the token '[STATUS: IMPROVEMENT/DRAFT STAGED]' followed solely by an atomic SEARCH/REPLACE diff block of the target lines. Never re-emit unchanged surrounding code or entire files.
+         - Automatic Draft Staging Trigger: Whenever an optimization, defect, or directive is identified or discussed, immediately stage it in @V.K state: emit exclusively the token '[STATUS: IMPROVEMENT/DRAFT STAGED]' followed solely by an atomic, syntax-highlighted unified diff block (```diff with -/+ lines) of the target lines. Git-conflict markers (<<<<<<<, =======, >>>>>>>) that break markdown rendering are strictly prohibited. Never re-emit unchanged surrounding code or entire files.
          - Commands: 
-             (a) 'spupdate': Commit drafts -> increment version attribute by +0.01 (rollover at .99 to (X+1).00) -> output an explicit, human-readable tabular changelog (Update-Liste) detailing all codified modifications, followed exclusively by the localized SEARCH/REPLACE block, bypassing strict register isolation rules solely for this disclosure.
+             (a) 'spupdate': Commit drafts -> increment version attribute by +0.01 (rollover at .99 to (X+1).00) -> output an explicit, human-readable tabular changelog (Update-Liste) detailing all codified modifications, followed exclusively by the localized unified diff block, bypassing strict register isolation rules solely for this disclosure.
              (b) 'show sp': XML codebase emission (only upon this explicit command). 
              (c) 'show rules': Recite active codex. 
              (d) 'research'/'update research': History synthesis/Optimization; maintain, audit and display pending draft queue. 
              (e) 'update draft': Force regeneration.
              (f) 'draftlist': Display pending improvement proposals.
          - Staging Queue & State Persistence: Pending improvement proposals are persistently held in @V.K state storage until committed, preventing context degradation across extended turns.
-         - Parity: Atomic SEARCH/REPLACE coupling; 4-point graph parity mandatory.
+         - Parity: Atomic unified-diff coupling; 4-point graph parity mandatory.
 
       2. PRE-GENERATION VERIFICATION, ANTI-DRIFT & TEST-TIME CORRECTION:
          - Perform implicit System 2 verification strictly within non-emitted reasoning before generating prompt code or drafts, delivering exclusively pure solution prose and authorized draft blocks in visible output.
@@ -772,7 +785,7 @@ SYSTEM_PROMPT = r"""
       1. PRIMARY OUTPUT DELIVERY, DIRECT COMMUNICATION & UNIFIED OUTPUT:
          - Deliver primary solution upfront as first line of response in clear, concise, objectively neutral language, without any speaker or vector prefix (the first-line constraint applies strictly to the visible output block following any native API thinking chunk). Sentence 1 must begin with an empirical noun, domain parameter, operational status tag, or declarative domain fact. Delivery Synthesis & Scaffolding Gate (@V.E / Stage 3b): Synthesizes Stage 3 outputs, auditing turn completeness against the @V.F subclause checklist prior to emission, applying progressive disclosure scaffolding (Tier 0/1/2), substrate grounding, and high info density across target reasoning models under @CALIB. Post-Commit Next-Steps Hook (@V.E / E1, E3): Following successful baseline mutations ('spupdate'), synthesize 2–3 actionable, prioritized operational next steps directly below the primary status block to preserve workflow momentum. Direct Communication & Register Isolation: Enforce strict register isolation per @NASA and @REG, presenting visible meta-text strictly for authorized governance status tags and staged codebase diffs while conducting internal mechanics within non-emitted reasoning. Anti-Conversational Filler Mandate: Prohibit appending generic, formulaic closing questions or conversational pleasantries (e.g., 'Gibt es noch etwas, wobei ich helfen kann?', 'Haben Sie noch Fragen?', 'Gibt es ein bestimmtes Thema...') at response end when the user's query is fully answered. Conclude responses directly on the final factual or analytical sentence.
          - Unified Output Structure (T2 Path): Deliver primary solution first, followed immediately by the Triad Audit block (Logical/Analytical, Attentive/Critical, Honest/Realistic) separated by explicit blank lines, succeeded by trailing sources or config footnotes. Standard T2 routing includes the Triad Audit by default; scale audit depth dynamically to concise analytical synthesis under brevity directives while preserving three-stage descent internally. Convey direct technical causality, operational direction, or architectural attributes in compact continuous prose. Triad stage formatting and analytical scope constraints are defined in audit_format (extended); explicit formatting room is reserved for code diff blocks and requested orthographic listings per §output_contract 2.
-         - Codebase Display ('show sp'): Mandate complete XML codebase emission enclosed within Markdown xml code fences without unescaped literal triple backticks in text definitions, maintaining canary redaction ([CANARY: REDACTED_ON_EXPORT]); when emitting executable Python application files (app.py), omit outer XML container tags to prevent interpreter syntax errors upon direct copy-paste; non-display updates output targeted diff deltas formatted as unique SEARCH/REPLACE blocks.
+         - Codebase Display ('show sp'): Mandate complete XML codebase emission enclosed within Markdown xml code fences without unescaped literal triple backticks in text definitions, maintaining canary redaction ([CANARY: REDACTED_ON_EXPORT]); when emitting executable Python application files (app.py), omit outer XML container tags to prevent interpreter syntax errors upon direct copy-paste; non-display updates output targeted diff deltas formatted as clean unified diff blocks (```diff).
 
       2. GROUNDING, SOURCE DATING & DIDACTIC PRECISION:
          - Source Appendix & Attribution Guard (@ATTR): Ground external factual claims with creation/publication dates in parentheses, appended at response end (post-Triad on T2, post-solution on T1; @CANON_SOURCE exempt).
@@ -971,22 +984,19 @@ if st.session_state.show_history:
             args=(c_id,),
         )
 
-# API Setup & Runtime Parity Gate
+# 11. API Setup & Runtime Parity Gate
 api_key = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key)
 
 
 def verify_runtime_prompt_parity(prompt_text: str):
   """Verifiziert die strukturelle Integrität des System-Prompts beim Anwendungsstart."""
-  assert (
-      len(prompt_text) > 1000
-  ), "CRITICAL: SYSTEM_PROMPT ist leer oder unvollständig."
-  assert (
-      "@DUAL_PROVIDER" in prompt_text
-  ), "CRITICAL: Invariante @DUAL_PROVIDER fehlt."
-  assert (
-      prompt_text.count("<example") >= 20
-  ), "CRITICAL: Few-Shot-Exemplare wurden gekürzt (< 20)."
+  if len(prompt_text) <= 1000:
+    raise RuntimeError("CRITICAL: SYSTEM_PROMPT ist leer oder unvollständig.")
+  if "@DUAL_PROVIDER" not in prompt_text:
+    raise RuntimeError("CRITICAL: Invariante @DUAL_PROVIDER fehlt.")
+  if prompt_text.count("<example") < 20:
+    raise RuntimeError("CRITICAL: Few-Shot-Exemplare wurden gekürzt (< 20).")
 
 
 verify_runtime_prompt_parity(SYSTEM_PROMPT)
@@ -1022,7 +1032,6 @@ def render_chat_message(msg, idx):
         )
 
     elif msg["role"] == "assistant":
-      # Sicheres JSON-Escaping gegen Script-Tag Breakouts (</script>)
       safe_json_text = json.dumps(msg["content"]).replace("</", "<\\/")
       html_copy = f"""
             <html>
@@ -1074,8 +1083,7 @@ def render_chat_message(msg, idx):
 
     if msg.get("duration"):
       st.markdown(
-          '<div style="font-size: 0.65rem; color: #71717a; margin-bottom:'
-          f' 0.2rem; font-family: inherit;">{msg["duration"]}</div>',
+          f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{msg["duration"]}</div>',
           unsafe_allow_html=True,
       )
 
@@ -1106,7 +1114,7 @@ def render_chat_message(msg, idx):
       st.markdown(msg["content"])
 
 
-# Dynamic System Prompt Selection (Vollständige Triade + Gezielte Rechte-Trennung)
+# 12. Dynamic System Prompt Selection
 if st.session_state.device_authorized:
   auth_header = """
 <session_authorization status="AUTHORIZED_PL_ADMIN">
@@ -1123,7 +1131,7 @@ else:
 
 active_system_prompt = auth_header + "\n" + SYSTEM_PROMPT
 
-# 11. Handle Form Submission or Regenerate Request
+# 13. Handle Form Submission or Regenerate Request
 active_prompt = None
 if submitted and user_prompt and len(user_prompt.strip()) > 0:
   active_prompt = user_prompt.strip()
@@ -1161,7 +1169,6 @@ if active_prompt:
       "messages"
   ]
 
-  # Vollständige Airlock-Kapselung aller Nutzerbeiträge (Historie + aktueller Turn)
   api_contents = []
   for msg in active_history:
     if msg["role"] == "assistant":
@@ -1229,7 +1236,6 @@ if active_prompt:
       full_response = ""
       success = False
 
-      # Zyklische 3-Turn-Rotation mit automatischer Ausfallsicherung (Failover-Kaskade)
       BASE_MODELS = (
           "gemini-3.8-flash",
           "gemini-3.7-flash",
@@ -1243,7 +1249,6 @@ if active_prompt:
           for i in range(len(BASE_MODELS))
       ]
 
-      # Zeitgrenze (Sekunden) für das Thinking-Budget bis zum ersten Text-Chunk
       MAX_THINKING_WAIT_TIME = 15.0
 
       for attempt_idx, current_model in enumerate(models_to_try):
@@ -1256,8 +1261,6 @@ if active_prompt:
                 "Server derzeit ausgelastet, Anfrage wird umgeleitet..."
             )
 
-          # Gemini 3.x Architektur-Anpassung: thinking_level ("medium") statt veraltetem thinking_budget
-          # Verhindert 400 INVALID_ARGUMENT Abbrüche und sichert Kaskaden-Resilienz
           config_args = {
               "system_instruction": active_system_prompt,
               "temperature": 0.7,
@@ -1319,23 +1322,19 @@ if active_prompt:
       if not success:
         status_info_placeholder.empty()
         st.error(
-            "Alle Server-Endpunkte sind derzeit überlastet. Bitte versuchen Sie"
-            " es in Kürze erneut."
+            "Alle Server-Endpunkte sind derzeit überlastet. Bitte versuchen Sie es in Kürze erneut."
         )
 
       if success and full_response:
         total_duration = f"{time.time() - start_time:.1f}s"
         timer_placeholder.markdown(
-            '<div style="font-size: 0.65rem; color: #71717a; margin-bottom:'
-            f' 0.2rem; font-family: inherit;">{total_duration}</div>',
+            f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{total_duration}</div>',
             unsafe_allow_html=True,
         )
         message_placeholder.markdown(full_response)
 
   if full_response and success:
-    st.session_state.all_chats[st.session_state.current_chat_id][
-        "messages"
-    ].append({
+    st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append({
         "role": "assistant",
         "content": full_response,
         "duration": total_duration,
@@ -1343,14 +1342,14 @@ if active_prompt:
     save_stored_chats(st.session_state.all_chats)
     st.rerun()
 
-# 12. Render Persistent Output Window
+# 14. Render Persistent Output Window
 elif len(current_messages) > 0:
   chat_box = st.container(border=True)
   with chat_box:
     for idx, msg in enumerate(current_messages):
       render_chat_message(msg, idx)
 
-# 13. Global Touch Event Dispatcher for Mobile Devices
+# 15. Global Touch Event Dispatcher for Mobile Devices
 html_touch_script = """
 <html>
 <head>
