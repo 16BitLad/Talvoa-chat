@@ -95,71 +95,66 @@ def save_stored_chats(data, uid=None):
     pass
 
 
-# 3. Multi-Language UI Dictionary & Language Detection
-UI_TEXTS = {
-    "de": {
-        "subtitle": "Wegbegleiter und Berater für alltägliche Fragen",
-        "placeholder": "Wie kann ich helfen?",
-        "new_chat": "➕ Neuer Chat",
-        "history_show": "📜 Chat-Verläufe",
-        "history_hide": "▲ Verlauf ausblenden",
-        "prev_conv": "Bisherige Gespräche",
-        "no_conv": "Noch keine bisherigen Gespräche gespeichert.",
-        "thinking_hint": "Denkprozesse bei komplexen Antworten können bis zu ca. 1 min. dauern.",
-    },
-    "en": {
-        "subtitle": "Fellow guide and advisor through day-to-day matters",
-        "placeholder": "How can I help?",
-        "new_chat": "➕ Open new chat",
-        "history_show": "📜 Chat history",
-        "history_hide": "▲ Hide history",
-        "prev_conv": "Previous Conversations",
-        "no_conv": "No previous conversations stored yet.",
-        "thinking_hint": "Thinking processes for complex answers may take up to approx. 1 min.",
-    },
-    "es": {
-        "subtitle": "Guía y asesor para los asuntos cotidianos",
-        "placeholder": "¿En qué puedo ayudarte?",
-        "new_chat": "➕ Nuevo chat",
-        "history_show": "📜 Historial de chats",
-        "history_hide": "▲ Ocultar historial",
-        "prev_conv": "Conversaciones anteriores",
-        "no_conv": "Aún no hay conversaciones previas guardadas.",
-        "thinking_hint": "Los procesos de razonamiento en respuestas complejas pueden tardar hasta aprox. 1 min.",
-    },
-    "fr": {
-        "subtitle": "Guide et conseiller pour les affaires du quotidien",
-        "placeholder": "Comment puis-je vous aider ?",
-        "new_chat": "➕ Nouveau chat",
-        "history_show": "📜 Historique des discussions",
-        "history_hide": "▲ Masquer l'historique",
-        "prev_conv": "Conversations précédentes",
-        "no_conv": "Aucune conversation précédente enregistrée.",
-        "thinking_hint": "Les processus de réflexion pour les réponses complexes peuvent prendre jusqu'à env. 1 min.",
-    },
+# 3. API Setup & Dynamic Multi-Language UI Engine
+API_KEY = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
+client = genai.Client(api_key=API_KEY)
+
+BASE_UI_TEXTS = {
+    "subtitle": "Fellow guide and advisor through day-to-day matters",
+    "placeholder": "How can I help?",
+    "new_chat": "➕ Open new chat",
+    "history_show": "📜 Chat history",
+    "history_hide": "▲ Hide history",
+    "prev_conv": "Previous Conversations",
+    "no_conv": "No previous conversations stored yet.",
+    "thinking_hint": "Thinking processes for complex answers may take up to approx. 1 min.",
 }
 
 
 def detect_device_language():
+  """Erkennt den ISO-Sprachcode aus URL-Parametern, Locale-Attributen oder HTTP-Headern."""
   try:
+    url_lang = st.query_params.get("lang")
+    if url_lang:
+      return url_lang.split("-")[0].lower()
     if hasattr(st.context, "locale") and st.context.locale:
-      loc = st.context.locale.split("-")[0].lower()
-      if loc in UI_TEXTS:
-        return loc
-    lang_header = st.context.headers.get(
-        "Accept-Language"
-    ) or st.context.headers.get("accept-language", "")
+      return st.context.locale.split("-")[0].lower()
+    lang_header = st.context.headers.get("Accept-Language") or st.context.headers.get("accept-language", "")
     if lang_header:
-      primary = lang_header.split(",")[0].split("-")[0].lower()
-      if primary in UI_TEXTS:
-        return primary
+      return lang_header.split(",")[0].split("-")[0].split(";")[0].strip().lower()
   except Exception:
     pass
   return "en"
 
 
+@st.cache_data(show_spinner=False)
+def get_dynamic_ui_texts(lang_code: str) -> dict:
+  """Liefert lokalisierte UI-Texte; übersetzt abweichende Gerätesprachen dynamisch via Gemini und cacht das Resultat."""
+  if lang_code == "en":
+    return BASE_UI_TEXTS
+  try:
+    prompt = (
+        f"Translate the values of the following JSON dictionary accurately into the language with ISO code '{lang_code}'. "
+        f"Preserve all keys and formatting. Return ONLY valid JSON:\n{json.dumps(BASE_UI_TEXTS, ensure_ascii=False)}"
+    )
+    resp = client.models.generate_content(
+        model="gemini-3.6-flash",
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            temperature=0.0,
+        ),
+    )
+    translated_dict = json.loads(resp.text)
+    if isinstance(translated_dict, dict) and all(k in translated_dict for k in BASE_UI_TEXTS):
+      return translated_dict
+  except Exception:
+    pass
+  return BASE_UI_TEXTS
+
+
 user_lang = detect_device_language()
-txt = UI_TEXTS[user_lang]
+txt = get_dynamic_ui_texts(user_lang)
 
 # 4. State Initializations, Device Authorization & Core Functions
 SECRET_DEVICE_ID = (
@@ -482,7 +477,7 @@ st.markdown(
         overflow: visible !important;
     }}
 
-    /* User Aktionsleiste */
+    /* User Aktionsleiste & Assistant Kopier-Container */
     div[data-testid="stChatMessage"] div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]) {{
         position: absolute !important;
         top: -11px !important;
@@ -500,7 +495,6 @@ st.markdown(
         background: transparent !important;
     }}
 
-    /* Assistant Kopier-Container */
     div[data-testid="stChatMessage"] div[class*="st-key-act_copy_cont_"] {{
         position: absolute !important;
         top: -11px !important;
@@ -520,14 +514,7 @@ st.markdown(
         border: none !important;
     }}
 
-    div[data-testid="stChatMessage"]:hover div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]),
-    div[data-testid="stChatMessage"]:hover div[class*="st-key-act_copy_cont_"] {{
-        opacity: 1 !important;
-        visibility: visible !important;
-    }}
-
-    div[data-testid="stChatMessage"].mobile-active div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]),
-    div[data-testid="stChatMessage"].mobile-active div[class*="st-key-act_copy_cont_"] {{
+    div[data-testid="stChatMessage"]:is(:hover, .mobile-active) :is(div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]), div[class*="st-key-act_copy_cont_"]) {{
         opacity: 1 !important;
         visibility: visible !important;
     }}
@@ -617,9 +604,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.78 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.81 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.78" deployment_mode="in_context">
+<system_config version="1.81" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -1056,11 +1043,7 @@ if st.session_state.show_history:
             args=(c_id,),
         )
 
-# 11. API Setup, Runtime Parity Gate & Universal Triage
-api_key = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
-client = genai.Client(api_key=api_key)
-
-
+# 11. Runtime Parity Gate & Universal Triage
 def verify_runtime_prompt_parity(prompt_text: str):
   """Verifiziert die strukturelle Integrität des System-Prompts beim Anwendungsstart."""
   if len(prompt_text) <= 1000:
@@ -1420,7 +1403,6 @@ if active_prompt:
               raise TimeoutError("Thinking-Budget-Zeit überschritten.")
 
           if full_response.strip():
-            message_placeholder.markdown(full_response)
             status_info_placeholder.empty()
             success = True
             break
@@ -1483,54 +1465,46 @@ elif len(current_messages) > 0:
     for idx, msg in enumerate(current_messages):
       render_chat_message(msg, idx)
 
-# 15. Global Touch Event Dispatcher for Mobile Devices
-html_touch_script = """
+# 15. Combined Global Touch Event Dispatcher & Client-Side Language Sync
+html_combined_client_scripts = """
 <html>
-<head>
-<style>body { margin: 0; padding: 0; overflow: hidden; background: transparent; }</style>
-</head>
+<head><style>body { margin: 0; padding: 0; overflow: hidden; background: transparent; }</style></head>
 <body>
 <script>
 try {
+    /* Client-side Language Sync */
+    const userLang = (navigator.language || navigator.userLanguage || 'en').split('-')[0].toLowerCase();
+    const url = new URL(window.parent.location.href);
+    if (!url.searchParams.has('lang') && userLang !== 'en') {
+        url.searchParams.set('lang', userLang);
+        window.parent.location.replace(url.toString());
+    }
+
+    /* Mobile Touch Action Dispatcher */
     const parentDoc = window.parent.document;
-    
     function setupTouchListeners() {
         const messages = parentDoc.querySelectorAll('div[data-testid="stChatMessage"]');
         messages.forEach(msg => {
             if (msg.dataset.touchBound) return;
             msg.dataset.touchBound = "true";
-            
             let touchTimeout;
-            
-            msg.addEventListener('touchstart', (e) => {
+            msg.addEventListener('touchstart', () => {
                 touchTimeout = setTimeout(() => {
                     messages.forEach(m => m.classList.remove('mobile-active'));
                     msg.classList.add('mobile-active');
                 }, 500);
             }, {passive: true});
-            
-            msg.addEventListener('touchend', () => {
-                clearTimeout(touchTimeout);
-            });
-            
-            msg.addEventListener('touchmove', () => {
-                clearTimeout(touchTimeout);
-            });
-            
+            msg.addEventListener('touchend', () => clearTimeout(touchTimeout));
+            msg.addEventListener('touchmove', () => clearTimeout(touchTimeout));
             parentDoc.addEventListener('touchstart', (e) => {
-                if (!msg.contains(e.target)) {
-                    msg.classList.remove('mobile-active');
-                }
+                if (!msg.contains(e.target)) msg.classList.remove('mobile-active');
             }, {passive: true});
         });
     }
-    
     setInterval(setupTouchListeners, 1000);
-} catch (e) {
-    console.warn("Touch-Events konnten aufgrund von Origin-Sicherheitsrichtlinien nicht gebunden werden.", e);
-}
+} catch (e) {}
 </script>
 </body>
 </html>
 """
-components.html(html_touch_script, height=0, width=0)
+components.html(html_combined_client_scripts, height=0, width=0)
