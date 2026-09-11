@@ -23,28 +23,21 @@ MAX_HISTORY_COUNT = 10
 
 def get_current_user_id():
   """Ermittelt oder erzeugt eine pseudonyme, browserspezifische User-ID."""
-  if "user_id" in st.session_state and st.session_state.user_id:
+  if st.session_state.get("user_id"):
     return st.session_state.user_id
 
-  # 1. Aus Cookie auslesen
-  try:
-    cookie_uid = st.context.cookies.get("wittalva_uid")
-    if cookie_uid:
-      st.session_state.user_id = cookie_uid
-      return cookie_uid
-  except Exception:
-    pass
+  for getter in (
+      lambda: st.context.cookies.get("wittalva_uid"),
+      lambda: st.query_params.get("uid"),
+  ):
+    try:
+      uid = getter()
+      if uid:
+        st.session_state.user_id = uid
+        return uid
+    except Exception:
+      continue
 
-  # 2. Aus URL-Parameter auslesen (?uid=...)
-  try:
-    q_uid = st.query_params.get("uid")
-    if q_uid:
-      st.session_state.user_id = q_uid
-      return q_uid
-  except Exception:
-    pass
-
-  # 3. Neue browserspezifische ID generieren
   new_uid = f"u_{uuid.uuid4().hex[:12]}"
   st.session_state.user_id = new_uid
   return new_uid
@@ -159,19 +152,18 @@ SECRET_DEVICE_ID = (
 
 current_user_id = get_current_user_id()
 
-defaults = {
+for k, v in {
     "user_id": current_user_id,
     "interaction_count": 0,
-    "all_chats": load_stored_chats(current_user_id),
     "current_chat_id": None,
     "show_history": False,
     "editing_idx": None,
     "regenerate_prompt": None,
     "device_authorized": False,
-}
-for key, value in defaults.items():
-  if key not in st.session_state:
-    st.session_state[key] = value
+}.items():
+  st.session_state.setdefault(k, v)
+if "all_chats" not in st.session_state:
+  st.session_state.all_chats = load_stored_chats(current_user_id)
 
 # Automatische Geräte-Identifikation ohne Passworteingabe
 if (
@@ -245,13 +237,9 @@ def trigger_regenerate(idx):
     save_stored_chats(st.session_state.all_chats)
 
 
-current_messages = []
-if (
-    st.session_state.current_chat_id
-    and st.session_state.current_chat_id in st.session_state.all_chats
-):
-  current_messages = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
-else:
+current_chat = st.session_state.all_chats.get(st.session_state.current_chat_id)
+current_messages = current_chat["messages"] if current_chat else []
+if not current_chat:
   st.session_state.current_chat_id = None
 
 chat_window_height = (
@@ -502,8 +490,6 @@ st.markdown(
         line-height: 1 !important;
         color: #ffffff !important;
         text-align: center !important;
-        width: 100% !important;
-        height: 100% !important;
         border: none !important;
     }}
 
@@ -604,9 +590,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.70 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.72 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.70" deployment_mode="in_context">
+<system_config version="1.72" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -1451,7 +1437,7 @@ if active_prompt:
 elif len(current_messages) > 0:
   chat_box = st.container(border=True)
   with chat_box:
-    for idx, msg in enumerate(active_history if "active_history" in locals() else current_messages):
+    for idx, msg in enumerate(current_messages):
       render_chat_message(msg, idx)
 
 # 15. Global Touch Event Dispatcher for Mobile Devices
