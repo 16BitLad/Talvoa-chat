@@ -594,9 +594,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.74 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.75 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.74" deployment_mode="in_context">
+<system_config version="1.75" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -1340,7 +1340,7 @@ if active_prompt:
 
           if attempt_idx > 0:
             status_info_placeholder.info(
-                "Server derzeit ausgelastet, Anfrage wird umgeleitet..."
+                f"Server-Lastspitze ({current_model}), wechsle zu Ausweichendpunkt..."
             )
             # Adaptive Failover-Degradation: Schnelle Antwortgarantie beim Ausweichsprung
             chosen_thinking_level = "low"
@@ -1353,7 +1353,7 @@ if active_prompt:
 
           http_opts_kwargs = {"timeout": current_timeout}
           if hasattr(types, "HttpRetryOptions"):
-            http_opts_kwargs["retry_options"] = types.HttpRetryOptions(attempts=1)
+            http_opts_kwargs["retry_options"] = types.HttpRetryOptions(attempts=3)
 
           config_args = {
               "system_instruction": active_system_prompt,
@@ -1417,9 +1417,9 @@ if active_prompt:
             st.error(f"API-Konfigurationsfehler: {raw_err}")
             break
           status_info_placeholder.info(
-              "Server derzeit ausgelastet, Anfrage wird umgeleitet..."
+              f"Server-Lastspitze ({current_model}), wechsle zu Ausweichendpunkt..."
           )
-          time.sleep(0.3)
+          time.sleep(1.2)
 
       # Timer generell stoppen, egal wodurch der Prozess beendet wurde
       if not thinking_duration_str:
