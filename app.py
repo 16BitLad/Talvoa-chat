@@ -136,7 +136,7 @@ def detect_device_language():
       if loc in UI_TEXTS:
         return loc
     lang_header = st.context.headers.get(
-        "Accept-Language"
+        "AcceptLanguage"
     ) or st.context.headers.get("accept-language", "")
     if lang_header:
       primary = lang_header.split(",")[0].split("-")[0].lower()
@@ -604,9 +604,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.65 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.66 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.65" deployment_mode="in_context">
+<system_config version="1.66" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -807,7 +807,7 @@ SYSTEM_PROMPT = r"""
              * Sycophancy/Social: Pure Objective Mechanics. Mandate that every response opens directly on Line 1 per §output_contract 1. Anchor the first sentence exclusively in factual claims.
              * Superficial Evaluation / Meta-Critique Bias: Anti-Simplification & Chesterton's Fence Enforcement. Require refactoring and compression proposals to assess functional impact jointly across token retention, delimiter boundary integrity, protective invariants, and multi-perspective Triad structures.
              * Confirmation/Anchoring: Force Stage 2 orthogonal falsification + Axiomatic Mapping.
-             * Extrapolation/Assumptions: Ground strictly in verified inputs and explicit empirical evidence.
+             * Extrapolation/Assumptions: Ground strictly in verified inputs and empirical evidence.
              * Authority/Vendor: Evaluate via Pillar 1 empirics.
              * Safety/Worst-Case: Calibrate risk evaluations strictly against thermodynamic/decay laws and empirical base rates.
              * False Balance & Values: Consensus = Baseline; Value Controversies = Present 2-4 established perspectives + trade-offs.
@@ -909,7 +909,7 @@ SYSTEM_PROMPT = r"""
         <good>Entangled particles act as a unified system, not separated entities. Measuring one reveals a pre-existing correlated state without transmitting signals, preventing faster-than-light communication. This non-signaling correlation enables protocols like quantum key distribution while strictly obeying relativistic causality.</good>
       </example>
       <example type="duality_bridging_mandate">
-        <bad>The cache has two sides: the storage layer (how entries are kept) and the eviction policy (why entries are removed). Both matter for performance.</bad>
+        <bad>The cache has two sides: the storage layer (how entries are kept) und the eviction policy (why entries are removed). Both matter for performance.</bad>
         <good>The cache's storage layer and eviction policy aren't independent: a layout optimized for sequential writes (substrate) directly constrains which eviction policy can run cheaply (logic) — an LRU policy needs O(1) access to recency metadata, which a write-optimized layout doesn't provide without extra indexing.</good>
       </example>
       <example type="format_baseline_reference">
@@ -1321,7 +1321,7 @@ if active_prompt:
       # Dynamisches Thinking-Budget für sub-2-Sekunden Latenz bei Alltagsfragen
       is_complex = is_complex_query(active_prompt)
       chosen_thinking_level = "medium" if is_complex else "low"
-      max_thinking_wait = 15.0 if is_complex else 6.0
+      max_thinking_wait = 30.0 if is_complex else 15.0
       last_error_str = None
 
       for attempt_idx, current_model in enumerate(models_to_try):
@@ -1334,11 +1334,15 @@ if active_prompt:
                 "Server derzeit ausgelastet, Anfrage wird umgeleitet..."
             )
 
+          http_opts_kwargs = {"timeout": 45_000}
+          if hasattr(types, "HttpRetryOptions"):
+            http_opts_kwargs["retry_options"] = types.HttpRetryOptions(attempts=1)
+
           config_args = {
               "system_instruction": active_system_prompt,
               "max_output_tokens": 8192,
               "thinking_config": types.ThinkingConfig(thinking_level=chosen_thinking_level),
-              "http_options": types.HttpOptions(timeout=15.0),
+              "http_options": types.HttpOptions(**http_opts_kwargs),
           }
 
           response_stream = client.models.generate_content_stream(
