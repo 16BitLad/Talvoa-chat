@@ -16,9 +16,47 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 2. JSON Storage Handlers & History Limit (Max 10)
-STORAGE_FILE = "chats_history.json"
+# 2. User Isolation & JSON Storage Handlers (Max 10 per User)
+STORAGE_DIR = "user_chats"
 MAX_HISTORY_COUNT = 10
+
+
+def get_current_user_id():
+  """Ermittelt oder erzeugt eine pseudonyme, browserspezifische User-ID."""
+  if "user_id" in st.session_state and st.session_state.user_id:
+    return st.session_state.user_id
+
+  # 1. Aus Cookie auslesen
+  try:
+    cookie_uid = st.context.cookies.get("wittalva_uid")
+    if cookie_uid:
+      st.session_state.user_id = cookie_uid
+      return cookie_uid
+  except Exception:
+    pass
+
+  # 2. Aus URL-Parameter auslesen (?uid=...)
+  try:
+    q_uid = st.query_params.get("uid")
+    if q_uid:
+      st.session_state.user_id = q_uid
+      return q_uid
+  except Exception:
+    pass
+
+  # 3. Neue browserspezifische ID generieren
+  new_uid = f"u_{uuid.uuid4().hex[:12]}"
+  st.session_state.user_id = new_uid
+  return new_uid
+
+
+def get_user_storage_path(uid=None):
+  """Gibt den individuellen Speicherpfad für den jeweiligen Benutzer zurück."""
+  if not uid:
+    uid = get_current_user_id()
+  os.makedirs(STORAGE_DIR, exist_ok=True)
+  clean_uid = "".join(c for c in str(uid) if c.isalnum() or c in "-_")[:40]
+  return os.path.join(STORAGE_DIR, f"chats_{clean_uid}.json")
 
 
 def trim_chats_history(data):
@@ -26,11 +64,12 @@ def trim_chats_history(data):
   return dict(list(data.items())[-MAX_HISTORY_COUNT:]) if len(data) > MAX_HISTORY_COUNT else data
 
 
-def load_stored_chats():
-  """Lädt gespeicherte Chats aus der lokalen chats_history.json Datei."""
-  if os.path.exists(STORAGE_FILE):
+def load_stored_chats(uid=None):
+  """Lädt gespeicherte Chats exklusiv für den aktuellen Nutzer."""
+  path = get_user_storage_path(uid)
+  if os.path.exists(path):
     try:
-      with open(STORAGE_FILE, "r", encoding="utf-8") as f:
+      with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
         return trim_chats_history(data)
     except Exception:
@@ -38,11 +77,12 @@ def load_stored_chats():
   return {}
 
 
-def save_stored_chats(data):
-  """Speichert die Chats dauerhaft in chats_history.json."""
+def save_stored_chats(data, uid=None):
+  """Speichert die Chats dauerhaft und isoliert in der Benutzerdatei."""
+  path = get_user_storage_path(uid)
   try:
     trimmed_data = trim_chats_history(data)
-    with open(STORAGE_FILE, "w", encoding="utf-8") as f:
+    with open(path, "w", encoding="utf-8") as f:
       json.dump(trimmed_data, f, ensure_ascii=False, indent=2)
   except Exception:
     pass
@@ -54,7 +94,7 @@ UI_TEXTS = {
         "subtitle": "Wegbegleiter und Berater für alltägliche Fragen",
         "placeholder": "Wie kann ich helfen?",
         "new_chat": "➕ Neuer Chat",
-        "history_show": "📜 Chat-Verlauf",
+        "history_show": "📜 Chat-Verläufe",
         "history_hide": "▲ Verlauf ausblenden",
         "prev_conv": "Bisherige Gespräche",
         "no_conv": "Noch keine bisherigen Gespräche gespeichert.",
@@ -117,9 +157,12 @@ SECRET_DEVICE_ID = (
     or "admin-wittalva-pc"
 )
 
+current_user_id = get_current_user_id()
+
 defaults = {
+    "user_id": current_user_id,
     "interaction_count": 0,
-    "all_chats": load_stored_chats(),
+    "all_chats": load_stored_chats(current_user_id),
     "current_chat_id": None,
     "show_history": False,
     "editing_idx": None,
@@ -153,6 +196,17 @@ if req_device == SECRET_DEVICE_ID:
       height=0,
       width=0,
   )
+
+# User-Cookie zur dauerhaften Browser-Bindung hinterlegen
+try:
+  if not st.context.cookies.get("wittalva_uid"):
+    components.html(
+        f"<script>document.cookie = 'wittalva_uid={current_user_id}; path=/; max-age=31536000; SameSite=Lax';</script>",
+        height=0,
+        width=0,
+    )
+except Exception:
+  pass
 
 
 def toggle_history():
@@ -1002,6 +1056,21 @@ def verify_runtime_prompt_parity(prompt_text: str):
 verify_runtime_prompt_parity(SYSTEM_PROMPT)
 
 
+def is_complex_query(prompt: str) -> bool:
+  """Erkennt komplexe oder vielschichtige Anfragen für ein höheres Thinking-Budget (T2)."""
+  p = prompt.lower().strip()
+  words = p.split()
+  complex_triggers = [
+      "vergleich", "analys", "abwägen", "unterschied", "warum",
+      "pro und contra", "vor- und nachteile", "vor und nachteile",
+      "strategie", "erkläre ausführlich", "trade-off", "tradeoff",
+      "bewertung", "beurteile", "perspektiven", "widerstreit"
+  ]
+  if len(words) > 15 or any(trig in p for trig in complex_triggers):
+    return True
+  return False
+
+
 def render_chat_message(msg, idx):
   with st.chat_message(msg["role"]):
     if st.session_state.editing_idx != idx and msg["role"] == "user":
@@ -1249,7 +1318,10 @@ if active_prompt:
           for i in range(len(BASE_MODELS))
       ]
 
-      MAX_THINKING_WAIT_TIME = 15.0
+      # Dynamisches Thinking-Budget für sub-2-Sekunden Latenz bei Alltagsfragen
+      is_complex = is_complex_query(active_prompt)
+      chosen_thinking_level = "medium" if is_complex else "low"
+      max_thinking_wait = 15.0 if is_complex else 6.0
 
       for attempt_idx, current_model in enumerate(models_to_try):
         try:
@@ -1266,7 +1338,7 @@ if active_prompt:
               "temperature": 0.7,
               "top_p": 0.9,
               "max_output_tokens": 8192,
-              "thinking_config": types.ThinkingConfig(thinking_level="medium"),
+              "thinking_config": types.ThinkingConfig(thinking_level=chosen_thinking_level),
           }
 
           response_stream = client.models.generate_content_stream(
@@ -1282,7 +1354,7 @@ if active_prompt:
           for chunk in response_stream:
             if (
                 not received_first_chunk
-                and (time.time() - stream_start_time) > MAX_THINKING_WAIT_TIME
+                and (time.time() - stream_start_time) > max_thinking_wait
             ):
               raise TimeoutError("Thinking-Budget-Zeit überschritten.")
 
