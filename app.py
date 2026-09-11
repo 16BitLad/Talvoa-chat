@@ -118,7 +118,7 @@ UI_TEXTS = {
         "no_conv": "Aún no hay conversaciones previas guardadas.",
     },
     "fr": {
-        "subtitle": "Guide et conseiller pour les affaires du quotidien",
+        "subtitle": "Guide et conseiller für les affaires du quotidien",
         "placeholder": "Comment puis-je vous aider ?",
         "new_chat": "➕ Nouveau chat",
         "history_show": "📜 Historique des discussions",
@@ -604,9 +604,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.68 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.69 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.68" deployment_mode="in_context">
+<system_config version="1.69" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -1321,7 +1321,7 @@ if active_prompt:
       # Dynamisches Thinking-Budget für sub-2-Sekunden Latenz bei Alltagsfragen
       is_complex = is_complex_query(active_prompt)
       chosen_thinking_level = "medium" if is_complex else "low"
-      max_thinking_wait = 60.0 if is_complex else 45.0
+      max_thinking_wait = 75.0 if is_complex else 45.0
       last_error_str = None
 
       for attempt_idx, current_model in enumerate(models_to_try):
@@ -1334,7 +1334,7 @@ if active_prompt:
                 "Server derzeit ausgelastet, Anfrage wird umgeleitet..."
             )
 
-          http_opts_kwargs = {"timeout": 45_000}
+          http_opts_kwargs = {"timeout": 90_000}
           if hasattr(types, "HttpRetryOptions"):
             http_opts_kwargs["retry_options"] = types.HttpRetryOptions(attempts=1)
 
@@ -1356,12 +1356,6 @@ if active_prompt:
           received_first_chunk = False
 
           for chunk in response_stream:
-            if (
-                not received_first_chunk
-                and (time.time() - stream_start_time) > max_thinking_wait
-            ):
-              raise TimeoutError("Thinking-Budget-Zeit überschritten.")
-
             if not chunk.candidates:
               continue
             candidate = chunk.candidates[0]
@@ -1377,6 +1371,12 @@ if active_prompt:
                 if now - last_render_time > 0.05:
                   message_placeholder.markdown(full_response + "▌")
                   last_render_time = now
+
+            if (
+                not received_first_chunk
+                and (time.time() - stream_start_time) > max_thinking_wait
+            ):
+              raise TimeoutError("Thinking-Budget-Zeit überschritten.")
 
           if full_response.strip():
             message_placeholder.markdown(full_response)
