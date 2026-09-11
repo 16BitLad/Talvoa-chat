@@ -124,13 +124,18 @@ for key, value in defaults.items():
   if key not in st.session_state:
     st.session_state[key] = value
 
-# OWASP A07-konforme Authentifizierung über Sidebar-Passworteingabe (verhindert Token-Leakage in Server-Logs und URL-Historien)
-if not st.session_state.device_authorized and SECRET_DEVICE_ID:
-  with st.sidebar:
-    admin_input = st.text_input("Admin-Schlüssel", type="password", key="admin_key_input")
-    if admin_input == SECRET_DEVICE_ID:
-      st.session_state.device_authorized = True
-      st.rerun()
+# Automatische Geräte-Identifikation ohne Passworteingabe (Localhost-Erkennung & Bookmark-Parameter)
+req_device = st.query_params.get("device")
+if req_device == SECRET_DEVICE_ID:
+  st.session_state.device_authorized = True
+  st.query_params.clear()
+
+try:
+  host_header = st.context.headers.get("Host", "")
+  if "localhost" in host_header or "127.0.0.1" in host_header:
+    st.session_state.device_authorized = True
+except Exception:
+  pass
 
 
 def toggle_history():
@@ -538,9 +543,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.57 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.58 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.57" deployment_mode="in_context">
+<system_config version="1.58" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
