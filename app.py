@@ -22,24 +22,38 @@ MAX_HISTORY_COUNT = 10
 
 
 def get_current_user_id():
-  """Ermittelt oder erzeugt eine pseudonyme, browserspezifische User-ID."""
-  if st.session_state.get("user_id"):
-    return st.session_state.user_id
+  """Ermittelt oder erzeugt eine pseudonyme, browserspezifische User-ID mit robuster URL-Bindung."""
+  try:
+    url_uid = st.query_params.get("uid")
+    if url_uid:
+      st.session_state.user_id = url_uid
+      return url_uid
+  except Exception:
+    pass
 
-  for getter in (
-      lambda: st.context.cookies.get("wittalva_uid"),
-      lambda: st.query_params.get("uid"),
-  ):
+  if st.session_state.get("user_id"):
+    uid = st.session_state.user_id
     try:
-      uid = getter()
-      if uid:
-        st.session_state.user_id = uid
-        return uid
+      st.query_params["uid"] = uid
     except Exception:
-      continue
+      pass
+    return uid
+
+  try:
+    uid = st.context.cookies.get("wittalva_uid")
+    if uid:
+      st.session_state.user_id = uid
+      st.query_params["uid"] = uid
+      return uid
+  except Exception:
+    pass
 
   new_uid = f"u_{uuid.uuid4().hex[:12]}"
   st.session_state.user_id = new_uid
+  try:
+    st.query_params["uid"] = new_uid
+  except Exception:
+    pass
   return new_uid
 
 
@@ -169,6 +183,13 @@ for k, v in {
 if "all_chats" not in st.session_state:
   st.session_state.all_chats = load_stored_chats(current_user_id)
 
+# Automatische Wiederherstellung des zuletzt aktiven Chats nach Reload
+if (
+    st.session_state.current_chat_id is None
+    and len(st.session_state.all_chats) > 0
+):
+  st.session_state.current_chat_id = list(st.session_state.all_chats.keys())[-1]
+
 # Automatische Geräte-Identifikation ohne Passworteingabe
 if (
     os.environ.get("LOCAL_ADMIN_MODE", "").lower() in ("1", "true", "yes")
@@ -186,14 +207,16 @@ except Exception:
 req_device = st.query_params.get("device")
 if req_device == SECRET_DEVICE_ID:
   st.session_state.device_authorized = True
-  st.query_params.clear()
+  try:
+    del st.query_params["device"]
+  except Exception:
+    pass
   components.html(
       f"<script>document.cookie = 'wittalva_device_id={SECRET_DEVICE_ID}; path=/; max-age=31536000; SameSite=Lax';</script>",
       height=0,
       width=0,
   )
 
-# User-Cookie zur dauerhaften Browser-Bindung hinterlegen
 try:
   if not st.context.cookies.get("wittalva_uid"):
     components.html(
@@ -594,9 +617,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.77 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.78 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.77" deployment_mode="in_context">
+<system_config version="1.78" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -1033,7 +1056,7 @@ if st.session_state.show_history:
             args=(c_id,),
         )
 
-# 11. API Setup & Runtime Parity Gate
+# 11. API Setup, Runtime Parity Gate & Universal Triage
 api_key = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key)
 
@@ -1068,7 +1091,7 @@ def classify_query_tier(prompt: str) -> str:
   if any(trig in p for trig in t3_triggers):
     return "T3"
   
-  # Beratungs-, Handlungs-, Analyse- und mehrstufige Praxisfragen eskalieren zu T2
+  # Universelle Beratungs-, Handlungs-, Analyse- und mehrstufige Praxisfragen eskalieren zu T2
   t2_triggers = [
       "vergleich", "analys", "abwägen", "unterschied", "warum", "wie", "was tun", "was kann ich",
       "pro und contra", "vor- und nachteile", "vor und nachteile",
@@ -1323,7 +1346,6 @@ if active_prompt:
       )
       models_to_try = list(BASE_MODELS)
 
-      # Adaptive Tier-Parametrisierung (T1 / T2 / T3)
       active_tier = classify_query_tier(active_prompt)
       tier_params = TIER_CONFIG[active_tier]
       base_thinking_level = tier_params["thinking_level"]
@@ -1416,7 +1438,6 @@ if active_prompt:
           )
           time.sleep(1.2)
 
-      # Timer generell stoppen
       if not thinking_duration_str:
         elapsed_final = time.time() - start_time
         thinking_duration_str = f"{elapsed_final:.1f}s"
