@@ -604,9 +604,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.67 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.68 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.67" deployment_mode="in_context">
+<system_config version="1.68" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -1321,7 +1321,7 @@ if active_prompt:
       # Dynamisches Thinking-Budget für sub-2-Sekunden Latenz bei Alltagsfragen
       is_complex = is_complex_query(active_prompt)
       chosen_thinking_level = "medium" if is_complex else "low"
-      max_thinking_wait = 30.0 if is_complex else 15.0
+      max_thinking_wait = 60.0 if is_complex else 45.0
       last_error_str = None
 
       for attempt_idx, current_model in enumerate(models_to_try):
@@ -1400,9 +1400,14 @@ if active_prompt:
       if not success:
         status_info_placeholder.empty()
         err_detail = f" ({last_error_str})" if last_error_str else ""
-        st.error(
-            f"Alle Server-Endpunkte sind derzeit überlastet. Bitte versuchen Sie es in Kürze erneut.{err_detail}"
-        )
+        if "Thinking-Budget" in str(last_error_str):
+          st.error(
+              f"Zeitüberschreitung während der Modell-Generierung (TTFT-Timeout). Bitte erneut anfragen.{err_detail}"
+          )
+        else:
+          st.error(
+              f"Alle Server-Endpunkte sind derzeit überlastet oder nicht erreichbar.{err_detail}"
+          )
 
       if success and full_response:
         total_duration = f"{time.time() - start_time:.1f}s"
@@ -1425,7 +1430,7 @@ if active_prompt:
 elif len(current_messages) > 0:
   chat_box = st.container(border=True)
   with chat_box:
-    for idx, msg in enumerate(current_messages):
+    for idx, msg in enumerate(active_history if "active_history" in locals() else current_messages):
       render_chat_message(msg, idx)
 
 # 15. Global Touch Event Dispatcher for Mobile Devices
