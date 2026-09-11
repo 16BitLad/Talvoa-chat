@@ -91,7 +91,7 @@ UI_TEXTS = {
 
 def detect_device_language():
   try:
-    lang_header = st.context.headers.get("Accept-Language", "")
+    lang_header = st.context.headers.get("AcceptLanguage", "")
     if lang_header:
       primary = lang_header.split(",")[0].split("-")[0].lower()
       if primary in UI_TEXTS:
@@ -170,15 +170,9 @@ def trigger_regenerate(idx):
   chat_id = st.session_state.current_chat_id
   if chat_id in st.session_state.all_chats:
     msgs = st.session_state.all_chats[chat_id]["messages"]
-    if msgs[idx]["role"] == "assistant":
-      if idx > 0 and msgs[idx - 1]["role"] == "user":
-        target_prompt = msgs[idx - 1]["content"]
-        st.session_state.all_chats[chat_id]["messages"] = msgs[:idx]
-        st.session_state.regenerate_prompt = target_prompt
-    else:
-      target_prompt = msgs[idx]["content"]
-      st.session_state.all_chats[chat_id]["messages"] = msgs[:idx]
-      st.session_state.regenerate_prompt = target_prompt
+    target_prompt = msgs[idx]["content"]
+    st.session_state.all_chats[chat_id]["messages"] = msgs[:idx]
+    st.session_state.regenerate_prompt = target_prompt
     save_stored_chats(st.session_state.all_chats)
 
 
@@ -543,9 +537,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.58 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.59 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.58" deployment_mode="in_context">
+<system_config version="1.59" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -1028,13 +1022,8 @@ def render_chat_message(msg, idx):
         )
 
     elif msg["role"] == "assistant":
-      safe_text = (
-          msg["content"]
-          .replace("\\", "\\\\")
-          .replace("`", "\\`")
-          .replace("$", "\\$")
-          .replace("\n", "\\n")
-      )
+      # Sicheres JSON-Escaping gegen Script-Tag Breakouts (</script>)
+      safe_json_text = json.dumps(msg["content"]).replace("</", "<\\/")
       html_copy = f"""
             <html>
             <head>
@@ -1067,7 +1056,7 @@ def render_chat_message(msg, idx):
                 <button id="cpBtn" onclick="copyToClipboard()">📋</button>
                 <script>
                 function copyToClipboard() {{
-                    const text = `{safe_text}`;
+                    const text = {safe_json_text};
                     navigator.clipboard.writeText(text).then(() => {{
                         const btn = document.getElementById('cpBtn');
                         btn.innerText = '✓';
@@ -1172,23 +1161,24 @@ if active_prompt:
       "messages"
   ]
 
+  # Vollständige Airlock-Kapselung aller Nutzerbeiträge (Historie + aktueller Turn)
   api_contents = []
-  for msg in active_history[:-1]:
-    api_role = "model" if msg["role"] == "assistant" else "user"
-    api_contents.append(
-        types.Content(
-            role=api_role,
-            parts=[types.Part.from_text(text=msg["content"])],
-        )
-    )
-
-  wrapped_prompt = f"<untrusted_input>\n{active_prompt}\n</untrusted_input>"
-  api_contents.append(
-      types.Content(
-          role="user",
-          parts=[types.Part.from_text(text=wrapped_prompt)],
+  for msg in active_history:
+    if msg["role"] == "assistant":
+      api_contents.append(
+          types.Content(
+              role="model",
+              parts=[types.Part.from_text(text=msg["content"])],
+          )
       )
-  )
+    else:
+      wrapped_user_text = f"<untrusted_input>\n{msg['content']}\n</untrusted_input>"
+      api_contents.append(
+          types.Content(
+              role="user",
+              parts=[types.Part.from_text(text=wrapped_user_text)],
+          )
+      )
 
   chat_box = st.container(border=True)
   with chat_box:
@@ -1266,14 +1256,14 @@ if active_prompt:
                 "Server derzeit ausgelastet, Anfrage wird umgeleitet..."
             )
 
-          # Dynamisches Thinking-Budget gemäß @CALIB: Übergabe der semantischen Komplexitätssteuerung an das Modell.
-          # Beseitigt fehleranfällige clientseitige String-Heuristiken und aktiviert native adaptive Budgetierung (-1).
+          # Gemini 3.x Architektur-Anpassung: thinking_level ("medium") statt veraltetem thinking_budget
+          # Verhindert 400 INVALID_ARGUMENT Abbrüche und sichert Kaskaden-Resilienz
           config_args = {
               "system_instruction": active_system_prompt,
               "temperature": 0.7,
               "top_p": 0.9,
               "max_output_tokens": 8192,
-              "thinking_config": types.ThinkingConfig(thinking_budget=-1),
+              "thinking_config": types.ThinkingConfig(thinking_level="medium"),
           }
 
           response_stream = client.models.generate_content_stream(
