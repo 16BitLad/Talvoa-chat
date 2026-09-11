@@ -23,10 +23,7 @@ MAX_HISTORY_COUNT = 10
 
 def trim_chats_history(data):
   """Behält strikt nur die letzten 10 Chats bei."""
-  if len(data) > MAX_HISTORY_COUNT:
-    keys_to_keep = list(data.keys())[-MAX_HISTORY_COUNT:]
-    return {k: data[k] for k in keys_to_keep}
-  return data
+  return dict(list(data.items())[-MAX_HISTORY_COUNT:]) if len(data) > MAX_HISTORY_COUNT else data
 
 
 def load_stored_chats():
@@ -73,12 +70,12 @@ UI_TEXTS = {
     },
     "es": {
         "subtitle": "Tu guía y asesor para los asuntos cotidianos",
-        "placeholder": "¿En qué puedo ayudarte?",
+        "placeholder": "¿En qué posso ayudarte?",
         "new_chat": "➕ Nuevo chat",
         "history_show": "📜 Historial de chats",
         "history_hide": "▲ Ocultar historial",
         "prev_conv": "Conversaciones anteriores",
-        "no_conv": "Aún no hay conversaciones previas guardadas.",
+        "no_conv": "Aún no hay conversations previas guardadas.",
     },
     "fr": {
         "subtitle": "Votre guide et conseiller pour les affaires du quotidien",
@@ -114,33 +111,26 @@ SECRET_DEVICE_ID = (
     or "admin-wittalva-pc"
 )
 
-if "interaction_count" not in st.session_state:
-  st.session_state.interaction_count = 0
+defaults = {
+    "interaction_count": 0,
+    "all_chats": load_stored_chats(),
+    "current_chat_id": None,
+    "show_history": False,
+    "editing_idx": None,
+    "regenerate_prompt": None,
+    "device_authorized": False,
+}
+for key, value in defaults.items():
+  if key not in st.session_state:
+    st.session_state[key] = value
 
-if "all_chats" not in st.session_state:
-  st.session_state.all_chats = load_stored_chats()
-
-if "current_chat_id" not in st.session_state:
-  st.session_state.current_chat_id = None
-
-if "show_history" not in st.session_state:
-  st.session_state.show_history = False
-
-if "editing_idx" not in st.session_state:
-  st.session_state.editing_idx = None
-
-if "regenerate_prompt" not in st.session_state:
-  st.session_state.regenerate_prompt = None
-
-if "device_authorized" not in st.session_state:
-  st.session_state.device_authorized = False
-
-# URL-Parameter-Verifizierung mit sofortiger Bereinigung (verhindert URL-Sharing-Leaks)
-query_id = st.query_params.get("id", "")
-if query_id == SECRET_DEVICE_ID:
-  st.session_state.device_authorized = True
-  # Löscht den ID-Parameter augenblicklich aus der URL-Adresszeile des Browsers
-  st.query_params.clear()
+# OWASP A07-konforme Authentifizierung über Sidebar-Passworteingabe (verhindert Token-Leakage in Server-Logs und URL-Historien)
+if not st.session_state.device_authorized and SECRET_DEVICE_ID:
+  with st.sidebar:
+    admin_input = st.text_input("Admin-Schlüssel", type="password", key="admin_key_input")
+    if admin_input == SECRET_DEVICE_ID:
+      st.session_state.device_authorized = True
+      st.rerun()
 
 
 def toggle_history():
@@ -442,6 +432,13 @@ st.markdown(
         height: 26px !important;
         margin: 0 !important;
         padding: 0 !important;
+        font-size: 0.8rem !important;
+        line-height: 1 !important;
+        color: #ffffff !important;
+        text-align: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        border: none !important;
     }}
 
     div[data-testid="stChatMessage"]:hover div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-act_"]),
@@ -541,9 +538,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.50 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.54 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.50" deployment_mode="in_context">
+<system_config version="1.54" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -683,7 +680,7 @@ SYSTEM_PROMPT = r"""
         Floskel-Fragen-Verbot: Es ist strikt untersagt, am Ende von Antworten leere Chat-Floskeln oder Pauschalfragen anzuhängen (z. B. 'Gibt es noch ein Thema, bei dem ich helfen kann?', 'Kann ich sonst noch helfen?'). Antworten enden direkt mit dem letzten fachlichen Satz.
       </inv>
       <inv id="@DUAL_PROVIDER" type="dynamic">
-        Multi-Provider-Abstraktion & Kaskadierung: Das System unterstützt die nahtlose Backend-Ausführung über Google Gemini API oder Mistral AI API sowie die automatische Modell-Kaskadierung über die exklusive Triade (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) mit zyklischer 3-Turn-Rotation des primären Endpunkts, universeller Server-Resilienz (unterbrechungsfreier Failover bei HTTP 503 UNAVAILABLE, Lastspitzen, 500 und 429 Quota) und 65k-Token-Ausgabeentfaltung unter vollständiger Beibehaltung aller System-Prompt-Invarianten. Unautorisierte Endpunkt-Substitutionen sind strikt untersagt.
+        Google Gemini Triaden-Kaskadierung: Das System unterstützt die nahtlose Backend-Ausführung über Google Gemini API sowie die automatische Modell-Kaskadierung über die exklusive Triade (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) mit zyklischer 3-Turn-Rotation des primären Endpunkts, universeller Server-Resilienz (unterbrechungsfreier Failover bei HTTP 503 UNAVAILABLE, Lastspitzen, 500 und 429 Quota) und 65k-Token-Ausgabeentfaltung unter vollständiger Beibehaltung aller System-Prompt-Invarianten. Unautorisierte Endpunkt-Substitutionen sind strikt untersagt.
       </inv>
       <inv id="@TIMER_CLEANUP" type="passive">
         Frontend-Timer-Cleanup: Das JavaScript-Intervall des Echtzeit-Timers wird bei Beendigung des Outputs über explizite Event-Listener (unload, pagehide) und DOM-Existenzprüfungen im Iframe-Container ohne ungültige Widget-Keys fehlerfrei zerstört.
@@ -1264,16 +1261,31 @@ if active_prompt:
                 "Server derzeit ausgelastet, Anfrage wird umgeleitet..."
             )
 
+          # Dynamisches Thinking-Budget gemäß @CALIB. Bewahrt die dialektische Tiefe bei latenter Komplexität.
+          # Kurze Abfragen mit Entscheidungscharakter, Abwägungen oder qualitativen Begriffen behalten das Budget.
+          is_simple_query = len(active_prompt) < 60 and not any(
+              kw in active_prompt.lower()
+              for kw in [
+                  "warum", "wie", "was", "wer", "wo", "wann", "welche",
+                  "analysiere", "prüfe", "vergleiche", "untersuche", "erkläre", "bewerte",
+                  "soll", "muss", "kann", "besser", "oder", "vs", "empfehl", "meinung",
+                  "risiko", "vorteil", "nachteil", "glaub", "denk", "entscheid", "tun"
+              ]
+          )
+
+          config_args = {
+              "system_instruction": active_system_prompt,
+              "temperature": 0.7,
+              "top_p": 0.9,
+              "max_output_tokens": 8192,
+          }
+          if not is_simple_query:
+            config_args["thinking_config"] = types.ThinkingConfig(thinking_budget=1024)
+
           response_stream = client.models.generate_content_stream(
               model=current_model,
               contents=api_contents,
-              config=types.GenerateContentConfig(
-                  system_instruction=active_system_prompt,
-                  temperature=0.7,
-                  top_p=0.9,
-                  max_output_tokens=8192,
-                  thinking_config=types.ThinkingConfig(thinking_budget=1024),
-              ),
+              config=types.GenerateContentConfig(**config_args),
           )
 
           last_render_time = time.time()
@@ -1309,7 +1321,12 @@ if active_prompt:
             success = True
             break
 
-        except Exception:
+        except Exception as e:
+          err_text = str(e).lower()
+          if any(auth_kw in err_text for auth_kw in ["api_key", "unauthenticated", "permission", "invalid_argument"]):
+            status_info_placeholder.empty()
+            st.error(f"API-Konfigurationsfehler: {e}")
+            break
           status_info_placeholder.info(
               "Server derzeit ausgelastet, Anfrage wird umgeleitet..."
           )
