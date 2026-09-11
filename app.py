@@ -1,3 +1,4 @@
+<codebase file="app.py" version="1.55">
 import json
 import os
 import time
@@ -538,9 +539,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.54 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.55 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.54" deployment_mode="in_context">
+<system_config version="1.55" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -1262,15 +1263,14 @@ if active_prompt:
             )
 
           # Dynamisches Thinking-Budget gemäß @CALIB. Bewahrt die dialektische Tiefe bei latenter Komplexität.
-          # Kurze Abfragen mit Entscheidungscharakter, Abwägungen oder qualitativen Begriffen behalten das Budget.
-          is_simple_query = len(active_prompt) < 60 and not any(
-              kw in active_prompt.lower()
-              for kw in [
-                  "warum", "wie", "was", "wer", "wo", "wann", "welche",
-                  "analysiere", "prüfe", "vergleiche", "untersuche", "erkläre", "bewerte",
-                  "soll", "muss", "kann", "besser", "oder", "vs", "empfehl", "meinung",
-                  "risiko", "vorteil", "nachteil", "glaub", "denk", "entscheid", "tun"
-              ]
+          # Kurze Abfragen mit kausalem, vergleichendem oder evaluativem Fokus behalten das Budget; Alltagsfragen nutzen den Fast-Path.
+          complexity_markers = [
+              "warum", "analysier", "vergleich", "untersuch", "bewert", "vs",
+              "risiko", "vorteil", "nachteil", "entscheid", "abwäg", "meinung",
+              "empfehl", "optimier", "architektur", "tradeoff", "trade-off"
+          ]
+          is_simple_query = len(active_prompt) < 80 and not any(
+              marker in active_prompt.lower() for marker in complexity_markers
           )
 
           config_args = {
@@ -1417,3 +1417,4 @@ try {
 </html>
 """
 components.html(html_touch_script, height=0, width=0)
+</codebase>
