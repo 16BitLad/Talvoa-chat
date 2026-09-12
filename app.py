@@ -342,13 +342,17 @@ st.markdown(
         color: #ffffff !important;
     }}
 
-    /* CHAT FORM: EINGABEZEILE */
+    /* CHAT FORM: EINGABEZEILE (Sticky fixiert) */
     div[data-testid="stForm"] {{
+        position: sticky !important;
+        top: 0px !important;
+        z-index: 1000 !important;
         background-color: #27272a !important;
         border: 1px solid #3f3f46 !important;
         border-radius: 12px !important;
         padding: 0.3rem 0.5rem !important;
         margin: 0.4rem auto 0.6rem auto !important;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
     }}
     div[data-testid="stForm"] [data-testid="stHorizontalBlock"] {{
         display: flex !important;
@@ -1101,7 +1105,7 @@ def classify_query_tier(prompt: str) -> str:
 def render_chat_message(msg, idx):
   with st.chat_message(msg["role"]):
     if st.session_state.editing_idx != idx and msg["role"] == "user":
-      ac1, ac2, ac3, _ = st.columns([0.05, 0.05, 0.05, 0.85])
+      ac1, ac2, ac3, ac4, _ = st.columns([0.05, 0.05, 0.05, 0.05, 0.80])
       with ac1:
         st.button(
             "🔄",
@@ -1119,6 +1123,52 @@ def render_chat_message(msg, idx):
             args=(idx,),
         )
       with ac3:
+        safe_u_text = json.dumps(msg["content"]).replace("</", "<\\/")
+        html_u_copy = f"""
+        <html>
+        <head>
+        <style>
+            body {{ margin: 0; padding: 0; background: transparent; overflow: hidden; }}
+            button {{
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 24px !important;
+                height: 24px !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border-radius: 4px !important;
+                background-color: #27272a !important;
+                border: 1px solid #52525b !important;
+                color: #ffffff !important;
+                font-size: 0.75rem !important;
+                box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.6) !important;
+                cursor: pointer !important;
+            }}
+            button:hover {{
+                background-color: #3f3f46 !important;
+                border-color: #a1a1aa !important;
+                transform: scale(1.1);
+            }}
+        </style>
+        </head>
+        <body>
+            <button id="cpUBtn" onclick="copyPrompt()">📋</button>
+            <script>
+            function copyPrompt() {{
+                navigator.clipboard.writeText({safe_u_text}).then(() => {{
+                    const b = document.getElementById('cpUBtn');
+                    b.innerText = '✓';
+                    setTimeout(() => {{ b.innerText = '📋'; }}, 1000);
+                }});
+            }}
+            </script>
+        </body>
+        </html>
+        """
+        with st.container(key=f"act_u_copy_{idx}"):
+          components.html(html_u_copy, height=24, width=24)
+      with ac4:
         st.button(
             "🗑️",
             key=f"act_del_{idx}",
@@ -1281,11 +1331,8 @@ if active_prompt:
 
   chat_box = st.container(border=True)
   with chat_box:
-    for idx, msg in enumerate(active_history[:-1]):
+    for idx, msg in enumerate(active_history):
       render_chat_message(msg, idx)
-
-    with st.chat_message("user"):
-      st.markdown(active_prompt)
 
     with st.chat_message("assistant"):
       start_time = time.time()
@@ -1297,11 +1344,27 @@ if active_prompt:
             <html>
             <head>
             <style>
-                body { margin: 0; padding: 0; background: transparent; color: #71717a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 0.65rem; }
+                body { margin: 0; padding: 0; background: transparent; color: #71717a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 0.65rem; display: flex; align-items: center; gap: 8px; }
+                #stop-btn {
+                    background: #27272a;
+                    color: #ef4444;
+                    border: 1px solid #3f3f46;
+                    border-radius: 4px;
+                    padding: 1px 6px;
+                    font-size: 0.65rem;
+                    cursor: pointer;
+                    line-height: 1.2;
+                }
+                #stop-btn:hover {
+                    background: #3f3f46;
+                    border-color: #ef4444;
+                    color: #f87171;
+                }
             </style>
             </head>
             <body>
                 <div id="timer">0.0s</div>
+                <button id="stop-btn" onclick="cancelThinking()">⏹️ Abbruch</button>
                 <script>
                     (function() {
                         var startTime = Date.now();
@@ -1318,6 +1381,14 @@ if active_prompt:
                         window.addEventListener('unload', function() { clearInterval(timerInterval); });
                         window.addEventListener('pagehide', function() { clearInterval(timerInterval); });
                     })();
+                    function cancelThinking() {
+                        try {
+                            var pDoc = window.parent.document;
+                            var sBtn = pDoc.querySelector('[data-testid="stStatusWidget"] button, button[aria-label="Stop"], button[title="Stop"]');
+                            if (sBtn) { sBtn.click(); return; }
+                        } catch(e) {}
+                        window.parent.location.reload();
+                    }
                 </script>
             </body>
             </html>
@@ -1444,6 +1515,12 @@ if active_prompt:
           st.error(
               f"Alle Server-Endpunkte sind derzeit überlastet oder nicht erreichbar.{err_detail}"
           )
+        if st.button("🔄 Anfrage wiederholen", key=f"retry_failed_btn_{st.session_state.interaction_count}"):
+          st.session_state.regenerate_prompt = active_prompt
+          if st.session_state.current_chat_id in st.session_state.all_chats:
+            st.session_state.all_chats[st.session_state.current_chat_id]["messages"].pop()
+            save_stored_chats(st.session_state.all_chats)
+          st.rerun()
 
       if success and full_response:
         timer_placeholder.markdown(
@@ -1506,6 +1583,23 @@ try {
         });
     }
     setInterval(setupTouchListeners, 1000);
+
+    /* Auto-Scroll Controller */
+    function setupAutoScroll() {
+        const chatBoxes = parentDoc.querySelectorAll('div[data-testid="stVerticalBlockBorderWrapper"]');
+        chatBoxes.forEach(box => {
+            if (!box.querySelector('.history-dropdown-box')) {
+                box.scrollTop = box.scrollHeight;
+                if (!box.dataset.scrollObserved) {
+                    box.dataset.scrollObserved = "true";
+                    const obs = new MutationObserver(() => { box.scrollTop = box.scrollHeight; });
+                    obs.observe(box, { childList: true, subtree: true, characterData: true });
+                }
+            }
+        });
+    }
+    setupAutoScroll();
+    setInterval(setupAutoScroll, 1200);
 } catch (e) {}
 </script>
 </body>
