@@ -271,7 +271,7 @@ if not current_chat:
 chat_window_height = (
     "calc(100vh - 460px)"
     if st.session_state.show_history
-    else "calc(100vh - 210px)"
+    else "calc(100vh - 225px)"
 )
 
 # 5. Custom CSS: Art-Déco, Dark-Theme & Mobile Optimierungen
@@ -342,17 +342,26 @@ st.markdown(
         color: #ffffff !important;
     }}
 
-    /* CHAT FORM: EINGABEZEILE (Sticky fixiert) */
+    /* CHAT FORM: EINGABEZEILE (Permanent oben im Sichtfeld arretierte Floating Bar) */
+    div:has(> div[data-testid="stForm"]) {{
+        min-height: 58px !important;
+        margin-top: 0.4rem !important;
+        margin-bottom: 0.6rem !important;
+    }}
     div[data-testid="stForm"] {{
-        position: sticky !important;
-        top: 0px !important;
-        z-index: 1000 !important;
+        position: fixed !important;
+        top: 92px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: calc(100% - 2rem) !important;
+        max-width: 730px !important;
+        z-index: 9999 !important;
         background-color: #27272a !important;
         border: 1px solid #3f3f46 !important;
         border-radius: 12px !important;
         padding: 0.3rem 0.5rem !important;
-        margin: 0.4rem auto 0.6rem auto !important;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+        margin: 0 !important;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.65) !important;
     }}
     div[data-testid="stForm"] [data-testid="stHorizontalBlock"] {{
         display: flex !important;
@@ -612,9 +621,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.88 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
+# 6. HEADER SYSTEM PROMPT (v1.89 - Schreibgeschützte 3.x-Flash-Triade mit zyklischer 3-Turn-Rotation & Paritäts-Gate)
 SYSTEM_PROMPT = r"""
-<system_config version="1.88" deployment_mode="in_context">
+<system_config version="1.89" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
