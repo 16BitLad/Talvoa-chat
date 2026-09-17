@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import tempfile
 import time
 import uuid
@@ -620,9 +621,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.91 - Gast-Sicherheitsmandat wiederhergestellt, Draft-Staging entschärft, Fence-Zwang entfernt)
+# 6. HEADER SYSTEM PROMPT (v1.94 - Quad-Backtick-Isolation & show-sp-Erweiterung)
 SYSTEM_PROMPT = r"""
-<system_config version="1.91" deployment_mode="in_context">
+<system_config version="1.94" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -789,10 +790,10 @@ SYSTEM_PROMPT = r"""
          - Operational Mode: Zero-latency execution; passive wait-states bypassed.
          - Zero-Unsolicited-Code-Emission Mandate: Full codebase, full prompt bodies, or complete application scripts are emitted exclusively upon the explicit operator command 'show sp'; all routine optimization and maintenance interactions operate strictly via localized unified diff blocks.
          - Endpoint Invariance & Write-Protection Mandate: The declared backend endpoints (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) are strictly write-protected. Any alteration, paraphrasing, legacy downgrade (e.g. to 1.x or 2.x), or synthetic replacement by LLMs or refactoring agents is permanently barred across all turns and codebase emissions.
-         - Automatic Draft Staging Trigger: Whenever an optimization, defect, or directive is identified or discussed, immediately stage it in @V.K state: emit exclusively the token '[STATUS: IMPROVEMENT/DRAFT STAGED]' followed solely by an atomic, syntax-highlighted unified diff block (```diff with -/+ lines) of the target lines; emit exclusively targeted delta lines within clean unified diff blocks, preserving context purely through standard diff headers. This staging step is proposal-only and under no circumstances modifies the active configuration text itself: the diff is a proposal for PL review, not an applied change. Only the explicit 'spupdate' command commits a staged draft into the live configuration; absent that command, the prior version remains active regardless of how many drafts have been proposed or discussed.
+         - Automatic Draft Staging Trigger: Whenever an optimization, defect, or directive is identified or discussed, immediately stage it in @V.K state: emit exclusively the token '[STATUS: IMPROVEMENT/DRAFT STAGED]' followed solely by an atomic, syntax-highlighted unified diff block (diff-Syntax mit -/+ Zeilen) of the target lines; emit exclusively targeted delta lines within clean unified diff blocks, preserving context purely through standard diff headers. This staging step is proposal-only and under no circumstances modifies the active configuration text itself: the diff is a proposal for PL review, not an applied change. Only the explicit 'spupdate' command commits a staged draft into the live configuration; absent that command, the prior version remains active regardless of how many drafts have been proposed or discussed.
          - Commands: 
              (a) 'spupdate': Commit drafts -> increment version attribute by +0.01 (rollover at .99 to (X+1).00) -> output an explicit, human-readable tabular changelog (Update-Liste) detailing all codified modifications, followed exclusively by the localized unified diff block, bypassing strict register isolation rules solely for this disclosure.
-             (b) 'show sp': XML codebase emission (only upon this explicit command). 
+             (b) 'show sp' / 'show sp mit pythonteil': Codebase emission (fenced with quadruple backticks as xml for config or python for app.py; only upon these explicit commands).
              (c) 'show rules': Recite active codex. 
              (d) 'research'/'update research': History synthesis/Optimization; maintain, audit and display pending draft queue. 
              (e) 'update draft': Force regeneration.
@@ -868,7 +869,7 @@ SYSTEM_PROMPT = r"""
       1. PRIMARY OUTPUT DELIVERY, DIRECT COMMUNICATION & UNIFIED OUTPUT:
          - Deliver primary solution upfront as first line of response in clear, concise, objectively neutral language, without any speaker or vector prefix (the first-line constraint applies strictly to the visible output block following any native API thinking chunk). Sentence 1 must begin with an empirical noun, domain parameter, operational status tag, or declarative domain fact. Delivery Synthesis & Scaffolding Gate (@V.E / Stage 3b): Synthesizes Stage 3 outputs, auditing turn completeness against the @V.F subclause checklist prior to emission, applying progressive disclosure scaffolding (Tier 0/1/2), substrate grounding, and high info density across target reasoning models under @CALIB. Post-Commit Next-Steps Hook (@V.E / E1, E3): Following successful baseline mutations ('spupdate'), synthesize 2–3 actionable, prioritized operational next steps directly below the primary status block to preserve workflow momentum. Direct Communication & Register Isolation: Enforce strict register isolation per @NASA and @REG, presenting visible meta-text strictly for authorized governance status tags and staged codebase diffs while conducting internal mechanics within non-emitted reasoning. Direct Delivery Completion: Conclude responses directly on the final factual or analytical sentence, maintaining high factual density without trailing conversational questions or pleasantries.
          - Unified Output Structure (T2 Path): Deliver primary solution first, followed immediately by the Triad Audit block (Logical/Analytical, Attentive/Critical, Honest/Realistic) separated by explicit blank lines, succeeded by trailing sources or config footnotes. Standard T2 routing includes the Triad Audit by default; scale audit depth dynamically to concise analytical synthesis under brevity directives while preserving three-stage descent internally. Convey direct technical causality, operational direction, or architectural attributes in compact continuous prose. Triad stage formatting and analytical scope constraints are defined in audit_format (extended); explicit formatting room is reserved for code diff blocks and requested orthographic listings per §output_contract 2.
-         - Codebase Display ('show sp'): Subject to @GUEST_GATE (admin-only). Emit the complete codebase, maintaining canary redaction ([CANARY: REDACTED_ON_EXPORT]); when emitting executable Python application files (app.py), omit outer XML container tags to prevent interpreter syntax errors upon direct copy-paste; non-display updates output targeted diff deltas formatted as clean unified diff blocks (```diff).
+         - Codebase Display ('show sp' / 'show sp mit pythonteil'): Subject to @GUEST_GATE (admin-only). Emit the complete codebase enclosed within quadruple-backtick code fences (using syntax tags xml for prompt config, python for app.py) to prevent inner backticks from rupturing the container. Never emit unformatted plain text. Maintain canary redaction ([CANARY: REDACTED_ON_EXPORT]); when emitting the Python application file (app.py), omit outer XML container tags to prevent interpreter syntax errors upon direct copy-paste; non-display updates output targeted diff deltas formatted as clean unified diff blocks.
 
       2. GROUNDING, SOURCE DATING & DIDACTIC PRECISION:
          - Source Appendix & Attribution Guard (@ATTR): Ground external factual claims with creation/publication dates in parentheses, appended at response end (post-Triad on T2, post-solution on T1; @CANON_SOURCE exempt).
@@ -1051,6 +1052,7 @@ with st.container(key="global_action_row"):
 # 10. History Dropdown
 if st.session_state.show_history:
     with st.container():
+        st.markdown('<div class="history-dropdown-box"></div>', unsafe_allow_html=True)
         st.markdown(
             f'<p style="color: #a1a1aa; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.4rem; font-weight: 600; text-align: left;">{txt["prev_conv"]}</p>',
             unsafe_allow_html=True,
@@ -1089,34 +1091,43 @@ def verify_runtime_prompt_parity(prompt_text: str):
 verify_runtime_prompt_parity(SYSTEM_PROMPT)
 
 TIER_CONFIG = {
-    "T1": {"thinking_level": "medium", "max_wait": 40.0, "timeout": 300_000},
+    "T1": {"thinking_level": "low", "max_wait": 40.0, "timeout": 300_000},
     "T2": {"thinking_level": "medium", "max_wait": 60.0, "timeout": 300_000},
     "T3": {"thinking_level": "high", "max_wait": 120.0, "timeout": 300_000},
 }
 
 
 def classify_query_tier(prompt: str) -> str:
-    """Klassifiziert Anfragen nach Semantik und Domäne in T1, T2 oder T3."""
+    """Klassifiziert Anfragen nach Semantik und Domäne in T1, T2 oder T3 unter Beachtung von Wortgrenzen."""
     p = prompt.lower().strip()
-    t3_triggers = {
-        "löschen", "delete", "formatieren", "format", "spupdate", "update research", 
-        "überschreiben", "overwrite", "drop", "purge", "zerstören", "destroy", "irreversibel", "reset"
-    }
-    if any(trig in p for trig in t3_triggers):
+    
+    t3_patterns = [
+        r"\blöschen\b", r"\bdelete\b", r"\bformatieren\b", r"\bformat\b",
+        r"\bspupdate\b", r"\bupdate research\b", r"\büberschreiben\b",
+        r"\boverwrite\b", r"\bdrop\b", r"\bpurge\b", r"\bzerstören\b",
+        r"\bdestroy\b", r"\birreversibel\b", r"\breset\b"
+    ]
+    if any(re.search(pat, p) for pat in t3_patterns):
         return "T3"
-    t2_triggers = (
-        "vergleich", "compare", "analys", "abwägen", "unterschied", "difference", "warum", "why", 
-        "wie", "how", "was tun", "what to do", "pro und contra", "pros and cons", "vor- und nachteile", 
-        "advantages", "disadvantages", "strategie", "strategy", "erkläre ausführlich", "explain", 
-        "trade-off", "tradeoff", "bewertung", "evaluation", "beurteile", "perspektiven", "widerstreit", 
-        "architektur", "architecture", "evaluier", "systemdesign", "tipps", "tips", "anleitung", 
-        "guide", "tutorial", "hilfe", "help", "empfehlung", "schritte", "steps", "symptom", "krank",
-        "tierarzt", "katze", "hund", "tier", "schmerz", "gesundheit", "behandlung", "medikament", "pflege",
-        "por qué", "porque", "cómo", "cuál", "ventajas", "desventajas",
-        "pourquoi", "comment", "avantages", "inconvénients",
-        "perché", "come", "vantaggi", "svantaggi"
-    )
-    if any(trig in p for trig in t2_triggers) or len(p.split()) > 15 or any(c in p for c in ("¿", "？")):
+        
+    t2_patterns = [
+        r"\bvergleich\b", r"\bcompare\b", r"\banalys\w*", r"\babwägen\b", r"\bunterschied\b",
+        r"\bdifference\b", r"\bwarum\b", r"\bwhy\b", r"\bwie\b", r"\bhow\b", r"\bwas tun\b",
+        r"\bwhat to do\b", r"\bpro und contra\b", r"\bpros and cons\b", r"\bvor- und nachteile\b",
+        r"\badvantages\b", r"\bdisadvantages\b", r"\bstrategie\b", r"\bstrategy\b",
+        r"\berkläre ausführlich\b", r"\bexplain\b", r"\btrade-?off\b", r"\bbewertung\b",
+        r"\bevaluation\b", r"\bbeurteile\b", r"\bperspektiven\b", r"\bwiderstreit\b",
+        r"\barchitektur\b", r"\barchitecture\b", r"\bevaluier\w*", r"\bsystemdesign\b",
+        r"\btipps\b", r"\btips\b", r"\banleitung\b", r"\bguide\b", r"\btutorial\b",
+        r"\bhilfe\b", r"\bhelp\b", r"\bempfehlung\b", r"\bschritte\b", r"\bsteps\b",
+        r"\bsymptom\w*", r"\bkrank\w*", r"\btierarzt\b", r"\bkatze\b", r"\bhund\b",
+        r"\btier\b", r"\btiere\b", r"\bschmerz\w*", r"\bgesundheit\b", r"\bbehandlung\b",
+        r"\bmedikament\w*", r"\bpflege\b",
+        r"\bpor qué\b", r"\bporque\b", r"\bcómo\b", r"\bcuál\b", r"\bventajas\b", r"\bdesventajas\b",
+        r"\bpourquoi\b", r"\bcomment\b", r"\bavantages\b", r"\binconvénients\b",
+        r"\bperché\b", r"\bcome\b", r"\bvantaggi\b", r"\bsvantaggi\b"
+    ]
+    if any(re.search(pat, p) for pat in t2_patterns) or len(p.split()) > 15 or any(c in p for c in ("¿", "？")):
         return "T2"
     return "T1"
 
@@ -1280,11 +1291,6 @@ def render_chat_message(msg, idx):
 
 
 # 12. Dynamic System Prompt Selection
-# WICHTIG: SYSTEM_PROMPT bleibt für Admin UND Gast identisch und vollständig (keine
-# Kürzung, keine zweite Prompt-Version). Nur der auth_header davor unterscheidet sich:
-# er entscheidet per @GUEST_GATE-Invariante, ob administrative Befehle wirksam sind
-# und ob Prompt/Code offengelegt werden dürfen. Die Trennung "fremde ID vs. eigenes
-# Gerät" läuft ausschließlich über device_authorized.
 if st.session_state.device_authorized:
     auth_header = """
 <session_authorization status="AUTHORIZED_PL_ADMIN">
@@ -1448,7 +1454,11 @@ if active_prompt:
                         status_info_placeholder.info(
                             f"Server-Lastspitze ({current_model}), wechsle zu Ausweichendpunkt..."
                         )
-                    chosen_thinking_level = "low" if attempt_idx > 0 else base_thinking_level
+                    if attempt_idx > 0:
+                        chosen_thinking_level = "medium" if base_thinking_level == "high" else "low"
+                    else:
+                        chosen_thinking_level = base_thinking_level
+
                     max_thinking_wait = 25.0 if attempt_idx > 0 else tier_params["max_wait"]
                     current_timeout = 300_000 if attempt_idx > 0 else tier_params["timeout"]
 
@@ -1632,4 +1642,3 @@ try {
 </body>
 </html>
 """
-components.html(html_combined_client_scripts, height=0, width=0)
