@@ -1,4 +1,5 @@
 
+~~~python
 import json
 import os
 import re
@@ -1648,3 +1649,4 @@ try {
 </html>
 """
 components.html(html_combined_client_scripts, height=0, width=0)
+~~~
