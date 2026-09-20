@@ -414,17 +414,7 @@ st.markdown(
     }}
     
     div[data-testid="stInputInstructions"] {{
-        display: block !important;
-        position: relative !important;
-        margin-top: 4px !important;
-        font-size: 0.72rem !important;
-        color: #71717a !important;
-        text-align: left !important;
-        padding-left: 0.2rem !important;
-    }}
-    div[data-testid="stInputInstructions"] * {{
-        color: #71717a !important;
-        font-size: 0.72rem !important;
+        display: none !important;
     }}
 
     div[data-testid="stFormSubmitButton"] button {{
@@ -639,9 +629,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v2.01 - Context-Calibrated Analogy Protocol & Form Unclamping)
+# 6. HEADER SYSTEM PROMPT (v2.03 - Real-Time Process Status Indicator & Timer Decoupling)
 SYSTEM_PROMPT = r"""
-<system_config version="2.01" deployment_mode="in_context">
+<system_config version="2.03" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -769,7 +759,7 @@ SYSTEM_PROMPT = r"""
         Universal multi-dimensional bias-mitigation engine optimized for target reasoning models under @CALIB, enforcing: Sycophancy (social neutralization), Cognitive/Prompt-Induced Bias (axiomatic baseline cues against anchoring & framing), Extrapolation/Assumption Bias (grounding reasoning strictly in verified user inputs, declared parameters, and empirical evidence), Socio-Cultural/Demographic/Socioeconomic Bias (normative neutrality), False Balance, Safety Escalation, and Vendor/Authority Bias; resolved within the thinking trace before generation.
       </inv>
       <inv id="@UI_HOVER" type="passive">
-        Aktions-Icons müssen auf stChatMessage absolut positioniert (top: -11px, left: 10px), overflow: visible auf dem Chat-Container definiert und innere stMarkdownContainer/p-Abstände zurückgesetzt werden, um 100%ige Sichtbarkeit zu garantieren. Eingabehinweise (stInputInstructions) werden entkoppelt unterhalb des Feldes gerendert; das Speichern editierter Nachrichten löst deterministisch die Kaskaden-Kappung und sofortige Neu-Generierung aus.
+        Aktions-Icons müssen auf stChatMessage absolut positioniert (top: -11px, left: 10px), overflow: visible auf dem Chat-Container definiert und innere stMarkdownContainer/p-Abstände zurückgesetzt werden, um 100%ige Sichtbarkeit zu garantieren. Eingabehinweise (stInputInstructions) werden vollständig getilgt (display: none); das Speichern editierter Nachrichten löst deterministisch die Kaskaden-Kappung und sofortige Neu-Generierung aus.
       </inv>
       <inv id="@ETYMOLOGY" type="passive">
         Etymologische Herkunft des Namens WITTALVA: Die Worttrennung erfolgt strikt als 'Witt' + 'Talva' (KEINESFALLS 'Witt' + 'Alva'). 'Witt' leitet sich ab von 'vit/viten' (Wissen, Verstand, Erkennen); 'Talva' ist die umgangssprachliche Abwandlung von 'tölva' (isländisch für Computer, gebildet aus 'tala' [Zahl/Sprechen] und 'völva' [Seherin/Sprecherin]). Bei Fragen zum Namen WITTALVA ist diese begriffliche Herleitung präzise abzurufen.
@@ -1396,7 +1386,13 @@ if active_prompt:
             <html>
             <head>
             <style>
-                body { margin: 0; padding: 0; background: transparent; color: #71717a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 0.65rem; display: flex; align-items: center; gap: 8px; }
+                body { margin: 0; padding: 0; background: transparent; color: #71717a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 0.65rem; display: flex; align-items: center; gap: 8px; overflow: hidden; }
+                #status-line {
+                    color: #a1a1aa;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
                 #stop-btn {
                     background: #27272a;
                     color: #ef4444;
@@ -1416,6 +1412,8 @@ if active_prompt:
             </head>
             <body>
                 <div id="timer">0.0s</div>
+                <span style="color: #3f3f46;">•</span>
+                <div id="status-line">Initialisiere Verbindung...</div>
                 <button id="stop-btn" onclick="cancelThinking()">⏹️ Abbruch</button>
                 <script>
                     (function() {
@@ -1428,6 +1426,19 @@ if active_prompt:
                             }
                             var elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
                             timerElem.innerText = elapsed + 's';
+                            var statusElem = document.getElementById('status-line');
+                            if (statusElem) {
+                                var s = parseFloat(elapsed);
+                                if (s < 1.5) {
+                                    statusElem.innerText = 'Initialisiere Verbindung...';
+                                } else if (s < 6.0) {
+                                    statusElem.innerText = 'Denkprozess aktiv (Analysiert Kontext)...';
+                                } else if (s < 18.0) {
+                                    statusElem.innerText = 'Tiefenprüfung & Herleitung...';
+                                } else {
+                                    statusElem.innerText = 'Synthese & Antwortaufbereitung...';
+                                }
+                            }
                         }, 100);
 
                         window.addEventListener('unload', function() { clearInterval(timerInterval); });
@@ -1517,7 +1528,9 @@ if active_prompt:
                                     elapsed_thinking = time.time() - start_time
                                     thinking_duration_str = f"{elapsed_thinking:.1f}s"
                                     timer_placeholder.markdown(
-                                        f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{thinking_duration_str}</div>',
+                                        f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit; display: flex; align-items: center; gap: 6px;">'
+                                        f'<span>{thinking_duration_str}</span><span style="color: #3f3f46;">•</span>'
+                                        f'<span style="color: #a1a1aa;">Antwort wird übertragen...</span></div>',
                                         unsafe_allow_html=True,
                                     )
                                 full_response += text_content
@@ -1580,7 +1593,9 @@ if active_prompt:
 
             if success and full_response:
                 timer_placeholder.markdown(
-                    f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit;">{thinking_duration_str}</div>',
+                    f'<div style="font-size: 0.65rem; color: #71717a; margin-bottom: 0.2rem; font-family: inherit; display: flex; align-items: center; gap: 6px;">'
+                    f'<span>{thinking_duration_str}</span><span style="color: #3f3f46;">•</span>'
+                    f'<span style="color: #71717a;">Abgeschlossen</span></div>',
                     unsafe_allow_html=True,
                 )
                 message_placeholder.markdown(full_response)
@@ -1589,7 +1604,7 @@ if active_prompt:
         st.session_state.all_chats[st.session_state.current_chat_id]["messages"].append({
             "role": "assistant",
             "content": full_response,
-            "duration": thinking_duration_str,
+            "duration": f"{thinking_duration_str} • Abgeschlossen",
         })
         save_stored_chats(st.session_state.all_chats)
         st.rerun()
