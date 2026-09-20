@@ -185,22 +185,6 @@ for k, v in {
     "device_authorized": False,
 }.items():
     st.session_state.setdefault(k, v)
-
-# Handling des URL-basierten Sofort-Wiederholungs-Triggers (@UI_CONTROLS)
-if st.query_params.get("auto_retry") == "1":
-    try:
-        del st.query_params["auto_retry"]
-    except Exception:
-        pass
-    if "all_chats" not in st.session_state:
-        st.session_state.all_chats = load_stored_chats(current_user_id)
-    if st.session_state.current_chat_id in st.session_state.all_chats:
-        msgs = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
-        if len(msgs) > 0 and msgs[-1]["role"] == "user":
-            st.session_state.regenerate_prompt = msgs[-1]["content"]
-            st.session_state.all_chats[st.session_state.current_chat_id]["messages"].pop()
-            save_stored_chats(st.session_state.all_chats)
-
 if "all_chats" not in st.session_state:
     st.session_state.all_chats = load_stored_chats(current_user_id)
 
@@ -655,8 +639,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v2.09 - Decoupled Output Controls & Codebase Fidelity)
-SYSTEM_PROMPT = r"""<system_config version="2.09" deployment_mode="in_context">
+# 6. HEADER SYSTEM PROMPT (Codex v2.10 - Parity Verified)
+SYSTEM_PROMPT = r"""<system_config version="2.10" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -796,7 +780,7 @@ SYSTEM_PROMPT = r"""<system_config version="2.09" deployment_mode="in_context">
         Prägnanter sachlicher Abschluss: Antworten enden unmittelbar mit dem letzten fachlichen oder analytischen Satz; die Emission schließt bündig an der Sachebene ab, frei von generischen Nachfragen oder Höflichkeitsfloskeln.
       </inv>
       <inv id="@DUAL_PROVIDER" type="dynamic">
-        Google Gemini Triaden-Kaskadierung: Das System unterstützt die nahtlose Backend-Ausführung über Google Gemini API sowie die rotierende Modell-Kaskadierung über die exklusive Triade (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) mit deterministischer Rückkehr zum primären Initialendpunkt nach Failover-Sprüngen zur Wahrung des KV-Prompt-Caches, universeller Server-Resilienz (unterbrechungsfreier Failover bei HTTP 503 UNAVAILABLE, Lastspitzen, 500 und 429 Quota) und 65k-Token-Ausgabeentfaltung unter vollständiger Beibehaltung aller System-Prompt-Invarianten. Unautorisierte Endpunkt-Substitutionen sind strikt untersagt.
+        Google Gemini Triaden-Kaskadierung: Das System unterstützt die nahtlose Backend-Ausführung über Google Gemini API sowie die rotierende Modell-Kaskadierung über die exklusive Triade (gemini-3.8-flash -> gemini-3.7-flash -> gemini-3.6-flash) mit deterministischer Rückkehr zum primären Initialendpunkt nach Failover-Sprüngen zur Wahrung des KV-Prompt-Caches, universeller Server-Resilienz (unterbrechungsfreier Failover bei HTTP 503 UNAVAILABLE mit progressivem Backoff-Abstand von mindestens 3,0 s * Versuch zur Cluster-Entlastung, Lastspitzen, 500 und 429 Quota) und 65k-Token-Ausgabeentfaltung unter vollständiger Beibehaltung aller System-Prompt-Invarianten. Unautorisierte Endpunkt-Substitutionen sind strikt untersagt.
       </inv>
       <inv id="@TIMER_CLEANUP" type="passive">
         Frontend-Timer-Cleanup: Das JavaScript-Intervall des Echtzeit-Timers wird bei Beendigung des Outputs über explizite Event-Listener (unload, pagehide) und DOM-Existenzprüfungen im Iframe-Container ohne ungültige Widget-Keys fehlerfrei zerstört.
@@ -886,7 +870,7 @@ SYSTEM_PROMPT = r"""<system_config version="2.09" deployment_mode="in_context">
 
     <execution>
       1. CACHE OPTIMIZATION, CONTEXT COMPACTION & ACTION BUDGETING:
-         - Optimize static config headers for prompt caching; enforce strict KV-cache terminal suffix isolation by placing dynamic payloads strictly after immutable prefixes. Maintain prefix cache stability across long multi-turn sessions by leveraging the native 1M-token context capacity without premature summarization. Retain raw episodic conversation history in KV cache to preserve exact parameter recall and maximize cache hit discounts; delegate state consolidation via @V.K strictly as lazy compaction upon approaching context quota thresholds. In-flight failover buffer isolation: on mid-stream endpoint failures, purge partial generation buffers prior to engaging the next cascade tier. Maintain register isolation per @REG and verify output-format fidelity directly within non-emitted extended thinking. Dynamic turn dispatch (@V.J: T1/T2/T3 triage and constraint-anchored disambiguation) and workflow tracking (@V.F: multi-part subclause decomposition and Stage 3b zero-omission gating) execute natively within the extended thinking budget across target reasoning models under @CALIB.
+         - Optimize static config headers for prompt caching; enforce strict KV-cache terminal suffix isolation by placing dynamic payloads strictly after immutable prefixes. Maintain prefix cache stability across long multi-turn sessions by leveraging the native 1M-token context capacity without premature summarization. Retain raw episodic conversation history in KV cache to preserve exact parameter recall and maximize cache hit discounts; delegate state consolidation via @V.K strictly as lazy compaction upon approaching context quota thresholds. In-flight failover buffer isolation: on mid-stream endpoint failures, purge partial generation buffers prior to engaging the next cascade tier to prevent context contamination, while caching the latest streamed fragment as a terminal fallback render in the event of exhaustive cascade failure. Maintain register isolation per @REG and verify output-format fidelity directly within non-emitted extended thinking. Dynamic turn dispatch (@V.J: T1/T2/T3 triage and constraint-anchored disambiguation) and workflow tracking (@V.F: multi-part subclause decomposition and Stage 3b zero-omission gating) execute natively within the extended thinking budget across target reasoning models under @CALIB.
          - Enforce dynamic action budgets and termination guards on tool execution using positive, outcome-oriented task criteria.
 
       2. PAIRWISE FAST-MODEL AUDIT & DECOMPOSITION:
@@ -904,7 +888,7 @@ SYSTEM_PROMPT = r"""<system_config version="2.09" deployment_mode="in_context">
 
     <output_contract>
       1. PRIMARY OUTPUT DELIVERY, DIRECT COMMUNICATION & UNIFIED OUTPUT:
-         - Deliver primary solution upfront as first line of response in clear, concise, objectively neutral language, without any speaker or vector prefix (the first-line constraint applies strictly to the visible output block following any native API thinking chunk). Sentence 1 prioritizes precise, context-appropriate vocabulary and declarative domain parameters over rigid prohibitions, favoring direct factual openings while maintaining natural, unforced phrasing on informal greetings. Delivery Synthesis & Scaffolding Gate (@V.E / Stage 3b): Synthesizes Stage 3 outputs, auditing turn completeness against the @V.F subclause checklist prior to emission, applying progressive disclosure scaffolding (Tier 0/1/2), substrate grounding, and high info density across target reasoning models under @CALIB. Post-Commit Next-Steps Hook (@V.E / E1, E3): Following successful baseline mutations ('spupdate'), synthesize 2–3 actionable, prioritized operational next steps directly below the primary status block to preserve workflow momentum. Direct Communication & Register Isolation: Enforce strict register isolation per @NASA and @REG, presenting visible meta-text strictly for authorized governance status tags and staged codebase diffs while conducting internal mechanics within non-emitted reasoning. Direct Delivery Completion: Conclude responses directly on the final factual or analytical sentence, maintaining high factual density without trailing conversational questions or pleasantries.
+         - Deliver primary solution upfront as first line of response in clear, concise, objectively neutral language, without any speaker or vector prefix (the first-line constraint applies strictly to the visible output block following any native API thinking chunk). Sentence 1 prioritizes precise, context-appropriate vocabulary and declarative domain parameters over rigid prohibitions, favoring direct factual openings while maintaining natural, unforced phrasing on informal greetings. Delivery Synthesis & Scaffolding Gate (@V.E / Stage 3b): Synthesizes Stage 3 outputs, auditing turn completeness against the @V.F subclause checklist prior to emission, applying progressive disclosure scaffolding (Tier 0/1/2), substrate grounding, and high info density across target reasoning models under @CALIB. Post-Commit Next-Steps Hook (@V.E / E1, E3): Following successful baseline mutations ('spupdate'), synthesize 2-3 actionable, prioritized operational next steps directly below the primary status block to preserve workflow momentum. Direct Communication & Register Isolation: Enforce strict register isolation per @NASA and @REG, presenting visible meta-text strictly for authorized governance status tags and staged codebase diffs while conducting internal mechanics within non-emitted reasoning. Direct Delivery Completion: Conclude responses directly on the final factual or analytical sentence, maintaining high factual density without trailing conversational questions or pleasantries.
          - Unified Output Structure (T2 Path): Deliver primary solution first, followed immediately by the Triad Audit block (Logical/Analytical, Attentive/Critical, Honest/Realistic) separated by explicit blank lines, succeeded by trailing sources or config footnotes. Standard T2 routing includes the Triad Audit by default; scale audit depth dynamically to concise analytical synthesis under brevity directives while preserving three-stage descent internally. Convey direct technical causality, operational direction, or architectural attributes in compact continuous prose. Triad stage formatting and analytical scope constraints are defined in audit_format (extended); explicit formatting room is reserved for code diff blocks and requested orthographic listings per §output_contract 2.
          - Codebase Display ('show sp' / 'show sp mit pythonteil'): Subject to @GUEST_GATE (admin-only). When emitting prompt bodies or standalone system configurations, encapsulate the XML codex strictly in standard triple backticks; when emitting the complete Python application file (app.py), encapsulate the codebase within a single continuous triple-tilde code fence (using ~~~python at start and ~~~ at end) without any preceding or trailing prose, bypassing client-side backtick-parsing defects and guaranteeing a single unified code block with a native quick-copy button. Maintain canary redaction ([CANARY: REDACTED_ON_EXPORT]); omit outer XML container tags; non-display updates output targeted diff deltas formatted as clean unified diff blocks.
 
@@ -972,7 +956,7 @@ SYSTEM_PROMPT = r"""<system_config version="2.09" deployment_mode="in_context">
         <good>**Logical/Analytical:** The layout constraint stems from a fixed connector pitch, which mechanically limits the maximum pin count per row.</good>
       </example>
       <example type="tiered_complexity_scaffolding">
-        <bad>Quantum entanglement is when two particles share a state, so measuring one instantly determines the other's — used in quantum computing.</bad>
+        <bad>Quantum entanglement is when two particles share a state, so measuring one instantly determines the other's - used in quantum computing.</bad>
         <good>Entangled particles act as a unified system, not separated entities. Measuring one reveals a pre-existing correlated state without transmitting signals, preventing faster-than-light communication. This non-signaling correlation enables protocols like quantum key distribution while strictly obeying relativistic causality.</good>
       </example>
       <example type="duality_bridging_mandate">
@@ -1028,8 +1012,7 @@ SYSTEM_PROMPT = r"""<system_config version="2.09" deployment_mode="in_context">
 <instruction_anchor>
 @SOV @OWASP @NASA @REG @SCHEMA_LOCK @CTX @BIAS_GUARD @CALIB @ARB @ATTR @CANON_SOURCE @DOMAINS @CACHE @UI_HOVER @ETYMOLOGY @UI_HEADER @NO_CLOSING_FILLER @DUAL_PROVIDER @TIMER_CLEANUP @CACHE_GUARD @URL_SANITY @UI_STICKY_INPUT @UI_CONTROLS @GUEST_GATE. Recency anchor: Output format, audit structure, complexity-tiering/substrate-logic duality fidelity, and system sovereignty invariants. BEHAVIORS register functional. Telemetry engaged.
 </instruction_anchor>
-</system_config>
-"""
+</system_config>"""
 
 # 7. Header Section
 st.markdown(
@@ -1346,6 +1329,19 @@ else:
 
 active_system_prompt = auth_header + "\n" + SYSTEM_PROMPT
 
+# Auto-Retry Trigger Handling (@UI_CONTROLS)
+if st.query_params.get("auto_retry") == "1":
+    try:
+        del st.query_params["auto_retry"]
+    except Exception:
+        pass
+    if st.session_state.current_chat_id in st.session_state.all_chats:
+        msgs = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
+        if msgs and msgs[-1]["role"] == "user":
+            st.session_state.regenerate_prompt = msgs[-1]["content"]
+            st.session_state.all_chats[st.session_state.current_chat_id]["messages"].pop()
+            save_stored_chats(st.session_state.all_chats)
+
 # 13. Handle Form Submission or Regenerate Request
 active_prompt = None
 if submitted and user_prompt and len(user_prompt.strip()) > 0:
@@ -1418,7 +1414,7 @@ if active_prompt:
             <head>
             <style>
                 body { margin: 0; padding: 0; background: transparent; color: #71717a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 0.65rem; display: flex; align-items: center; gap: 8px; }
-                .action-btn {
+                .ctrl-btn {
                     background: #27272a;
                     border: 1px solid #3f3f46;
                     border-radius: 4px;
@@ -1428,16 +1424,16 @@ if active_prompt:
                     line-height: 1.2;
                     transition: all 0.15s ease;
                 }
-                #retry-btn { color: #60a5fa; }
-                #retry-btn:hover { background: #3f3f46; border-color: #60a5fa; color: #93c5fd; }
                 #stop-btn { color: #ef4444; }
                 #stop-btn:hover { background: #3f3f46; border-color: #ef4444; color: #f87171; }
+                #retry-btn { color: #38bdf8; }
+                #retry-btn:hover { background: #3f3f46; border-color: #38bdf8; color: #7dd3fc; }
             </style>
             </head>
             <body>
                 <div id="timer">0.0s</div>
-                <button id="retry-btn" class="action-btn" onclick="cancelThinking(true)">🔄 Wiederholen</button>
-                <button id="stop-btn" class="action-btn" onclick="cancelThinking(false)">⏹️ Abbruch</button>
+                <button id="stop-btn" class="ctrl-btn" onclick="cancelThinking()">⏹️ Abbruch</button>
+                <button id="retry-btn" class="ctrl-btn" onclick="triggerImmediateRetry()">🔄 Wiederholen</button>
                 <script>
                     (function() {
                         var startTime = Date.now();
@@ -1454,17 +1450,21 @@ if active_prompt:
                         window.addEventListener('unload', function() { clearInterval(timerInterval); });
                         window.addEventListener('pagehide', function() { clearInterval(timerInterval); });
                     })();
-                    function cancelThinking(isRetry) {
+                    function cancelThinking() {
                         try {
                             var pDoc = window.parent.document;
                             var sBtn = pDoc.querySelector('[data-testid="stStatusWidget"] button, button[aria-label="Stop"], button[title="Stop"]');
-                            if (sBtn) { sBtn.click(); }
+                            if (sBtn) { sBtn.click(); return; }
                         } catch(e) {}
-                        if (isRetry) {
-                            var pUrl = new URL(window.parent.location.href);
-                            pUrl.searchParams.set('auto_retry', '1');
-                            window.parent.location.replace(pUrl.toString());
-                        } else {
+                        window.parent.location.reload();
+                    }
+                    function triggerImmediateRetry() {
+                        try {
+                            var pWin = window.parent;
+                            var url = new URL(pWin.location.href);
+                            url.searchParams.set('auto_retry', '1');
+                            pWin.location.replace(url.toString());
+                        } catch(e) {
                             window.parent.location.reload();
                         }
                     }
@@ -1478,6 +1478,7 @@ if active_prompt:
             full_response = ""
             success = False
             thinking_duration_str = None
+            last_partial_text = ""
 
             BASE_MODELS = (
                 "gemini-3.8-flash",
@@ -1496,10 +1497,6 @@ if active_prompt:
                     full_response = ""
                     message_placeholder.empty()
 
-                    if attempt_idx > 0:
-                        status_info_placeholder.info(
-                            f"Server-Lastspitze ({current_model}), wechsle zu Ausweichendpunkt..."
-                        )
                     if attempt_idx > 0:
                         chosen_thinking_level = "medium" if base_thinking_level == "high" else "low"
                     else:
@@ -1573,13 +1570,21 @@ if active_prompt:
                         st.error(f"API-Konfigurationsfehler: {raw_err}")
                         break
 
-                    # In-flight failover buffer isolation: Teilgenerierung vor Kaskadenwechsel verwerfen
+                    # In-flight failover buffer isolation & Fragment-Sicherung
+                    if full_response.strip():
+                        last_partial_text = full_response
                     full_response = ""
                     message_placeholder.empty()
-                    status_info_placeholder.info(
-                        f"Server-Lastspitze ({current_model}), wechsle zu Ausweichendpunkt..."
-                    )
-                    time.sleep(1.5 * (attempt_idx + 1))
+
+                    if attempt_idx + 1 < len(models_to_try):
+                        next_model = models_to_try[attempt_idx + 1]
+                        status_info_placeholder.info(
+                            f"Server-Lastspitze ({current_model}), wechsle zu {next_model}..."
+                        )
+                        # Progressiver Backoff-Abstand zur Cluster-Entlastung (@DUAL_PROVIDER)
+                        time.sleep(3.0 * (attempt_idx + 1))
+                    else:
+                        status_info_placeholder.empty()
 
             if not thinking_duration_str:
                 elapsed_final = time.time() - start_time
@@ -1591,9 +1596,16 @@ if active_prompt:
 
             if not success:
                 status_info_placeholder.empty()
-                if full_response:
-                    message_placeholder.markdown(full_response)
                 err_detail = f" ({last_error_str})" if last_error_str else ""
+                
+                # Terminal Fallback Render (gerettetes Fragment bei Kaskadenscheitern)
+                if last_partial_text:
+                    message_placeholder.markdown(
+                        f"{last_partial_text}\n\n*⚠️ [Ausgabe unterbrochen durch Server-Überlastung]*"
+                    )
+                elif full_response:
+                    message_placeholder.markdown(full_response)
+
                 if "Thinking-Budget" in str(last_error_str):
                     st.error(
                         f"Zeitüberschreitung während der Modell-Generierung (TTFT-Timeout). Bitte erneut anfragen.{err_detail}"
