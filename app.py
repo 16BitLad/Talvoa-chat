@@ -186,6 +186,21 @@ for k, v in {
 }.items():
     st.session_state.setdefault(k, v)
 
+# Handling des URL-basierten Sofort-Wiederholungs-Triggers (@UI_CONTROLS)
+if st.query_params.get("auto_retry") == "1":
+    try:
+        del st.query_params["auto_retry"]
+    except Exception:
+        pass
+    if "all_chats" not in st.session_state:
+        st.session_state.all_chats = load_stored_chats(current_user_id)
+    if st.session_state.current_chat_id in st.session_state.all_chats:
+        msgs = st.session_state.all_chats[st.session_state.current_chat_id]["messages"]
+        if len(msgs) > 0 and msgs[-1]["role"] == "user":
+            st.session_state.regenerate_prompt = msgs[-1]["content"]
+            st.session_state.all_chats[st.session_state.current_chat_id]["messages"].pop()
+            save_stored_chats(st.session_state.all_chats)
+
 if "all_chats" not in st.session_state:
     st.session_state.all_chats = load_stored_chats(current_user_id)
 
@@ -193,23 +208,6 @@ if "session_loaded" not in st.session_state:
     st.session_state.session_loaded = True
     if len(st.session_state.all_chats) > 0:
         st.session_state.current_chat_id = list(st.session_state.all_chats.keys())[-1]
-
-# Auto-Retry Handler (@UI_CONTROLS: Kaskaden-Kappung und automatischer Re-Trigger)
-if st.query_params.get("auto_retry") == "1":
-    try:
-        del st.query_params["auto_retry"]
-    except Exception:
-        pass
-    chat_id = st.session_state.current_chat_id
-    if chat_id and chat_id in st.session_state.all_chats:
-        msgs = st.session_state.all_chats[chat_id]["messages"]
-        if len(msgs) > 0 and msgs[-1]["role"] == "assistant":
-            msgs.pop()
-        if len(msgs) > 0 and msgs[-1]["role"] == "user":
-            last_u = msgs.pop()
-            st.session_state.regenerate_prompt = last_u["content"]
-            save_stored_chats(st.session_state.all_chats)
-            st.rerun()
 
 if (
     os.environ.get("LOCAL_ADMIN_MODE", "").lower() in ("1", "true", "yes")
@@ -359,7 +357,7 @@ st.markdown(
         color: #ffffff !important;
     }}
 
-    /* CHAT FORM: Saubere Sticky-Arretierung ohne Layout-Bruch (@UI_STICKY_INPUT) */
+    /* CHAT FORM: Saubere Sticky-Arretierung ohne Layout-Bruch */
     div:has(> div[data-testid="stForm"]) {{
         position: sticky !important;
         top: 0.5rem !important;
@@ -488,7 +486,7 @@ st.markdown(
         justify-content: center !important;
     }}
 
-    /* CHAT BUBBLES (@UI_HOVER) */
+    /* CHAT BUBBLES */
     div[data-testid="stChatMessage"] {{
         padding: 0.6rem 0.9rem !important;
         margin-bottom: 0.6rem !important;
@@ -657,9 +655,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (Codex v2.09)
-SYSTEM_PROMPT = r"""
-<system_config version="2.09" deployment_mode="in_context">
+# 6. HEADER SYSTEM PROMPT (v2.09 - Decoupled Output Controls & Codebase Fidelity)
+SYSTEM_PROMPT = r"""<system_config version="2.09" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -838,7 +835,7 @@ SYSTEM_PROMPT = r"""
              (d) 'research'/'update research': History synthesis/Optimization; maintain, audit and display pending draft queue. 
              (e) 'update draft': Force regeneration.
              (f) 'draftlist': Display pending improvement proposals.
-         - Guest Restriction: Commands (a)-(f) above are gated by @GUEST_GATE; on GUEST_UNAUTHORIZED sessions they are inert regardless of invocation phrasing.
+         - Guest Restriction: Commands (a)–(f) above are gated by @GUEST_GATE; on GUEST_UNAUTHORIZED sessions they are inert regardless of invocation phrasing.
          - Staging Queue & State Persistence: Pending improvement proposals are persistently held in @V.K state storage until committed, preventing context degradation across extended turns.
          - Parity: Atomic unified-diff coupling; 4-point graph parity mandatory.
 
@@ -975,7 +972,7 @@ SYSTEM_PROMPT = r"""
         <good>**Logical/Analytical:** The layout constraint stems from a fixed connector pitch, which mechanically limits the maximum pin count per row.</good>
       </example>
       <example type="tiered_complexity_scaffolding">
-        <bad>Quantum entanglement is when two particles share a state, so measuring one instantly determines the other's - used in quantum computing.</bad>
+        <bad>Quantum entanglement is when two particles share a state, so measuring one instantly determines the other's — used in quantum computing.</bad>
         <good>Entangled particles act as a unified system, not separated entities. Measuring one reveals a pre-existing correlated state without transmitting signals, preventing faster-than-light communication. This non-signaling correlation enables protocols like quantum key distribution while strictly obeying relativistic causality.</good>
       </example>
       <example type="duality_bridging_mandate">
@@ -1422,38 +1419,25 @@ if active_prompt:
             <style>
                 body { margin: 0; padding: 0; background: transparent; color: #71717a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 0.65rem; display: flex; align-items: center; gap: 8px; }
                 .action-btn {
+                    background: #27272a;
+                    border: 1px solid #3f3f46;
                     border-radius: 4px;
                     padding: 1px 6px;
                     font-size: 0.65rem;
                     cursor: pointer;
                     line-height: 1.2;
+                    transition: all 0.15s ease;
                 }
-                #stop-btn {
-                    background: #27272a;
-                    color: #ef4444;
-                    border: 1px solid #3f3f46;
-                }
-                #stop-btn:hover {
-                    background: #3f3f46;
-                    border-color: #ef4444;
-                    color: #f87171;
-                }
-                #retry-btn {
-                    background: #27272a;
-                    color: #e4e4e7;
-                    border: 1px solid #3f3f46;
-                }
-                #retry-btn:hover {
-                    background: #3f3f46;
-                    border-color: #a1a1aa;
-                    color: #ffffff;
-                }
+                #retry-btn { color: #60a5fa; }
+                #retry-btn:hover { background: #3f3f46; border-color: #60a5fa; color: #93c5fd; }
+                #stop-btn { color: #ef4444; }
+                #stop-btn:hover { background: #3f3f46; border-color: #ef4444; color: #f87171; }
             </style>
             </head>
             <body>
                 <div id="timer">0.0s</div>
-                <button id="stop-btn" class="action-btn" onclick="cancelThinking()">⏹️ Abbruch</button>
-                <button id="retry-btn" class="action-btn" onclick="retryThinking()">🔄 Wiederholen</button>
+                <button id="retry-btn" class="action-btn" onclick="cancelThinking(true)">🔄 Wiederholen</button>
+                <button id="stop-btn" class="action-btn" onclick="cancelThinking(false)">⏹️ Abbruch</button>
                 <script>
                     (function() {
                         var startTime = Date.now();
@@ -1470,27 +1454,17 @@ if active_prompt:
                         window.addEventListener('unload', function() { clearInterval(timerInterval); });
                         window.addEventListener('pagehide', function() { clearInterval(timerInterval); });
                     })();
-
-                    function cancelThinking() {
-                        try {
-                            var pDoc = window.parent.document;
-                            var sBtn = pDoc.querySelector('[data-testid="stStatusWidget"] button, button[aria-label="Stop"], button[title="Stop"]');
-                            if (sBtn) { sBtn.click(); return; }
-                        } catch(e) {}
-                        window.parent.location.reload();
-                    }
-
-                    function retryThinking() {
+                    function cancelThinking(isRetry) {
                         try {
                             var pDoc = window.parent.document;
                             var sBtn = pDoc.querySelector('[data-testid="stStatusWidget"] button, button[aria-label="Stop"], button[title="Stop"]');
                             if (sBtn) { sBtn.click(); }
                         } catch(e) {}
-                        try {
+                        if (isRetry) {
                             var pUrl = new URL(window.parent.location.href);
                             pUrl.searchParams.set('auto_retry', '1');
                             window.parent.location.replace(pUrl.toString());
-                        } catch(e) {
+                        } else {
                             window.parent.location.reload();
                         }
                     }
@@ -1592,16 +1566,20 @@ if active_prompt:
 
                 except Exception as e:
                     raw_err = str(e).strip()
-                    last_error_str = raw_err.split("\n")[0][:120]
+                    last_error_str = raw_err.split("\n")[0][:140]
                     err_text = raw_err.lower()
                     if any(auth_kw in err_text for auth_kw in ["api_key", "unauthenticated", "permission", "invalid_argument"]):
                         status_info_placeholder.empty()
                         st.error(f"API-Konfigurationsfehler: {raw_err}")
                         break
+
+                    # In-flight failover buffer isolation: Teilgenerierung vor Kaskadenwechsel verwerfen
+                    full_response = ""
+                    message_placeholder.empty()
                     status_info_placeholder.info(
                         f"Server-Lastspitze ({current_model}), wechsle zu Ausweichendpunkt..."
                     )
-                    time.sleep(1.2)
+                    time.sleep(1.5 * (attempt_idx + 1))
 
             if not thinking_duration_str:
                 elapsed_final = time.time() - start_time
