@@ -383,13 +383,17 @@ st.markdown(
     div[data-testid="stTextArea"],
     div[data-testid="stTextArea"] div[data-baseweb="textarea"],
     div[data-testid="stTextArea"] textarea {{
+        min-height: 38px !important;
+        height: 38px !important;
         background-color: #27272a !important;
         color: #ffffff !important;
         border: none !important;
         box-shadow: none !important;
         font-size: 0.95rem !important;
         resize: none !important;
-        line-height: 1.4 !important;
+        line-height: 1.35 !important;
+        padding: 7px 10px !important;
+        box-sizing: border-box !important;
     }}
     div[data-testid="stTextArea"] textarea::placeholder {{
         color: #a1a1aa !important;
@@ -593,14 +597,6 @@ st.markdown(
         transform: scale(1.1);
     }}
 
-    div[data-testid="stChatMessage"] div[data-testid="stTextArea"] textarea {{
-        background-color: #1e1e22 !important;
-        color: #ffffff !important;
-        border: 1px solid #3f3f46 !important;
-        border-radius: 8px !important;
-        font-size: 0.95rem !important;
-    }}
-
     pre, code {{
         white-space: pre-wrap !important;
         word-break: break-word !important;
@@ -622,9 +618,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.99 - Explicit XML/Python Fencing & Parity Restoration)
+# 6. HEADER SYSTEM PROMPT (v2.00 - Major-Release & Auto-Grow Baseline)
 SYSTEM_PROMPT = r"""
-<system_config version="1.99" deployment_mode="in_context">
+<system_config version="2.00" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
   <!-- 
     COGNITIVE VALUE PROPOSITION & USER AGENCY DOCTRINE:
@@ -1645,13 +1641,22 @@ try {
         const form = parentDoc.querySelector('div[data-testid="stForm"]');
         if (!form) return;
         const ta = form.querySelector('textarea');
+        const box = form.querySelector('div[data-baseweb="textarea"]');
         if (!ta || ta.dataset.autoGrowBound) return;
         ta.dataset.autoGrowBound = "true";
+
         function updateHeight() {
-            ta.style.height = 'auto';
-            const h = Math.min(Math.max(ta.scrollHeight, 38), 220);
-            ta.style.height = h + 'px';
-            ta.style.overflowY = ta.scrollHeight > 220 ? 'auto' : 'hidden';
+            ta.style.setProperty('height', '38px', 'important');
+            if (box) box.style.setProperty('height', '38px', 'important');
+            const scrollH = ta.scrollHeight;
+            if (ta.value.trim().length > 0 && scrollH > 42) {
+                const newH = Math.min(scrollH, 200);
+                ta.style.setProperty('height', newH + 'px', 'important');
+                if (box) box.style.setProperty('height', newH + 'px', 'important');
+                ta.style.overflowY = scrollH > 200 ? 'auto' : 'hidden';
+            } else {
+                ta.style.overflowY = 'hidden';
+            }
         }
         ta.addEventListener('input', updateHeight);
         ta.addEventListener('keydown', (e) => {
