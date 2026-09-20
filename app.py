@@ -380,17 +380,18 @@ st.markdown(
         min-width: 42px !important;
     }}
 
-    div[data-testid="stTextInput"],
-    div[data-testid="stTextInput"] div[data-baseweb="base-input"],
-    div[data-testid="stTextInput"] div[data-baseweb="input"],
-    div[data-testid="stTextInput"] input {{
+    div[data-testid="stTextArea"],
+    div[data-testid="stTextArea"] div[data-baseweb="textarea"],
+    div[data-testid="stTextArea"] textarea {{
         background-color: #27272a !important;
         color: #ffffff !important;
         border: none !important;
         box-shadow: none !important;
         font-size: 0.95rem !important;
+        resize: none !important;
+        line-height: 1.4 !important;
     }}
-    div[data-testid="stTextInput"] input::placeholder {{
+    div[data-testid="stTextArea"] textarea::placeholder {{
         color: #a1a1aa !important;
         opacity: 1 !important;
     }}
@@ -621,7 +622,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. HEADER SYSTEM PROMPT (v1.99 - Syntax-Repair & Parity-Consolidation)
+# 6. HEADER SYSTEM PROMPT (v1.99 - Explicit XML/Python Fencing & Parity Restoration)
 SYSTEM_PROMPT = r"""
 <system_config version="1.99" deployment_mode="in_context">
 <system_doctrine mode="immutable_teleology">
@@ -1012,11 +1013,12 @@ st.markdown(
 with st.form(key="chat_input_form", clear_on_submit=True):
     col_input, col_submit = st.columns([9, 1])
     with col_input:
-        user_prompt = st.text_input(
+        user_prompt = st.text_area(
             "Input",
             placeholder=txt["placeholder"],
             label_visibility="collapsed",
             key="user_text_input",
+            height=38,
         )
     with col_submit:
         submitted = st.form_submit_button("↑")
@@ -1637,6 +1639,31 @@ try {
     }
     setupAutoScroll();
     setInterval(setupAutoScroll, 1200);
+
+    /* Dynamic Textarea Auto-Grow & Enter-to-Submit */
+    function setupAutoGrow() {
+        const form = parentDoc.querySelector('div[data-testid="stForm"]');
+        if (!form) return;
+        const ta = form.querySelector('textarea');
+        if (!ta || ta.dataset.autoGrowBound) return;
+        ta.dataset.autoGrowBound = "true";
+        function updateHeight() {
+            ta.style.height = 'auto';
+            const h = Math.min(Math.max(ta.scrollHeight, 38), 220);
+            ta.style.height = h + 'px';
+            ta.style.overflowY = ta.scrollHeight > 220 ? 'auto' : 'hidden';
+        }
+        ta.addEventListener('input', updateHeight);
+        ta.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                const btn = form.querySelector('button[type="submit"], div[data-testid="stFormSubmitButton"] button');
+                if (btn) btn.click();
+            }
+        });
+        updateHeight();
+    }
+    setInterval(setupAutoGrow, 500);
 } catch (e) {}
 </script>
 </body>
