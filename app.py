@@ -968,14 +968,14 @@ def verify_runtime_prompt_parity(prompt_text: str):
     """Verifiziert die strukturelle Integrität des System-Prompts beim Anwendungsstart."""
     if len(prompt_text) <= 1000:
         raise RuntimeError("CRITICAL: SYSTEM_PROMPT ist leer oder unvollständig.")
-    if "@DUAL_PROVIDER" not in prompt_text:
-        raise RuntimeError("CRITICAL: Invariante @DUAL_PROVIDER fehlt.")
-    if "@UI_STICKY_INPUT" not in prompt_text:
-        raise RuntimeError("CRITICAL: Invariante @UI_STICKY_INPUT fehlt.")
     if "@GUEST_GATE" not in prompt_text:
         raise RuntimeError("CRITICAL: Invariante @GUEST_GATE fehlt.")
     if "@PROPORTIONALITY" not in prompt_text:
         raise RuntimeError("CRITICAL: Invariante @PROPORTIONALITY fehlt.")
+    if "@SCHEMA_LOCK" not in prompt_text:
+        raise RuntimeError("CRITICAL: Invariante @SCHEMA_LOCK fehlt.")
+    if "@CALIB" not in prompt_text:
+        raise RuntimeError("CRITICAL: Invariante @CALIB fehlt.")
 
 
 verify_runtime_prompt_parity(SYSTEM_PROMPT)
