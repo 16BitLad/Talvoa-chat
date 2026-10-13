@@ -242,10 +242,13 @@ def select_chat(chat_id=None):
 
 
 def delete_message(idx):
-    if st.session_state.current_chat_id in st.session_state.all_chats:
-        st.session_state.all_chats[st.session_state.current_chat_id]["messages"].pop(idx)
-        save_stored_chats(st.session_state.all_chats)
-        st.session_state.editing_idx = None
+    chat_id = st.session_state.current_chat_id
+    if chat_id and chat_id in st.session_state.all_chats:
+        msgs = st.session_state.all_chats[chat_id].get("messages", [])
+        if 0 <= idx < len(msgs):
+            msgs.pop(idx)
+            save_stored_chats(st.session_state.all_chats)
+    st.session_state.editing_idx = None
 
 
 def set_editing_message(idx):
@@ -254,12 +257,13 @@ def set_editing_message(idx):
 
 def trigger_regenerate(idx):
     chat_id = st.session_state.current_chat_id
-    if chat_id in st.session_state.all_chats:
-        msgs = st.session_state.all_chats[chat_id]["messages"]
-        target_prompt = msgs[idx]["content"]
-        st.session_state.all_chats[chat_id]["messages"] = msgs[:idx]
-        st.session_state.regenerate_prompt = target_prompt
-        save_stored_chats(st.session_state.all_chats)
+    if chat_id and chat_id in st.session_state.all_chats:
+        msgs = st.session_state.all_chats[chat_id].get("messages", [])
+        if 0 <= idx < len(msgs):
+            target_prompt = msgs[idx].get("content", "")
+            st.session_state.all_chats[chat_id]["messages"] = msgs[:idx]
+            st.session_state.regenerate_prompt = target_prompt
+            save_stored_chats(st.session_state.all_chats)
 
 
 current_chat = st.session_state.all_chats.get(st.session_state.current_chat_id)
@@ -1151,14 +1155,14 @@ def render_chat_message(msg, idx):
             with col_save:
                 if st.button("Speichern", key=f"save_btn_{idx}"):
                     chat_id = st.session_state.current_chat_id
-                    if chat_id in st.session_state.all_chats:
-                        st.session_state.all_chats[chat_id]["messages"] = (
-                            st.session_state.all_chats[chat_id]["messages"][:idx]
-                        )
-                        st.session_state.regenerate_prompt = edited_text
-                        save_stored_chats(st.session_state.all_chats)
-                        st.session_state.editing_idx = None
-                        st.rerun()
+                    if chat_id and chat_id in st.session_state.all_chats:
+                        msgs = st.session_state.all_chats[chat_id].get("messages", [])
+                        if 0 <= idx < len(msgs):
+                            st.session_state.all_chats[chat_id]["messages"] = msgs[:idx]
+                            st.session_state.regenerate_prompt = edited_text
+                            save_stored_chats(st.session_state.all_chats)
+                            st.session_state.editing_idx = None
+                            st.rerun()
             with col_cancel:
                 if st.button("Abbrechen", key=f"cancel_btn_{idx}"):
                     st.session_state.editing_idx = None
@@ -1431,9 +1435,11 @@ if active_prompt:
                     )
                 if st.button("🔄 Anfrage wiederholen", key=f"retry_failed_btn_{st.session_state.interaction_count}"):
                     st.session_state.regenerate_prompt = active_prompt
-                    if st.session_state.current_chat_id in st.session_state.all_chats:
-                        st.session_state.all_chats[st.session_state.current_chat_id]["messages"].pop()
-                        save_stored_chats(st.session_state.all_chats)
+                    if st.session_state.current_chat_id and st.session_state.current_chat_id in st.session_state.all_chats:
+                        msgs = st.session_state.all_chats[st.session_state.current_chat_id].get("messages", [])
+                        if msgs:
+                            msgs.pop()
+                            save_stored_chats(st.session_state.all_chats)
                     st.rerun()
 
             if success and full_response:
