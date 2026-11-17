@@ -1602,10 +1602,20 @@ try {
         const chatBoxes = parentDoc.querySelectorAll('div[data-testid="stVerticalBlockBorderWrapper"]');
         chatBoxes.forEach(box => {
             if (!box.querySelector('.history-dropdown-box')) {
-                box.scrollTop = box.scrollHeight;
                 if (!box.dataset.scrollObserved) {
                     box.dataset.scrollObserved = "true";
+                    box.scrollTop = box.scrollHeight;
                     const obs = new MutationObserver(() => { box.scrollTop = box.scrollHeight; });
                     obs.observe(box, { childList: true, subtree: true, characterData: true });
                 }
             }
+        });
+    }
+    setupAutoScroll();
+    setInterval(setupAutoScroll, 1000);
+} catch (e) {}
+</script>
+</body>
+</html>
+"""
+components.html(html_combined_client_scripts, height=0, width=0)
